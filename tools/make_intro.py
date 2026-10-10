@@ -2,7 +2,9 @@
 document and demo values. Needs Pillow and ffmpeg on PATH.  Run: python tools/make_intro.py"""
 import os
 import subprocess
-from PIL import Image, ImageDraw, ImageFont
+import math
+import random
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 W, H, FPS = 1280, 720, 24
@@ -52,6 +54,100 @@ def step(d, n, title, t, bg=PAPER):
     text(d, (96, 104), title, 54, INK, bg, t, 0.1, bold=True)
 
 
+# ---------------- depth: drifting backdrop, floating particles, a turning helix, a camera ----------------
+
+def _backdrop(base, blobs):
+    im = Image.new("RGB", (W + 240, H + 240), base)
+    d = ImageDraw.Draw(im)
+    for x, y, r, c in blobs:
+        d.ellipse((x - r, y - r, x + r, y + r), fill=c)
+    return im.filter(ImageFilter.GaussianBlur(150))
+
+
+BACK = {PAPER: _backdrop(PAPER, [(250, 200, 330, "#D9EEEA"), (1250, 760, 380, "#E3F1E4"), (1100, 120, 240, "#FFFFFF")]),
+        DARK: _backdrop(DARK, [(300, 250, 360, "#11524C"), (1250, 700, 400, "#0E4A45"), (900, 100, 220, "#072B28")])}
+random.seed(7)
+DOTS = [(random.random(), random.random(), random.random()) for _ in range(46)]  # x, y, depth
+
+
+def backdrop(bg, T):
+    x, y = 120 + 90 * math.sin(T * 0.21), 120 + 70 * math.cos(T * 0.17)
+    return BACK[bg].crop((round(x), round(y), round(x) + W, round(y) + H))
+
+
+def particles(d, bg, T):
+    """Small dots drifting upward; nearer ones are larger, brighter and faster."""
+    tint = MINT if bg == DARK else TEAL
+    for x, y, z in DOTS:
+        px = (x * W + 40 * z * math.sin(T * 0.5 + x * 9)) % W
+        py = (y * H - T * (10 + 34 * z)) % H
+        r = 1.5 + 4.5 * z
+        d.ellipse((px - r, py - r, px + r, py + r), fill=mix(bg, tint, 0.10 + 0.22 * z))
+
+
+def helix(d, cx, top, height, radius, T, bg, k=1.0):
+    """A double helix turning about its vertical axis, drawn back to front."""
+    if k <= 0:
+        return
+    a, b = (MINT, "#FFFFFF") if bg == DARK else (TEAL, "#7FB8B0")
+    n, balls = 26, []
+    for i in range(n):
+        y = top + height * i / (n - 1)
+        ang = i * 0.52 + T * 1.3
+        x, z = math.cos(ang) * radius, math.sin(ang)
+        if i % 2 == 0:
+            d.line((cx + x, y, cx - x, y), fill=mix(bg, a, 0.22 * k), width=2)
+        balls += [(z, cx + x, y, a), (-z, cx - x, y, b)]
+    for z, x, y, c in sorted(balls):
+        r = 5 + 4.5 * (z + 1) / 2
+        d.ellipse((x - r, y - r, x + r, y + r), fill=mix(bg, c, k * (0.35 + 0.65 * (z + 1) / 2)))
+
+
+def camera(im, t, secs, bg):
+    """A slow push-in through the scene, and a fly-through into the next one at the end."""
+    z, left = 1 + 0.045 * t / secs, secs - t
+    out = 0.0
+    if left < 0.4:
+        out = (1 - left / 0.4) ** 2
+        z += 0.22 * out
+    w, h = round(W * z), round(H * z)
+    im = im.resize((w, h), Image.BICUBIC).crop(((w - W) // 2, (h - H) // 2, (w - W) // 2 + W, (h - H) // 2 + H))
+    return Image.blend(im, Image.new("RGB", (W, H), bg), out) if out else im
+
+
+def _coeffs(dst, src):
+    """Perspective coefficients mapping output points dst back to source points src."""
+    m = []
+    for (x, y), (u, v) in zip(dst, src):
+        m.append([x, y, 1, 0, 0, 0, -u * x, -u * y, u])
+        m.append([0, 0, 0, x, y, 1, -v * x, -v * y, v])
+    n = 8
+    for c in range(n):  # Gauss-Jordan
+        piv = max(range(c, n), key=lambda r: abs(m[r][c]))
+        m[c], m[piv] = m[piv], m[c]
+        m[c] = [v / m[c][c] for v in m[c]]
+        for r in range(n):
+            if r != c:
+                f = m[r][c]
+                m[r] = [a - f * b for a, b in zip(m[r], m[c])]
+    return [m[i][8] for i in range(n)]
+
+
+def card3d(im, src, x, y, yaw, lift=0.0):
+    """Paste an image turned about its left edge by yaw (0 = flat), with a soft shadow under it."""
+    w, h = src.size
+    wd = w * math.cos(yaw)
+    inset = h * 0.5 * math.sin(yaw) * 0.42
+    quad = [(0, 0), (wd, inset), (wd, h - inset), (0, h)]
+    shadow = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(shadow).polygon([(x + px + 18, y + py + 26 + lift) for px, py in quad], fill=90)
+    shadow = shadow.filter(ImageFilter.GaussianBlur(22))
+    im.paste(Image.new("RGB", (W, H), "#0B3B37"), (0, 0), shadow)
+    warped = src.convert("RGBA").transform((w, h), Image.PERSPECTIVE, _coeffs(quad, [(0, 0), (w, 0), (w, h), (0, h)]), Image.BICUBIC)
+    im.paste(warped, (round(x), round(y - lift)), warped)
+    ImageDraw.Draw(im).line([(x + px, y + py - lift) for px, py in quad] + [(x, y - lift)], fill="#C9D6D0", width=2)
+
+
 SAMPLE = Image.open(os.path.join(ROOT, "public", "samples", "lab-2026-06.png")).convert("RGB")
 SAMPLE = SAMPLE.resize((440, round(440 * SAMPLE.height / SAMPLE.width)))
 
@@ -59,6 +155,8 @@ SAMPLE = SAMPLE.resize((440, round(440 * SAMPLE.height / SAMPLE.width)))
 def s_title(im, d, t):
     cx = W // 2
     k = ease(t / 0.8)
+    helix(d, 170, 60, 600, 62, t, DARK, k)
+    helix(d, W - 170, 60, 600, 62, t + 2, DARK, k)
     r = 46
     d.rounded_rectangle((cx - r, 190 - r, cx + r, 190 + r), 22, fill=mix(DARK, TEAL, k))
     d.rectangle((cx - 8, 190 - 26, cx + 8, 190 + 26), fill=mix(DARK, "#FFFFFF", k))
@@ -69,6 +167,7 @@ def s_title(im, d, t):
 
 
 def s_problem(im, d, t):
+    helix(d, 1090, 90, 540, 70, t, PAPER, ease(t / 1.0))
     text(d, (96, 150), "A prescription you cannot read.", 50, INK, PAPER, t, 0.0, bold=True)
     text(d, (96, 230), "A lab report full of numbers.", 50, INK, PAPER, t, 0.9, bold=True)
     text(d, (96, 310), "Papers from five visits, in five folders.", 50, INK, PAPER, t, 1.8, bold=True)
@@ -76,11 +175,11 @@ def s_problem(im, d, t):
     text(d, (96, 482), "what their own records say.", 30, MUTED, PAPER, t, 2.8)
 
 
-def paste_doc(im, t, x=96, y=200):
-    k = ease(t / 0.8)
-    h, top = min(SAMPLE.height, 470), round(y + (1 - k) * 40)
-    im.paste(SAMPLE.crop((0, 0, 440, h)), (x, top))
-    ImageDraw.Draw(im).rectangle((x, top, x + 440, top + h), outline="#DDE5E0", width=2)
+def paste_doc(im, t, x=96, y=210):
+    k = ease(t / 1.4)
+    doc = SAMPLE.crop((0, 0, 440, min(SAMPLE.height, 470)))
+    yaw = math.radians(62 - 50 * k + 3 * math.sin(t * 0.9))
+    card3d(im, doc, x + (1 - k) * 120, y + 6 * math.sin(t * 1.1), yaw, lift=10 * k)
 
 
 def s_read(im, d, t):
@@ -91,7 +190,9 @@ def s_read(im, d, t):
         y, dl = 220 + i * 96, 0.8 + i * 0.6
         k = ease((t - dl) / 0.5)
         if k > 0:
-            d.rounded_rectangle((600, y, 1184, y + 80), 16, fill=mix(PAPER, "#FFFFFF", k), outline=mix(PAPER, "#DDE5E0", k), width=2)
+            sx = (1 - k) * 80  # each row flies in from the right
+            d.rounded_rectangle((606 + sx, y + 8, 1190 + sx, y + 88), 16, fill=mix(PAPER, "#C9DAD5", k))
+            d.rounded_rectangle((600 + sx, y, 1184 + sx, y + 80), 16, fill=mix(PAPER, "#FFFFFF", k), outline=mix(PAPER, "#DDE5E0", k), width=2)
         text(d, (624, y + 12), n, 24, INK, "#FFFFFF", t, dl, bold=True)
         text(d, (624, y + 46), "read from a line on the report", 18, MUTED, "#FFFFFF", t, dl, mono=True)
         text(d, (1040, y + 26), v, 24, INK, "#FFFFFF", t, dl, mono=True, anchor="ra")
@@ -119,6 +220,7 @@ def s_explain(im, d, t):
     step(d, 3, "Explain it in plain words", t)
     k = ease((t - 0.5) / 0.6)
     if k > 0:
+        d.rounded_rectangle((104, 232, 1192, 412), 20, fill=mix(PAPER, "#C9DAD5", k))
         d.rounded_rectangle((96, 220, 1184, 400), 20, fill=mix(PAPER, "#FFFFFF", k), outline=mix(PAPER, "#DDE5E0", k), width=2)
     text(d, (130, 244), "HbA1c  7.6 %", 28, INK, "#FFFFFF", t, 0.6, mono=True)
     text(d, (130, 292), "Your average sugar over about three months is above", 30, INK, "#FFFFFF", t, 1.0)
@@ -144,6 +246,8 @@ def s_profile(im, d, t):
         dl = 0.6 + i * 1.1
         k = ease((t - dl) / 0.4)
         if k > 0:
+            pulse = 16 + 4 * math.sin(t * 3 + i)
+            d.ellipse((x - pulse, y - pulse, x + pulse, y + pulse), fill=mix(PAPER, "#BFE0DA", k))
             d.ellipse((x - 10, y - 10, x + 10, y + 10), fill=mix(PAPER, TEAL, k))
         text(d, (x, y - 54), v, 30, INK, PAPER, t, dl, bold=True, anchor="ma")
         text(d, (x, 514), dt_, 20, MUTED, PAPER, t, dl, mono=True, anchor="ma")
@@ -162,13 +266,17 @@ def s_abdm(im, d, t):
         dl = 0.7 + i * 0.9
         k = ease((t - dl) / 0.5)
         if k > 0:
-            d.rounded_rectangle((96, 210 + i * 130, 1184, 318 + i * 130), 18, fill=mix(DARK, "#124A45", k))
+            sx = (1 - k) * (90 if i % 2 else -90)
+            d.rounded_rectangle((104 + sx, 220 + i * 130, 1192 + sx, 328 + i * 130), 18, fill=mix(DARK, "#062522", k))
+            d.rounded_rectangle((96 + sx, 210 + i * 130, 1184 + sx, 318 + i * 130), 18, fill=mix(DARK, "#124A45", k))
         text(d, (128, 226 + i * 130), a, 32, "#FFFFFF", "#124A45", t, dl, bold=True)
         text(d, (128, 272 + i * 130), b, 24, MINT, "#124A45", t, dl)
 
 
 def s_end(im, d, t):
     cx = W // 2
+    helix(d, 170, 60, 600, 62, t + 1, DARK, ease(t / 0.8))
+    helix(d, W - 170, 60, 600, 62, t + 3, DARK, ease(t / 0.8))
     text(d, (cx, 210), "Sehat Copilot", 80, "#FFFFFF", DARK, t, 0.0, bold=True, anchor="ma")
     text(d, (cx, 330), "A guide to your records. Not a doctor.", 34, MINT, DARK, t, 0.5, anchor="ma")
     text(d, (cx, 440), "sehat-copilot.vercel.app", 40, "#FFFFFF", DARK, t, 1.0, mono=True, anchor="ma")
@@ -264,15 +372,17 @@ def main():
     ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
                            "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
                            "-movflags", "+faststart", video], stdin=subprocess.PIPE)
+    T = 0.0
     for fn, secs, bg in SCENES:
         n = round(secs * FPS)
         for i in range(n):
             t = i / FPS
-            im = Image.new("RGB", (W, H), bg)
-            fn(im, ImageDraw.Draw(im), t)
-            left = secs - t
-            if left < 0.35:  # quick fade to the scene colour between scenes
-                im = Image.blend(im, Image.new("RGB", (W, H), bg), 1 - left / 0.35)
+            im = backdrop(bg, T)
+            d = ImageDraw.Draw(im)
+            particles(d, bg, T)
+            fn(im, d, t)
+            im = camera(im, t, secs, bg)
+            T += 1 / FPS
             ff.stdin.write(im.tobytes())
     ff.stdin.close()
     ff.wait()
