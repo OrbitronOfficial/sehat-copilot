@@ -160,6 +160,23 @@
     return p.then(function (m) { if (my === ver) apply(m); });
   }
 
+  // Switching should feel instant: once the page is idle, fetch every language file in the
+  // background so a later switch reads from memory instead of waiting on the network.
+  function preloadLangs() {
+    Object.keys(CODES).forEach(function (code, i) {
+      if (code === "en" || maps[code]) return;
+      setTimeout(function () {
+        if (maps[code]) return;
+        fetch("/i18n/site-" + code + ".json")
+          .then(function (r) { return r.ok ? r.json() : {}; })
+          .then(function (j) { if (!maps[code]) maps[code] = j && typeof j === "object" ? j : {}; })
+          .catch(function () { /* stays on-demand */ });
+      }, 150 * i);
+    });
+  }
+  if (document.readyState === "complete") setTimeout(preloadLangs, 1200);
+  else window.addEventListener("load", function () { setTimeout(preloadLangs, 1200); });
+
   window.SehatSite = { setLang: setLang, getLang: function () { return curLang; }, setTheme: setTheme, translate: translate };
 
   /* ---------- nav tools: language select + theme toggle ---------- */
