@@ -271,6 +271,17 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertIn("too large", json.loads(body)["error"])
 
+    def test_extract_reports_resting_models(self):
+        first = llm._vision_models()[0]
+        llm._resting.clear()
+        try:
+            with mock.patch.object(server.pipeline, "extract", return_value={"id": "r"}):
+                status, out = self.post("/api/extract", {"data": "eA==", "mime": "text/plain", "skip": [first]})
+            self.assertEqual(status, 200)
+            self.assertEqual(out["resting"], [first])
+        finally:
+            llm._resting.clear()
+
 
 class HandlerUnitTests(unittest.TestCase):
     def test_record_helper_requires_dict(self):
@@ -281,6 +292,17 @@ class HandlerUnitTests(unittest.TestCase):
     def test_pages_map_to_existing_files(self):
         for page, name in server.PAGES.items():
             self.assertTrue(os.path.isfile(os.path.join(server.PUBLIC, name)), (page, name))
+
+    def test_reported_resting_models_are_skipped_but_never_all(self):
+        models = llm._vision_models()
+        llm._resting.clear()
+        try:
+            llm.rest(models)  # a browser cannot rest every model
+            self.assertEqual(llm.resting(), [])
+            llm.rest([models[0], "not-a-model", 7])
+            self.assertEqual(llm.resting(), [models[0]])
+        finally:
+            llm._resting.clear()
 
 
 if __name__ == "__main__":

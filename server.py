@@ -144,7 +144,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/extract":
                 if not b.get("data"):
                     raise ValueError("No file was received.")
-                out = {"record": _extract(b)}
+                llm.rest(b.get("skip"))
+                out = {"record": _extract(b), "resting": llm.resting()}
             elif path == "/api/reflag":
                 out = {"record": pipeline.check(_record(b))}
             elif path == "/api/explain":

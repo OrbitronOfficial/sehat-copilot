@@ -14,6 +14,7 @@ const STR = {
     samples_title: 'Try a sample', samples_none: 'No samples available right now.',
     demo_btn: 'Load full demo profile', demo_hint: 'Adds a sample patient with several records and opens the timeline.',
     processing_title: 'Reading your document',
+    wait_hint: 'This usually takes 10 to 20 seconds. Handwriting can take a little longer.',
     step_read: 'Reading document', step_extract: 'Extracting', step_check: 'Checking values', step_write: 'Writing summary',
     review_title: 'Review and correct',
     review_sub: 'Compare with the original document. Fix anything that looks wrong, then save.',
@@ -183,6 +184,7 @@ const STR = {
     samples_title: 'नमूना आज़माएँ', samples_none: 'अभी कोई नमूना उपलब्ध नहीं है।',
     demo_btn: 'पूरी डेमो प्रोफ़ाइल लोड करें', demo_hint: 'एक नमूना मरीज़ और कई रिकॉर्ड जोड़कर टाइमलाइन खोलता है।',
     processing_title: 'आपका दस्तावेज़ पढ़ा जा रहा है',
+    wait_hint: 'इसमें आम तौर पर 10 से 20 सेकंड लगते हैं। हाथ की लिखावट में थोड़ा ज़्यादा समय लग सकता है।',
     step_read: 'दस्तावेज़ पढ़ना', step_extract: 'जानकारी निकालना', step_check: 'मान जाँचना', step_write: 'सारांश लिखना',
     review_title: 'जाँचें और सुधारें',
     review_sub: 'मूल दस्तावेज़ से मिलान करें। जो गलत लगे उसे ठीक करें, फिर सहेजें।',
@@ -600,14 +602,14 @@ function downscale(file) {
     img.onload = () => {
       let w = img.naturalWidth, h = img.naturalHeight;
       const m = Math.max(w, h);
-      if (m > 2200) { const k = 2200 / m; w = Math.round(w * k); h = Math.round(h * k); }
+      if (m > 1800) { const k = 1800 / m; w = Math.round(w * k); h = Math.round(h * k); }
       const c = document.createElement('canvas');
       c.width = w; c.height = h;
       const x = c.getContext('2d');
       x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
       x.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      resolve(c.toDataURL('image/jpeg', 0.88));
+      resolve(c.toDataURL('image/jpeg', 0.82));
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(t('err_image'))); };
     img.src = url;
@@ -710,7 +712,8 @@ async function handleFile(file, sampleId) {
     const name = file.name || 'upload';
     let res;
     try {
-      res = await api('/api/extract', { filename: name, mime: outMime, data, lang, sample_id: sampleId || null });
+      res = await api('/api/extract', { filename: name, mime: outMime, data, lang, sample_id: sampleId || null, skip: skipGet() });
+      skipSet(res.resting);
     } catch (e) {
       if (e.code !== 'vision_unavailable' || !isImg) throw e;
       let text = '';
@@ -915,11 +918,19 @@ function viewAdd() {
     '<span class="muted small">' + esc(t('demo_hint')) + '</span></div></div>';
 }
 
+/* Reader models the server last reported as out of daily quota. Sent with the next upload so
+   a fresh server instance skips them straight away. Forgotten after an hour. */
+function skipGet() {
+  try { const v = JSON.parse(localStorage.getItem('sehat_skip') || 'null'); return v && Date.now() - v.at < 36e5 ? v.models : []; } catch (e) { return []; }
+}
+function skipSet(models) {
+  try { localStorage.setItem('sehat_skip', JSON.stringify({ at: Date.now(), models: arr(models) })); } catch (e) { /* storage blocked */ }
+}
 function viewProcessing() {
   const steps = ['step_read', 'step_extract', 'step_check', 'step_write'];
   return '<div class="page-head"><h1>' + esc(t('processing_title')) + '</h1></div><div class="card"><ol class="stepper">' +
     steps.map((k, i) => '<li class="' + (i < S.step ? 'done' : (i === S.step ? 'now' : '')) + '"><span class="dot"></span><span>' + esc(t(k)) + '</span></li>').join('') +
-    '</ol></div>';
+    '</ol><p class="muted small" style="margin:14px 0 0">' + esc(t('wait_hint')) + '</p></div>';
 }
 
 function fld(label, path, val, o) {
@@ -1519,7 +1530,8 @@ async function chatFile(file) {
     const dataUrl = isImg ? await downscale(file) : await readAsDataURL(file), outMime = isImg ? 'image/jpeg' : mime;
     let res;
     try {
-      res = await api('/api/extract', { filename: file.name || 'upload', mime: outMime, data: String(dataUrl).split(',')[1] || '', lang });
+      res = await api('/api/extract', { filename: file.name || 'upload', mime: outMime, data: String(dataUrl).split(',')[1] || '', lang, skip: skipGet() });
+      skipSet(res.resting);
     } catch (e) { if (e.code === 'vision_unavailable') throw new Error(t('err_busy')); throw e; }
     const rec = normalizeRecord(res.record);
     S.draft = rec; S.pendingFile = { mime: outMime, dataUrl }; S.previewFile = null;

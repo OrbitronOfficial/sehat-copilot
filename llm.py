@@ -88,6 +88,26 @@ def _chain(env_name, default, call, deadline, provider="gemini", per_call=None):
     raise LLMError("; ".join(errors) or "no models configured")
 
 
+def _vision_models():
+    return [m.strip() for m in os.environ.get("GEMINI_MODELS", GEMINI_MODELS).split(",") if m.strip()]
+
+
+def rest(models, seconds=1800):
+    """A browser reports the reader models it last saw out of daily quota, so a fresh server
+    instance does not spend a second on each of them again. Ignored if it would rest them all."""
+    known = _vision_models()
+    names = [m for m in (models or []) if isinstance(m, str) and m in known][:len(known)]
+    if not names or len(set(names)) >= len(known):
+        return
+    for m in names:
+        _resting.setdefault(f"gemini:{m}", time.time() + seconds)
+
+
+def resting():
+    """Reader models that are out of quota for a while yet."""
+    return [m for m in _vision_models() if _resting.get(f"gemini:{m}", 0) > time.time() + 300]
+
+
 def _gemini(prompt, file, deadline):
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
