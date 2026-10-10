@@ -16,7 +16,7 @@ Built by team ANTIJAREX for HacXLerate 2026 Round 1 (Altrix Labs challenge: AI-P
 | Multi-language (bonus) | 43 languages: ten ship ready (English, Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Punjabi), the rest are translated on demand. Summaries and chat are written in the chosen language; Hindi, mixed-language and handwritten documents are read |
 | Wellness data | A log for home readings (blood pressure, sugar, weight, pulse) with code-decided flags and trends, shown beside the lab results and exported as FHIR vital signs |
 | Guide on every screen | Saathi, a floating helper with a tip for the current screen and a chat that shares the Ask page's safety gate |
-| ABDM/ABHA readiness (bonus) | FHIR R4 bundle export shaped on NRCeS profiles; mock ABHA link and import |
+| ABDM/ABHA readiness (bonus) | FHIR R4 bundle export shaped on NRCeS profiles; mock ABHA link that follows the ABDM steps (number, OTP, consent, choose records, import) |
 
 ## Architecture
 
@@ -116,6 +116,7 @@ Python 3 standard library server (no framework), vanilla JS frontend, Gemini (do
 - Working prototype: https://sehat-copilot.vercel.app
 - Architecture diagram: above
 - Approach and demo: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md); submission text in [docs/SUBMISSION.md](docs/SUBMISSION.md)
+- Intro video (64 s walkthrough): [docs/intro.mp4](docs/intro.mp4), rendered by `tools/make_intro.py` from real app screenshots; stock clips credited in [docs/footage/CREDITS.md](docs/footage/CREDITS.md)
 - Tests: `python -m unittest discover tests` (279 tests). CI runs lint, a security scan and the tests on every push (`.github/workflows/ci.yml`).
 
 ## Run locally
