@@ -180,5 +180,12 @@
 "Photos, PDFs and text files work. Printed documents read best. Handwritten prescriptions are read too, but every item is marked for you to check against the original.": "ছবি, PDF এবং টেক্সট ফাইল কাজ করে। প্রিন্ট করা কাগজ সবচেয়ে ভালো পড়া যায়। হাতের লেখা প্রেসক্রিপশনও পড়া যায়, তবে মূল কাগজের সাথে মিলিয়ে দেখার জন্য প্রতিটি আইটেম চিহ্নিত করা থাকে।",
 "You can export all records as a FHIR R4 bundle shaped on ABDM profiles, download a backup file to move to another device, and print a one-page summary for your doctor. The ABHA link in the app is a mock for demonstration.": "আপনি ABDM প্রোফাইলের আদলে তৈরি FHIR R4 বান্ডেল হিসেবে সমস্ত রেকর্ড এক্সপোর্ট করতে পারবেন, অন্য ডিভাইসে নিয়ে যাওয়ার জন্য ব্যাকআপ ফাইল ডাউনলোড করতে পারবেন এবং আপনার ডাক্তারের জন্য এক পাতার সারাংশ প্রিন্ট করতে পারবেন। অ্যাপে থাকা ABHA লিঙ্কটি শুধুমাত্র প্রদর্শনের জন্য একটি মক লিংক।",
 "Inside the app, My health shows today's medicine schedule from your prescriptions, with optional reminders while the app is open, and a check for the same ingredient under two brand names.": "অ্যাপের ভেতরে, 'আমার স্বাস্থ্য' অংশে আপনার প্রেসক্রিপশন অনুযায়ী আজকের ওষুধ খাওয়ার সময়সূচি দেখা যায়, অ্যাপ খোলা থাকা অবস্থায় ঐচ্ছিক রিমাইন্ডার পাওয়া যায় এবং একই উপাদানের ওষুধ আলাদা ব্র্যান্ড নামে রয়েছে কি না তা যাচাই করা যায়।",
-"Sehat Copilot is a student prototype built by team ANTIJAREX for HacXLerate 2026, for the Altrix Labs challenge. The code is on GitHub.": "Altrix Labs চ্যালেঞ্জের জন্য HacXLerate 2026-এ টিম ANTIJAREX দ্বারা তৈরি একটি স্টুডেন্ট প্রোটোটাইপ হলো Sehat Copilot। এর কোড GitHub-এ উপলব্ধ আছে।"
+"Sehat Copilot is a student prototype built by team ANTIJAREX for HacXLerate 2026, for the Altrix Labs challenge. The code is on GitHub.": "Altrix Labs চ্যালেঞ্জের জন্য HacXLerate 2026-এ টিম ANTIJAREX দ্বারা তৈরি একটি স্টুডেন্ট প্রোটোটাইপ হলো Sehat Copilot। এর কোড GitHub-এ উপলব্ধ আছে।",
+"Three reports. One line.": "তিনটি রিপোর্ট। একটি লাইন।",
+"Every new report joins the same timeline, so a change is easy to see.": "প্রতিটি নতুন রিপোর্ট একই টাইমলাইনে যোগ হয়, তাই পরিবর্তন সহজে দেখা যায়।",
+"HbA1c 8.4 %, lab report, 12 Mar 2026": "HbA1c 8.4 %, ল্যাব রিপোর্ট, 12 Mar 2026",
+"HbA1c 7.6 %, lab report, 18 Jun 2026": "HbA1c 7.6 %, ল্যাব রিপোর্ট, 18 Jun 2026",
+"HbA1c 6.9 %, lab report, 22 Sep 2026": "HbA1c 6.9 %, ল্যাব রিপোর্ট, 22 Sep 2026",
+"Down from 8.4 to 6.9 over six months, and still above the range printed on the report.": "ছয় মাসে ৮.৪ থেকে কমে ৬.৯ হয়েছে, এবং রিপোর্ট প্রিন্ট করা সীমার উপরেই আছে।",
+"Understand your own health records": "আপনার নিজের স্বাস্থ্য রেকর্ড বুঝে নিন"
 }
