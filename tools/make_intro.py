@@ -1,4 +1,4 @@
-"""Renders docs/intro.mp4: a silent 40-second introduction built from the project's own sample
+"""Renders docs/intro.mp4: a short narrated introduction built from the project's own sample
 document and demo values. Needs Pillow and ffmpeg on PATH.  Run: python tools/make_intro.py"""
 import os
 import subprocess
@@ -180,11 +180,90 @@ SCENES = [(s_title, 4.5, DARK), (s_problem, 5.5, PAPER), (s_read, 5.5, PAPER), (
           (s_explain, 6.0, PAPER), (s_profile, 5.5, PAPER), (s_abdm, 5.0, DARK), (s_end, 4.5, DARK)]
 
 
+# One line of voice-over per scene, spoken by a Windows system voice (offline, System.Speech).
+NARRATION = [
+    "Sehat Copilot. Understand your own health records.",
+    "A prescription you cannot read. A lab report full of numbers. Most people never learn what their own records say.",
+    "Step one. Upload a photo or PDF. Every value is read with the line it came from.",
+    "Step two. Code, not the A I, decides what is high or low. Lines that cannot be read are listed, never guessed.",
+    "Step three. A plain language explanation, in forty three languages. It never diagnoses, and never tells you to change a medicine.",
+    "Step four. Every record joins one profile and one timeline, so you can see what changed.",
+    "Records export in the fire format, with a mock Abha link that follows the national consent steps.",
+    "Sehat Copilot. A guide to your records. Not a doctor.",
+]
+RATE = 22050
+LEAD = 0.35  # silence before each line
+
+
+def speak(tmp):
+    """Writes one WAV per narration line and returns their lengths in seconds. Empty list if
+    no system voice is available (the video is then rendered silent)."""
+    import json
+    os.makedirs(tmp, exist_ok=True)
+    with open(os.path.join(tmp, "lines.json"), "w", encoding="utf-8") as f:
+        json.dump(NARRATION, f)
+    ps = os.path.join(tmp, "speak.ps1")
+    with open(ps, "w", encoding="utf-8") as f:
+        f.write("""param($dir)
+Add-Type -AssemblyName System.Speech
+$s = New-Object System.Speech.Synthesis.SpeechSynthesizer
+$want = $s.GetInstalledVoices() | Where-Object { $_.Enabled -and $_.VoiceInfo.Culture.Name -like 'en-*' } | Sort-Object { $_.VoiceInfo.Name -notmatch 'Zira|Heera|Hazel' } | Select-Object -First 1
+if ($want) { $s.SelectVoice($want.VoiceInfo.Name) }
+$s.Rate = 2
+$fmt = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(22050, [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen, [System.Speech.AudioFormat.AudioChannel]::Mono)
+$lines = Get-Content -Raw -Encoding UTF8 (Join-Path $dir 'lines.json') | ConvertFrom-Json
+for ($i = 0; $i -lt $lines.Count; $i++) {
+  $s.SetOutputToWaveFile((Join-Path $dir ("line$i.wav")), $fmt)
+  $s.Speak($lines[$i])
+}
+$s.SetOutputToNull()
+Write-Output $s.Voice.Name
+""")
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps, tmp],
+                           capture_output=True, text=True, timeout=120)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    import wave
+    out = []
+    for i in range(len(NARRATION)):
+        try:
+            with wave.open(os.path.join(tmp, f"line{i}.wav")) as w:
+                out.append(w.getnframes() / w.getframerate())
+        except (OSError, wave.Error):
+            return []
+    print("voice:", r.stdout.strip(), [round(x, 1) for x in out])
+    return out
+
+
+def soundtrack(tmp, lengths):
+    """One WAV as long as the video: each line starts just after its scene does."""
+    import wave
+    path = os.path.join(tmp, "voice.wav")
+    with wave.open(path, "wb") as o:
+        o.setnchannels(1)
+        o.setsampwidth(2)
+        o.setframerate(RATE)
+        for i, secs in enumerate(lengths):
+            with wave.open(os.path.join(tmp, f"line{i}.wav")) as w:
+                data = w.readframes(w.getnframes())
+            total = round(secs * FPS) * RATE // FPS
+            lead = int(LEAD * RATE)
+            o.writeframes(bytes(2) * lead + data + bytes(2) * max(0, total - lead - len(data) // 2))
+    return path
+
+
 def main():
+    global SCENES
     out = os.path.join(ROOT, "docs", "intro.mp4")
+    tmp = os.path.join(os.environ.get("TEMP", "."), "sehat_intro")
+    spoken = speak(tmp)
+    if spoken:  # a scene lasts at least as long as its line
+        SCENES = [(fn, max(secs, round((LEAD + d + 0.7) * FPS) / FPS), bg) for (fn, secs, bg), d in zip(SCENES, spoken)]
+    video = os.path.join(tmp, "silent.mp4") if spoken else out
     ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
                            "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
-                           "-movflags", "+faststart", out], stdin=subprocess.PIPE)
+                           "-movflags", "+faststart", video], stdin=subprocess.PIPE)
     for fn, secs, bg in SCENES:
         n = round(secs * FPS)
         for i in range(n):
@@ -197,6 +276,10 @@ def main():
             ff.stdin.write(im.tobytes())
     ff.stdin.close()
     ff.wait()
+    if spoken:
+        voice = soundtrack(tmp, [secs for _, secs, _ in SCENES])
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", video, "-i", voice, "-c:v", "copy", "-c:a", "aac",
+                        "-b:a", "128k", "-shortest", "-movflags", "+faststart", out], check=True)
     print(out, round(sum(s for _, s, _ in SCENES), 1), "seconds")
 
 
