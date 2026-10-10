@@ -578,6 +578,15 @@ _SIDE_EN = {"normal": "within", "low": "below", "high": "above", "critical": "fa
 _SIDE_HI = {"normal": "के अंदर", "low": "से कम", "high": "से अधिक", "critical": "से बहुत बाहर"}
 
 
+def _nice_date(iso):
+    """2026-09-22 -> 22 Sep 2026; anything else is returned as it came."""
+    try:
+        d = dt.date.fromisoformat(iso)
+        return f"{d.day} {d:%b %Y}"
+    except (TypeError, ValueError):
+        return iso or ""
+
+
 def _direct(question, records, lang):
     """Answer a plain "what is my X" from the saved records by code. Returns None when the
     question needs explaining, names no test, or names more than one."""
@@ -601,7 +610,7 @@ def _direct(question, records, lang):
         return None
     t, r = next(iter(hits.values()))
     value = f"{t.get('value')} {t.get('unit') or ''}".strip()
-    title, date, rng, flag = r.get("title") or "a saved record", r.get("date") or "", t.get("ref_text"), t.get("flag")
+    title, date, rng, flag = r.get("title") or "a saved record", _nice_date(r.get("date")), t.get("ref_text"), t.get("flag")
     if lang == "hi":
         text = f"आपके रिकॉर्ड में सबसे नया {t.get('name')} {value} है। यह {title} ({date}) से है।"
         if rng and flag in _SIDE_HI:
