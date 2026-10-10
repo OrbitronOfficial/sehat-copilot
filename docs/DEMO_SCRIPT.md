@@ -1,6 +1,6 @@
 # Two-minute demo script
 
-For a screen recording or a live walkthrough. One synthetic patient, Rahul Sharma, with records from March to September 2026. Timings are a guide.
+For a screen recording or a live walkthrough. One synthetic patient, Jay Tawri, with records from March to September 2026. Timings are a guide.
 
 | Time | Do | Say |
 |---|---|---|

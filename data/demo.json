@@ -1,6 +1,6 @@
 {
  "patient": {
-  "name": "Rahul Sharma",
+  "name": "Jay Tawri",
   "age": "46",
   "sex": "M",
   "abha": null
@@ -14,7 +14,7 @@
    "facility": "CityCare Diagnostics",
    "doctor": "Dr. Anita Mehta",
    "patient": {
-    "name": "Mr. Rahul Sharma",
+    "name": "Mr. Jay Tawri",
     "age": "46 Years",
     "sex": "M"
    },
@@ -292,7 +292,7 @@
    "facility": "Mehta Diabetes & Heart Clinic",
    "doctor": "Dr. Anita Mehta",
    "patient": {
-    "name": "Rahul Sharma",
+    "name": "Jay Tawri",
     "age": "46",
     "sex": "M"
    },
@@ -446,7 +446,7 @@
    "facility": "CityCare Diagnostics",
    "doctor": "Dr. Anita Mehta",
    "patient": {
-    "name": "Mr. Rahul Sharma",
+    "name": "Mr. Jay Tawri",
     "age": "46 Years",
     "sex": "M"
    },
@@ -674,7 +674,7 @@
    "facility": "Fortune Multispeciality Hospital",
    "doctor": "Dr. Vikram Sood",
    "patient": {
-    "name": "Mr. Rahul Sharma",
+    "name": "Mr. Jay Tawri",
     "age": "46 Y",
     "sex": "M"
    },
@@ -946,7 +946,7 @@
    "facility": "CityCare Diagnostics",
    "doctor": "Dr. Anita Mehta",
    "patient": {
-    "name": "Mr. Rahul Sharma",
+    "name": "Mr. Jay Tawri",
     "age": "46 Years",
     "sex": "M"
    },

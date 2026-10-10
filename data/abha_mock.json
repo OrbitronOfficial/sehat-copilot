@@ -1,5 +1,5 @@
 {
- "name": "Rahul Sharma",
+ "name": "Jay Tawri",
  "records": [
   {
    "id": "rec_abha2501",
@@ -9,7 +9,7 @@
    "facility": "District Hospital Mohali (via ABDM)",
    "doctor": null,
    "patient": {
-    "name": "Rahul Sharma",
+    "name": "Jay Tawri",
     "age": "45",
     "sex": "M"
    },
@@ -60,7 +60,7 @@
    "facility": "District Hospital Mohali (via ABDM)",
    "doctor": "Dr. S. Gill, Radiologist",
    "patient": {
-    "name": "Rahul Sharma",
+    "name": "Jay Tawri",
     "age": "45",
     "sex": "M"
    },
@@ -93,7 +93,7 @@
    "facility": "Civil Dispensary Sector 8 (via ABDM)",
    "doctor": null,
    "patient": {
-    "name": "Rahul Sharma",
+    "name": "Jay Tawri",
     "age": "45",
     "sex": "M"
    },

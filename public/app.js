@@ -1829,7 +1829,7 @@ function signinBtns(m) {
 document.addEventListener('click', e => {
   const el = e.target && e.target.closest ? e.target.closest('[data-act="demoacct"]') : null;
   if (!el) return;
-  try { localStorage.setItem('sehat_user', JSON.stringify({ name: 'Rahul Sharma', email: 'demo@sehat.local', demo: true })); } catch (x) { /* ignore */ }
+  try { localStorage.setItem('sehat_user', JSON.stringify({ name: 'Jay Tawri', email: 'demo@sehat.local', demo: true })); } catch (x) { /* ignore */ }
   const i = Number(el.dataset.i), m = S.chat[i];
   const q = m && m.q;
   if (m) { if (i > 0 && S.chat[i - 1].role === 'me') S.chat.splice(i - 1, 2); else S.chat.splice(i, 1); }
@@ -2620,7 +2620,7 @@ renderUser();
   if (!/[?&]demo=1\b/.test(location.search)) return;
   for (let i = 0; i < 40 && !S.ready; i++) await new Promise(r => setTimeout(r, 100));
   if (!currentUser()) {
-    try { localStorage.setItem('sehat_user', JSON.stringify({ name: 'Rahul Sharma', email: 'demo@sehat.local', demo: true })); } catch (e) { /* ignore */ }
+    try { localStorage.setItem('sehat_user', JSON.stringify({ name: 'Jay Tawri', email: 'demo@sehat.local', demo: true })); } catch (e) { /* ignore */ }
     renderUser();
   }
   if (!S.records.length) await loadDemo();

@@ -66,7 +66,7 @@ def lab(name, date, rows, lab_no):
         body.append(("h", section))
         body += [("row", list(t)) for t in tests]
     page(name, "CityCare Diagnostics", "NABL Accredited Laboratory  |  Phase 7, Mohali, Punjab",
-         [("Patient Name", "Mr. Rahul Sharma"), ("Age / Sex", "46 Years / Male"),
+         [("Patient Name", "Mr. Jay Tawri"), ("Age / Sex", "46 Years / Male"),
           ("Referred By", "Dr. Anita Mehta"), ("Lab No", lab_no),
           ("Collected On", date), ("Reported On", date)],
          body, "Sample document for demonstration. Not a real patient. Results relate only to the sample tested.")
@@ -111,7 +111,7 @@ lab("lab-2026-09.png", "22/09/2026", [
 
 page("prescription-2026-03.png", "Dr. Anita Mehta, MD (Medicine)",
      "Mehta Diabetes & Heart Clinic  |  Sector 70, Mohali  |  Reg. No. PMC 41872",
-     [("Patient", "Rahul Sharma"), ("Age / Sex", "46 / M"), ("Date", "14/03/2026"), ("Weight", "84 kg")],
+     [("Patient", "Jay Tawri"), ("Age / Sex", "46 / M"), ("Date", "14/03/2026"), ("Weight", "84 kg")],
      [("h", "Diagnosis"), ("p", "Type 2 Diabetes Mellitus (newly detected)"), ("p", "Dyslipidemia"),
       ("p", "Vitamin D deficiency"), ("gap",), ("h", "Rx"),
       ("p", "1.  Tab. Glycomet 500 mg (Metformin)        1-0-1     after food     x 3 months"),
@@ -126,7 +126,7 @@ page("prescription-2026-03.png", "Dr. Anita Mehta, MD (Medicine)",
 
 page("discharge-2026-08.png", "Fortune Multispeciality Hospital",
      "Discharge Summary  |  Department of Internal Medicine  |  Mohali, Punjab",
-     [("Patient Name", "Mr. Rahul Sharma"), ("Age / Sex", "46 Y / Male"),
+     [("Patient Name", "Mr. Jay Tawri"), ("Age / Sex", "46 Y / Male"),
       ("Date of Admission", "04/08/2026"), ("Date of Discharge", "08/08/2026"),
       ("Consultant", "Dr. Vikram Sood"), ("IP No", "FMH/IP/26/11834")],
      [("h", "Final Diagnosis"), ("p", "Dengue fever (NS1 antigen positive) with thrombocytopenia"),

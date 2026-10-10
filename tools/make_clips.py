@@ -123,8 +123,8 @@ def main():
 
         mark("login")  # create an account on this device
         go("#t-up")
-        typed("#name", "Yash Jain")
-        typed("#email", "yash@example.com")
+        typed("#name", "Jay Tawri")
+        typed("#email", "jay@example.com")
         typed("#pw", "walkthrough-only-1")
         go("#submit", 300)
         page.wait_for_url("**/app*", wait_until="domcontentloaded", timeout=30000)
@@ -188,7 +188,7 @@ def main():
         }""", first)
         pause(600)
         # the profile carries the account holder's name, and the dashboard's 3D model is loaded ahead of its step
-        page.evaluate("(async () => { S.patient = Object.assign({}, S.patient || {}, { name: 'Yash Jain' }); await dbPut('meta', S.patient, 'patient'); PET.tipOff = true; S.view = 'health'; render(); })()")
+        page.evaluate("(async () => { S.patient = Object.assign({}, S.patient || {}, { name: 'Jay Tawri' }); await dbPut('meta', S.patient, 'patient'); PET.tipOff = true; S.view = 'health'; render(); })()")
         try:
             page.wait_for_selector("[data-dna] canvas", timeout=20000)
         except Exception:

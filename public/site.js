@@ -58,7 +58,7 @@
       return user;
     },
     demo: function () {
-      var user = { name: "Rahul Sharma", email: "demo@sehat.local", demo: true };
+      var user = { name: "Jay Tawri", email: "demo@sehat.local", demo: true };
       write(USR, user);
       return user;
     },

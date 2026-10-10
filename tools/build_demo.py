@@ -29,7 +29,7 @@ for s in server.SAMPLES:
           f"{len(rec['medicines'])} meds, {len(rec['diagnoses'])} dx | warnings: {rec['warnings']}")
     records.append(rec)
 
-patient = {"name": "Rahul Sharma", "age": "46", "sex": "M", "abha": None}
+patient = {"name": "Jay Tawri", "age": "46", "sex": "M", "abha": None}
 with open(os.path.join(ROOT, "data", "demo.json"), "w", encoding="utf-8") as f:
     json.dump({"patient": patient, "records": records}, f, ensure_ascii=False, indent=1)
 print("saved data/demo.json")
