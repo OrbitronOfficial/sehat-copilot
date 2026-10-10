@@ -593,13 +593,16 @@ _INSTRUCTION = re.compile(r"(take|give|use|separate|space|reduce|increase|adjust
                           r"dose|needs?|requires?|should|must|prefer|limit|hold|withhold)\b", re.I)
 
 
+_DOSE_TALK = re.compile("dose|monitor|adjust", re.I)
+
+
 def _neutral(note):
     """Reference notes describe a risk. Any instruction in them ("avoid the combination") is
     dropped: this app never tells anyone to change a medicine."""
     note = _s(note, 300) or ""
     parts = [p.strip() for p in note.split(";") if p.strip()]
     # the first clause states the risk; later clauses that tell the reader what to do are dropped
-    keep = parts[:1] + [p for p in parts[1:] if not (_INSTRUCTION.match(p) or re.search(r"(dose|doses|monitor\w*|adjust\w*)", p, re.I))]
+    keep = parts[:1] + [p for p in parts[1:] if not (_INSTRUCTION.match(p) or _DOSE_TALK.search(p))]
     note = "; ".join(keep)
     return re.sub(r"[;,.]?\s*(avoid|do not|don't|stop|must not|never)\b[^.;]*", "", note, flags=re.I).strip(" ;,.-") + "."
 
