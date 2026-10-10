@@ -17,7 +17,8 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 W, H, FPS, RATE = 1280, 720, 24, 22050
-WHITE, TEAL, INK, MUTED, LINE = "#FFFFFF", "#0F766E", "#0F172A", "#5B6B68", "#E2E8E4"
+# black on white; TEAL is kept as the name of the accent, which is now near-black
+WHITE, TEAL, INK, MUTED, LINE = "#FFFFFF", "#111827", "#0B0F19", "#6B7280", "#E5E7EB"
 FONTS = "C:/Windows/Fonts/"
 VOICE = "en-IN-NeerjaNeural"  # any edge-tts voice name
 LEAD, TAIL = 0.3, 0.55        # silence before and after each line
@@ -76,7 +77,7 @@ def text(d, xy, s, size, fill, t, delay=0.0, bold=False, mono=False, anchor="la"
 def _backdrop():
     im = Image.new("RGB", (W + 240, H + 240), WHITE)
     d = ImageDraw.Draw(im)
-    for x, y, r, c in [(240, 190, 330, "#E4F3F0"), (1300, 780, 400, "#EAF4EC"), (1150, 100, 260, "#EEF3FB")]:
+    for x, y, r, c in [(240, 190, 330, "#F1F3F5"), (1300, 780, 400, "#EEF0F2"), (1150, 100, 260, "#F5F6F8")]:
         d.ellipse((x - r, y - r, x + r, y + r), fill=c)
     return im.filter(ImageFilter.GaussianBlur(150))
 
@@ -110,7 +111,7 @@ def helix(d, cx, top, height, radius, T, k=1.0):
         x, z = math.cos(ang) * radius, math.sin(ang)
         if i % 2 == 0:
             d.line((cx + x, y, cx - x, y), fill=mix(WHITE, TEAL, 0.18 * k), width=2)
-        balls += [(z, cx + x, y, TEAL), (-z, cx - x, y, "#7FB8B0")]
+        balls += [(z, cx + x, y, TEAL), (-z, cx - x, y, "#9CA3AF")]
     for z, x, y, c in sorted(balls):
         r = 5 + 4.5 * (z + 1) / 2
         d.ellipse((x - r, y - r, x + r, y + r), fill=mix(WHITE, c, k * (0.3 + 0.7 * (z + 1) / 2)))
@@ -141,7 +142,7 @@ def card3d(im, src, x, y, yaw):
     quad = [(0, 0), (wd, inset), (wd, h - inset), (0, h)]
     shadow = Image.new("L", (W, H), 0)
     ImageDraw.Draw(shadow).polygon([(x + px + 10, y + py + 26) for px, py in quad], fill=70)
-    im.paste(Image.new("RGB", (W, H), "#5B7B75"), (0, 0), shadow.filter(ImageFilter.GaussianBlur(24)))
+    im.paste(Image.new("RGB", (W, H), "#6B7280"), (0, 0), shadow.filter(ImageFilter.GaussianBlur(24)))
     warped = src.convert("RGBA").transform((w, h), Image.PERSPECTIVE, _coeffs(quad, [(0, 0), (w, 0), (w, h), (0, h)]), Image.BICUBIC)
     im.paste(warped, (round(x), round(y)), warped)
     ImageDraw.Draw(im).line([(x + px, y + py) for px, py in quad] + [(x, y)], fill="#CBD5D1", width=2)
@@ -154,7 +155,7 @@ def _framed(name, width):
     shot = Image.open(path).convert("RGB") if os.path.exists(path) else Image.new("RGB", (1440, 900), "#F4F7F5")
     h = round(width * shot.height / shot.width)
     bar = 26
-    im = Image.new("RGB", (width, h + bar), "#EEF2F0")
+    im = Image.new("RGB", (width, h + bar), "#F0F1F3")
     d = ImageDraw.Draw(im)
     for i, c in enumerate(("#E0605A", "#E6B44C", "#5FBF77")):
         d.ellipse((14 + i * 18, 8, 24 + i * 18, 18), fill=c)
@@ -185,7 +186,7 @@ def _cursor():
 
 
 CURSOR = _cursor()
-RGB_TEAL = (15, 118, 110)
+RGB_TEAL = (17, 24, 39)
 
 
 def outline(im, box, k):
@@ -197,7 +198,7 @@ def outline(im, box, k):
     w, h = x1 - x0 + 2 * pad, y1 - y0 + 2 * pad
 
     def paint(d, s):
-        d.rounded_rectangle((2 * s, 2 * s, (w - 2) * s, (h - 2) * s), 10 * s, fill=RGB_TEAL + (round(26 * k),),
+        d.rounded_rectangle((2 * s, 2 * s, (w - 2) * s, (h - 2) * s), 10 * s, fill=RGB_TEAL + (round(10 * k),),
                             outline=RGB_TEAL + (round(235 * k),), width=3 * s)
     patch = _smooth((w, h), paint)
     im.paste(patch, (x0 - pad, y0 - pad), patch)
@@ -424,8 +425,8 @@ def main():
         for i in range(n):
             t = i / FPS
             frame = next(reel, None) if reel else None
-            # stock footage is washed almost to white so it reads as texture, not as a picture
-            im = Image.blend(frame, BLANK, 0.84) if frame else backdrop(T)
+            # stock footage goes grey and is washed almost to white, so it reads as texture, not as a picture
+            im = Image.blend(frame.convert("L").convert("RGB"), BLANK, 0.84) if frame else backdrop(T)
             d = ImageDraw.Draw(im)
             particles(d, T)
             if kind == "title":
