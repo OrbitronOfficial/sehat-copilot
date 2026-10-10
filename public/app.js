@@ -136,7 +136,7 @@ const STR = {
     listen: 'Listen', listen_stop: 'Stop',
     greet_morning: 'Good morning, {name}', greet_afternoon: 'Good afternoon, {name}', greet_evening: 'Good evening, {name}', greet_guest: 'Your health at a glance',
     dash_attn_one: 'value needs attention', dash_attn_many: 'values need attention', dash_see: 'See what they mean',
-    dash_next: 'Next up', dash_next_none: 'Nothing scheduled in your records.', dash_next_med: '{slot}: {names}',
+    dash_next: 'Next up', dash_next_from: 'Written in your record of {date}', mock_tag: 'mock', dash_next_none: 'Nothing scheduled in your records.', dash_next_med: '{slot}: {names}',
     dash_changed: 'What changed', dash_changed_none: 'Not enough repeat results yet.',
     dash_doctor: 'For your doctor', dash_doctor_n: '{n} question(s) from your records',
     qa_ask: 'Ask Saathi', qa_export: 'Export',
@@ -284,7 +284,7 @@ const STR = {
     listen: 'सुनें', listen_stop: 'रोकें',
     greet_morning: 'सुप्रभात, {name}', greet_afternoon: 'नमस्कार, {name}', greet_evening: 'शुभ संध्या, {name}', greet_guest: 'आपकी सेहत एक नज़र में',
     dash_attn_one: 'मान पर ध्यान देना है', dash_attn_many: 'मानों पर ध्यान देना है', dash_see: 'इनका मतलब देखें',
-    dash_next: 'आगे क्या', dash_next_none: 'आपके रिकॉर्ड में कुछ तय नहीं है।', dash_next_med: '{slot}: {names}',
+    dash_next: 'आगे क्या', dash_next_from: '{date} के रिकॉर्ड में लिखा है', mock_tag: 'मॉक', dash_next_none: 'आपके रिकॉर्ड में कुछ तय नहीं है।', dash_next_med: '{slot}: {names}',
     dash_changed: 'क्या बदला', dash_changed_none: 'दोहराए गए नतीजे अभी पर्याप्त नहीं हैं।',
     dash_doctor: 'डॉक्टर के लिए', dash_doctor_n: 'आपके रिकॉर्ड से {n} सवाल',
     qa_ask: 'साथी से पूछें', qa_export: 'एक्सपोर्ट',
@@ -1272,8 +1272,9 @@ function greetingLine() {
   return t(h < 12 ? 'greet_morning' : (h < 18 ? 'greet_afternoon' : 'greet_evening'), { name: nm });
 }
 function nextUpHTML() {
-  const r = sortedRecords().find(x => x.follow_up);
-  if (r) return '<p class="dash-t">' + esc(r.follow_up) + '</p><p class="muted small">' + esc(fmtDate(r.date)) + '</p>';
+  // a follow-up note is only "next" while its record is recent; older ones are already past
+  const r = sortedRecords().find(x => x.follow_up && x.date && (Date.now() - new Date(x.date).getTime()) < 30 * 864e5);
+  if (r) return '<p class="dash-t">' + esc(r.follow_up) + '</p><p class="muted small">' + esc(t('dash_next_from', { date: fmtDate(r.date) })) + '</p>';
   const doses = buildDoses(schedMeds()).filter(d => d.slot === 'morning' || d.slot === 'afternoon' || d.slot === 'night');
   const order = ['morning', 'afternoon', 'night'], h = new Date().getHours(), cur = h < 12 ? 0 : (h < 18 ? 1 : 2);
   for (let k = 0; k < 3; k++) {
@@ -1373,7 +1374,7 @@ function viewHealth() {
       return '<li><span class="l">' + esc(c.name) + '</span><span class="r muted small">' + (c.first_seen ? esc(t('first_seen', { d: fmtDate(c.first_seen) })) : '') + '</span>' +
         (ms.length ? '<details class="mentions"><summary>' + esc(t('ment_title', { n: ms.length })) + '</summary><ul>' + ms.map(m => '<li>“' + esc(m.text) + '”' + (m.date ? ' <span class="muted small">' + esc(fmtDate(m.date)) + '</span>' : '') + ' ' + recLink(m.record, t('ment_open')) + '</li>').join('') + '</ul></details>' : '') + '</li>';
     }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>';
-  const patientCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab || t('not_linked')) + '</dd></dl></div>';
+  const patientCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab ? ab + ' (' + t('mock_tag') + ')' : t('not_linked')) + '</dd></dl></div>';
   const sec = (k, body) => '<section class="hsec"><div class="kicker">' + esc(t(k)) + '</div>' + body + '</section>';
   return headV + dashHTML(I) + sec('kick_wellness', wellnessCard(I)) + tiles +
     sec('kick_results', '<div class="stack">' + attn + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>') +
@@ -1514,6 +1515,10 @@ async function exportFhir() {
 async function wipeAll() {
   if (!confirm(t('confirm_wipe'))) return;
   await dbClear('records'); await dbClear('files'); await dbClear('meta');
+  try {
+    Object.keys(localStorage).filter(k => /^sehat_(insights|taken_|notified_)/.test(k)).forEach(k => localStorage.removeItem(k));
+  } catch (e) { /* storage blocked: nothing was cached there */ }
+  S.visitNotes = ''; S.medcheck = null;
   S.records = []; S.patient = null; S.vitals = []; S.vform = null; S.insights = null; S.overview = {}; S.chat = []; S.fhir = null; S.notice = null;
   S.draft = null; S.stage = 'idle'; S.view = 'add'; S.detailId = null;
   render();
@@ -1684,7 +1689,7 @@ function pharmacistCard(P) {
   else {
     h += '<ul class="list pharm">' +
       dups.map(x => '<li><span class="l">' + esc(t('ph_dup', { ingredient: x.ingredient, names: arr(x.names).join(', ') })) + '</span></li>').join('') +
-      ints.map(x => {
+      ints.filter(x => (arr(x.names)[0] || x.a) && (arr(x.names)[1] || x.b)).map(x => {
         const nm = arr(x.names), sev = ['major', 'moderate', 'minor'].indexOf(x.severity) >= 0 ? x.severity : 'minor';
         return '<li><span class="l">' + esc((nm[0] || x.a) + ' + ' + (nm[1] || x.b) + ': ' + x.note) + '</span><span class="r"><span class="sev sev-' + sev + '">' + esc(t('sev_' + sev)) + '</span></span></li>';
       }).join('') + '</ul>';
@@ -1699,7 +1704,7 @@ function viewVisit() {
   const p = S.patient || {}, ab = abhaNumber(p);
   const sx = String(p.sex || '').toLowerCase();
   const sexTxt = sx === 'male' || sx === 'm' ? t('sex_male') : (sx === 'female' || sx === 'f' ? t('sex_female') : (p.sex || ''));
-  const line = [p.name, p.age ? t('h_age') + ' ' + p.age : '', sexTxt, ab ? t('h_abha') + ' ' + ab : ''].filter(Boolean).join('  |  ');
+  const line = [p.name, p.age ? t('h_age') + ' ' + p.age : '', sexTxt, ab ? t('h_abha') + ' ' + ab + ' (' + t('mock_tag') + ')' : ''].filter(Boolean).join('  |  ');
   const headBlock = '<div class="visit-head"><h1>' + esc(t('visit_title')) + '</h1>' +
     '<p class="visit-pt">' + esc(line || '-') + '</p><p class="muted small">' + esc(t('visit_generated', { d: fmtDate(todayKey()) })) + '</p></div>';
   const g = getInsights();

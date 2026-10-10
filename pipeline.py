@@ -450,7 +450,7 @@ def explain(rec, lang="en"):
     lang = _lang(lang)
     by_name = {t.get("name"): t for t in rec.get("tests") or []}
     try:
-        out, _ = llm.write_json(EXPLAIN_PROMPT.format(
+        out, model = llm.write_json(EXPLAIN_PROMPT.format(
             language=_lang_name(lang), record=json.dumps(_compact(rec), ensure_ascii=False)))
     except llm.LLMError:
         return _fallback_explanation(rec, lang)
@@ -493,7 +493,7 @@ def explain(rec, lang="en"):
     questions = [q for q in (_s(q, 300) for q in out.get("questions") or [])
                  if q and not safety.unverified(q, allowed)][:5]
     return {"summary": summary, "findings": findings, "medicines": medicines, "questions": questions,
-            "disclaimer": _disclaimer(lang), "guard_replaced": replaced}
+            "disclaimer": _disclaimer(lang), "guard_replaced": replaced, "model": model}
 
 
 def _sorted(records):
@@ -589,11 +589,19 @@ def _find_medicine(name):
     return None
 
 
+_INSTRUCTION = re.compile(r"(take|give|use|separate|space|reduce|increase|adjust|monitor|check|consider|switch|"
+                          r"dose|needs?|requires?|should|must|prefer|limit|hold|withhold)\b", re.I)
+
+
 def _neutral(note):
     """Reference notes describe a risk. Any instruction in them ("avoid the combination") is
     dropped: this app never tells anyone to change a medicine."""
     note = _s(note, 300) or ""
-    return re.sub(r"[;,.]?\s*(avoid|do not|don't|stop|must not|never)\b[^.;]*", "", note, flags=re.I).strip(" ;,.") + "."
+    parts = [p.strip() for p in note.split(";") if p.strip()]
+    # the first clause states the risk; later clauses that tell the reader what to do are dropped
+    keep = parts[:1] + [p for p in parts[1:] if not _INSTRUCTION.match(p)]
+    note = "; ".join(keep)
+    return re.sub(r"[;,.]?\s*(avoid|do not|don't|stop|must not|never)\b[^.;]*", "", note, flags=re.I).strip(" ;,.-") + "."
 
 
 def medcheck(medicines, lang="en"):

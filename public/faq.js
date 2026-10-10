@@ -23,7 +23,7 @@
       text: "An account is optional and lives only in this browser. You can upload and read your records as a guest. The demo account opens a sample patient in one click. Asking questions about your reports needs a sign-in." },
     { re: /language|hindi|tamil|telugu|bengali|marathi|gujarati|kannada|malayalam|punjabi|urdu|spanish|french|arabic|translate|भाषा/i,
       text: "The app works in 43 languages. Ten ship ready, including Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam and Punjabi. Others are translated the first time you pick them. Summaries and answers are written in the language you choose." },
-    { re: /doctor|diagnos|medical advice|treat|cure|replace|trust|accurate|accuracy|correct|wrong|mistake/i,
+    { re: /replace (my|a|the|your) doctor|instead of (a|my|the) doctor|(are|is) (you|it|this) a doctor|diagnos|medical advice|can (it|you) (treat|cure)|trust (it|this|you|the app)|how accurate|is (it|this) accurate|accuracy|can (it|you|this) be wrong|make mistakes?/i,
       text: "Sehat Copilot does not diagnose and does not replace your doctor. Software, not the AI, decides whether a value is high or low, using the range printed on your report. Every value shows the line it was read from so you can check it, and handwritten documents are always marked for checking." },
     { re: /handwrit|photo|pdf|scan|camera|which (document|file)|what (document|file)|format|kind of (report|document)/i,
       text: "Photos, PDFs and text files work. Printed documents read best. Handwritten prescriptions are read too, but every item is marked for you to check against the original." },
