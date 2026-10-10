@@ -117,7 +117,7 @@ Python 3 standard library server (no framework), vanilla JS frontend, Gemini (do
 - Architecture diagram: above
 - Approach and demo: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md); submission text in [docs/SUBMISSION.md](docs/SUBMISSION.md)
 - Intro video (64 s walkthrough): [docs/intro.mp4](docs/intro.mp4), rendered by `tools/make_intro.py` from real app screenshots; stock clips credited in [docs/footage/CREDITS.md](docs/footage/CREDITS.md)
-- Tests: `python -m unittest discover tests` (279 tests). CI runs lint, a security scan and the tests on every push (`.github/workflows/ci.yml`).
+- Tests: `python -m unittest discover tests` (281 tests). CI runs lint, a security scan and the tests on every push (`.github/workflows/ci.yml`).
 
 ## Run locally
 

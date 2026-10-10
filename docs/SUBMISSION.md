@@ -38,7 +38,7 @@ ALSO INCLUDED
 A medicine schedule from the prescriptions with optional reminders, a check for the same ingredient under two brand names and known interaction pairs, a printable one-page summary for the doctor, backup and restore, dark and light themes, and Saathi, a guide on every screen.
 
 EVIDENCE
-- 279 automated tests, run on every push with lint and a security scan, cover the range logic, the pipeline, the FHIR export, the HTTP server, the safety gate and the profile.
+- 281 automated tests, run on every push with lint and a security scan, cover the range logic, the pipeline, the FHIR export, the HTTP server, the safety gate and the profile.
 - Extraction scored 140 of 140 fields on the five bundled sample documents (`tools/benchmark.py`). These are clean, printed, synthetic documents; this is not a measure of accuracy on photographed paper or handwriting.
 
 TECH STACK

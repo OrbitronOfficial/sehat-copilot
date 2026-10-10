@@ -6,3 +6,6 @@ __pycache__/
 
 # raw stock clips (see docs/footage/CREDITS.md)
 docs/footage/*.mp4
+
+# raw screen recording for the intro video (re-create with tools/make_clips.py)
+docs/clips/

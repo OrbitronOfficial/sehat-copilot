@@ -537,7 +537,22 @@ class DirectLookup(unittest.TestCase):
     def test_a_document_under_review_is_never_the_direct_answer(self):
         recs = self.RECS + [{"id": "d1", "under_review": True, "date": "2026-10-10",
                              "tests": [{"name": "HbA1c", "value": 11.0, "unit": "%"}]}]
-        self.assertEqual(pipeline.ask("What is my HbA1c?", recs, "en")["sources"], ["r2"])
+        # the open document has this test too, so the full answer (which knows about the draft) handles it
+        self.assertIsNone(pipeline._direct("What is my HbA1c?", recs, "en"))
+
+    def test_direct_answers_only_the_test_that_was_asked_about(self):
+        recs = self.RECS + [{"id": "r3", "title": "CBC", "date": "2026-09-25",
+                             "tests": [{"name": "Hemoglobin", "value": 14.1, "unit": "g/dL", "flag": "normal"}]}]
+        self.assertIsNone(pipeline._direct("What is my hemoglobin A1c?", recs, "en"))
+        self.assertIsNone(pipeline._direct("what was my hemoglobin in march", recs, "en"))
+        self.assertIsNone(pipeline._direct("what is hemoglobin", recs, "en"))
+        self.assertIn("14.1", pipeline._direct("What is my hemoglobin?", recs, "en")["answer"])
+
+    def test_a_doubtful_value_is_not_stated_as_fact(self):
+        recs = [{"id": "r9", "title": "Scan", "date": "2026-09-25",
+                 "tests": [{"name": "HbA1c", "value": 76, "unit": "%", "confidence": 0.3}]}]
+        self.assertIsNone(pipeline._direct("What is my latest HbA1c?", recs, "en"))
+        self.assertEqual(pipeline._compact(recs[0])["uncertain_items"], ["HbA1c"])
 
     def test_emergency_still_wins(self):
         out = pipeline.ask("I have chest pain, what is my HbA1c", self.RECS, "en")

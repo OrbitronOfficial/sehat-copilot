@@ -14,6 +14,7 @@ const STR = {
     samples_title: 'Try a sample', samples_none: 'No samples available right now.',
     demo_btn: 'Load full demo profile', demo_hint: 'Adds a sample patient with several records and opens the timeline.',
     processing_title: 'Reading your document',
+    med_conf: 'You confirmed you take this', warn_ocr: 'This document was read with the backup on-device reader, which is less accurate. Please check every value.',
     warn_hand: 'This document is handwritten. Please check every medicine name and dose against the original.',
     warn_unread: '{n} line(s) could not be read reliably and were left out. They are listed under "Lines not used"; add them by hand if they matter.',
     warn_low: '{n} item(s) were read with low confidence and are marked below.',
@@ -193,6 +194,7 @@ const STR = {
     samples_title: 'नमूना आज़माएँ', samples_none: 'अभी कोई नमूना उपलब्ध नहीं है।',
     demo_btn: 'पूरी डेमो प्रोफ़ाइल लोड करें', demo_hint: 'एक नमूना मरीज़ और कई रिकॉर्ड जोड़कर टाइमलाइन खोलता है।',
     processing_title: 'आपका दस्तावेज़ पढ़ा जा रहा है',
+    med_conf: 'आपने पुष्टि की है कि आप यह लेते हैं', warn_ocr: 'यह दस्तावेज़ डिवाइस पर चलने वाले बैकअप रीडर से पढ़ा गया, जो कम सटीक है। कृपया हर मान जाँचें।',
     warn_hand: 'यह दस्तावेज़ हाथ से लिखा है। कृपया हर दवा का नाम और खुराक मूल दस्तावेज़ से मिलाएँ।',
     warn_unread: '{n} पंक्ति(याँ) ठीक से पढ़ी नहीं जा सकीं और छोड़ दी गईं। वे "उपयोग न की गई पंक्तियाँ" में दी गई हैं; ज़रूरी हों तो उन्हें खुद जोड़ें।',
     warn_low: '{n} चीज़ें कम भरोसे के साथ पढ़ी गईं और नीचे चिह्नित हैं।',
@@ -970,7 +972,8 @@ const WARN_MAP = [
   [/^The date was read as (\S+), more than two years/, 'warn_old', 'date'],
   [/far outside the usual range/, 'warn_critical'],
   [/does not look like a health record/, 'warn_notrecord'],
-  [/live reader is busy/, 'warn_saved']
+  [/live reader is busy/, 'warn_saved'],
+  [/backup on-device reader/, 'warn_ocr']
 ];
 function warnText(w) {
   for (const [re, key, arg] of WARN_MAP) {
@@ -1457,6 +1460,7 @@ function skelCard(n) {
 }
 function medStatusChip(m) {
   if (m.status === 'course_ended') return '<span class="tag">' + esc(m.ends ? t('med_ended_d', { d: fmtDate(m.ends) }) : t('med_ended')) + '</span>';
+  if (curGet()[curKey(m)]) return '<span class="tag green">' + esc(t('med_conf')) + '</span>';
   return '<span class="tag amber">' + esc(t('med_unconf')) + '</span>';
 }
 function medsRecordedCard(I) {
@@ -1576,6 +1580,7 @@ async function chatFile(file) {
   const mime = file.type || guessMime(file.name), isImg = mime.indexOf('image/') === 0;
   if (!(isImg || mime === 'application/pdf' || mime === 'text/plain')) return showError(t('err_type'));
   if (!isImg && file.size > 3 * 1024 * 1024) return showError(t('err_size'));
+  if (S.draft && (S.dirty || S.editingId) && !confirm(t('discard') + '?')) return;
   clearError();
   S.chat.push({ role: 'me', text: t('ask_doc_me', { name: file.name || 'upload' }) });
   S.asking = true; S.reading = true; render(); scrollChat();
@@ -1799,9 +1804,10 @@ async function wipeAll() {
   if (!confirm(t('confirm_wipe'))) return;
   await dbClear('records'); await dbClear('files'); await dbClear('meta');
   try {
-    Object.keys(localStorage).filter(k => /^sehat_(insights|taken_|notified_)/.test(k)).forEach(k => localStorage.removeItem(k));
+    Object.keys(localStorage).filter(k => /^sehat_(insights|current|skip|taken_|notified_)/.test(k)).forEach(k => localStorage.removeItem(k));
   } catch (e) { /* storage blocked: nothing was cached there */ }
-  S.visitNotes = ''; S.medcheck = null;
+  S.visitNotes = ''; S.medcheck = null; S.abhaFlow = null; S.pendingFile = null; S.previewFile = null;
+  if (typeof TAKEN_MEM === 'object' && TAKEN_MEM) Object.keys(TAKEN_MEM).forEach(k => delete TAKEN_MEM[k]);
   S.records = []; S.patient = null; S.vitals = []; S.vform = null; S.insights = null; S.overview = {}; S.chat = []; S.fhir = null; S.notice = null;
   S.draft = null; S.stage = 'idle'; S.view = 'add'; S.detailId = null;
   render();
@@ -2363,7 +2369,8 @@ function render() {
 
 function go(view) {
   if (S.view === 'add' && S.stage === 'review' && view !== 'add' && S.dirty && !confirm(t('discard') + '?')) return;
-  if (view !== 'add' && S.stage === 'review') { S.draft = null; S.pendingFile = null; S.previewFile = null; S.stage = 'idle'; S.editingId = null; }
+  S.chatUpload = false;
+  if (view !== 'add' && S.stage === 'review' && S.view === 'add') { S.draft = null; S.pendingFile = null; S.previewFile = null; S.stage = 'idle'; S.editingId = null; }
   S.view = view; S.notice = null;
   clearError();
   render();
@@ -2384,7 +2391,7 @@ document.addEventListener('click', e => {
     case 'nav': go(el.dataset.view); break;
     case 'choose': S.chatUpload = false; $('#fileInput').click(); break;
     case 'askfile': S.chatUpload = true; $('#fileInput').click(); break;
-    case 'photo': $('#camInput').click(); break;
+    case 'photo': S.chatUpload = false; $('#camInput').click(); break;
     case 'sample': runSample(el.dataset.id); break;
     case 'demo': loadDemo(); break;
     case 'addrow': addRow(el.dataset.kind); break;

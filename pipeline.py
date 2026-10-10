@@ -406,8 +406,8 @@ def _caution(rec):
         out["status"] = "OPEN DOCUMENT: uploaded just now, still under review, NOT saved yet"
     if rec.get("handwritten"):
         out["handwritten"] = True
-    doubtful = [m.get("name") for m in rec.get("medicines") or []
-                if isinstance(m.get("confidence"), (int, float)) and m["confidence"] < 0.7]
+    doubtful = [m.get("name") for m in (rec.get("tests") or []) + (rec.get("medicines") or [])
+                if isinstance(m, dict) and isinstance(m.get("confidence"), (int, float)) and m["confidence"] < 0.7]
     doubtful += [d.get("name") for d in rec.get("diagnoses") or []
                  if isinstance(d, dict) and isinstance(d.get("confidence"), (int, float)) and d["confidence"] < 0.7]
     if doubtful:
@@ -573,7 +573,17 @@ def overview(patient, records, lang="en"):
 # ---- straight lookups: "what is my latest HbA1c" needs no model ----
 
 _NEEDS_MODEL = re.compile(r"why|explain|mean|chang|trend|compar|differ|should|cause|normal for|kyu|kyon|matlab|"
+                          r"previous|earlier|before|\bago\b|first|\bin (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)|\b20\d\d\b|pehle|पहले|"
                           r"क्यों|मतलब|बदल|तुलना|समझा", re.I)
+_ABOUT_ME = re.compile(r"\b(my|latest|last|current|recent|mera|meri|mere)\b|मेर", re.I)
+_QUALIFIERS = ("a1c", "ldl", "hdl", "vldl", "fasting", "post", "pp", "random", "free", "total", "direct", "indirect")
+
+
+def _test_key(name):
+    entry = ranges.lookup(name or "")
+    return str(entry[0] if isinstance(entry, (tuple, list)) and entry else name or "").lower()
+
+
 _SIDE_EN = {"normal": "within", "low": "below", "high": "above", "critical": "far outside"}
 _SIDE_HI = {"normal": "के अंदर", "low": "से कम", "high": "से अधिक", "critical": "से बहुत बाहर"}
 
@@ -590,8 +600,10 @@ def _nice_date(iso):
 def _direct(question, records, lang):
     """Answer a plain "what is my X" from the saved records by code. Returns None when the
     question needs explaining, names no test, or names more than one."""
-    if lang not in ("en", "hi") or _NEEDS_MODEL.search(question):
+    if lang not in ("en", "hi") or _NEEDS_MODEL.search(question) or not _ABOUT_ME.search(question):
         return None
+    draft_tests = {_test_key(t.get("name")) for r in records if isinstance(r, dict) and r.get("under_review")
+                   for t in r.get("tests") or [] if isinstance(t, dict)}
     q = " " + re.sub(r"[^a-z0-9\u0900-\u097f]+", " ", question.lower()) + " "
     hits = {}
     for r in _sorted(records):
@@ -605,10 +617,16 @@ def _direct(question, records, lang):
             canon = entry[0] if isinstance(entry, (tuple, list)) and entry else name
             keys = {re.sub(r"[^a-z0-9]+", " ", n.lower()).strip() for n in (name, str(canon))}
             if any(len(k) > 2 and f" {k} " in q for k in keys):
+                label = " " + " ".join(keys) + " "
+                if any(f" {w} " in q and f" {w} " not in label for w in _QUALIFIERS):
+                    continue  # "hemoglobin a1c" is not Hemoglobin; "fasting glucose" is not Glucose
                 hits[str(canon).lower()] = (t, r)  # later records overwrite: the latest wins
     if len(hits) != 1:
         return None
     t, r = next(iter(hits.values()))
+    low = isinstance(t.get("confidence"), (int, float)) and not isinstance(t.get("confidence"), bool) and t["confidence"] < 0.7
+    if low or _test_key(t.get("name")) in draft_tests:
+        return None  # a doubtful reading, or one the open document also has: let the full answer explain
     value = f"{t.get('value')} {t.get('unit') or ''}".strip()
     title, date, rng, flag = r.get("title") or "a saved record", _nice_date(r.get("date")), t.get("ref_text"), t.get("flag")
     if lang == "hi":
@@ -650,15 +668,12 @@ def ask(question, records, lang="en"):
     direct = _direct(question, records or [], lang)
     if direct:
         return dict(direct, disclaimer=_disclaimer(lang))
-    if not records:
-        return {"answer": "Add a record first, then ask about it." if lang != "hi"
-                else "पहले कोई रिकॉर्ड जोड़ें, फिर उसके बारे में पूछें।", "sources": [], "label": "general"}
     prompt = ASK_PROMPT.format(
         language=_lang_name(lang), question=question,
         records=json.dumps([_compact(r) for r in _sorted(records)[-25:]], ensure_ascii=False))
     started = time.time()
     out, _ = llm.write_json(prompt)
-    if lang == "hi" and not _mostly_devanagari(out.get("answer")) and time.time() - started < 15:
+    if lang == "hi" and not _mostly_devanagari(out.get("answer")) and time.time() - started < 6:
         # the model mirrored a Hinglish question: ask once more, in the right script
         try:
             out, _ = llm.write_json(prompt + " Your last answer used Latin letters. Write it again in Devanagari (हिंदी).")

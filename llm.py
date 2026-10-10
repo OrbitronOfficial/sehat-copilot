@@ -97,7 +97,8 @@ def rest(models, seconds=1800):
     """A browser reports the reader models it last saw out of daily quota, so a fresh server
     instance does not spend a second on each of them again. Ignored if it would rest them all."""
     known = _vision_models()
-    names = [m for m in (models or []) if isinstance(m, str) and m in known][:len(known)]
+    models = models if isinstance(models, (list, tuple)) else []
+    names = [m for m in models if isinstance(m, str) and m in known][:len(known)]
     if not names or len(set(names)) >= len(known):
         return
     for m in names:
