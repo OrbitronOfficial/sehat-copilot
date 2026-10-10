@@ -18,8 +18,7 @@ MAX_BODY = 6 * 1024 * 1024
 TYPES = {".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8",
          ".svg": "image/svg+xml", ".glb": "model/gltf-binary", ".css": "text/css; charset=utf-8"}
 # clean URLs: the site is the front door, the app lives at /app
-PAGES = {"/": "landing.html", "/app": "index.html", "/login": "login.html", "/pricing": "pricing.html",
-         "/1": "v1.html", "/2": "v2.html", "/3": "v3.html"}  # /1 to /3: design options to compare
+PAGES = {"/": "landing.html", "/app": "index.html", "/login": "login.html", "/pricing": "pricing.html"}
 
 
 def _load_env():

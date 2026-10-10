@@ -11,9 +11,6 @@
     { "src": "/app/?", "dest": "/public/index.html" },
     { "src": "/login/?", "dest": "/public/login.html" },
     { "src": "/pricing/?", "dest": "/public/pricing.html" },
-    { "src": "/1/?", "dest": "/public/v1.html" },
-    { "src": "/2/?", "dest": "/public/v2.html" },
-    { "src": "/3/?", "dest": "/public/v3.html" },
     { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
