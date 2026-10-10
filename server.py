@@ -125,6 +125,7 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path == "/api/health":
             return self._send(200, {"ok": True, "gemini": bool(os.environ.get("GEMINI_API_KEY")),
+                                    "keys": {"gemini": len(llm._keys("GEMINI_API_KEY")), "groq": len(llm._keys("GROQ_API_KEY"))},
                                     "groq": bool(os.environ.get("GROQ_API_KEY"))})
         if path == "/api/langs":
             return self._send(200, {"languages": pipeline.language_list()})

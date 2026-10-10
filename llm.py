@@ -63,29 +63,47 @@ def _parse(text):
         raise LLMError(f"bad JSON from model: {e}") from e
 
 
-def _chain(env_name, default, call, deadline, provider="gemini", per_call=None):
-    """Try each model in turn. Returns (json, model). Raises LLMError listing why each failed."""
+def _keys(var):
+    """Every key configured for a provider: VAR may hold several separated by commas, and
+    VAR_2 ... VAR_6 are read too. Each key has its own quota, so more keys mean more headroom."""
+    out = []
+    for name in [var] + [f"{var}_{i}" for i in range(2, 7)]:
+        for k in re.split(r"[,\s]+", os.environ.get(name, "")):
+            if k and k not in out:
+                out.append(k)
+    return out
+
+
+def _slot(provider, model, i):
+    """Where one model's rest time is kept for the i-th key."""
+    return f"{provider}:{model}" + (f"#{i}" if i else "")
+
+
+def _chain(env_name, default, call, deadline, provider="gemini", per_call=None, keys=(None,)):
+    """Try each model in turn, best first, and for each model every key before moving to a
+    weaker model. Returns (json, model). Raises LLMError listing why each failed."""
     errors = []
     for model in [m.strip() for m in os.environ.get(env_name, default).split(",") if m.strip()]:
-        left = deadline - time.time()
-        if left < 4:
-            errors.append("out of time")
-            break
-        rest_key = f"{provider}:{model}"
-        if _resting.get(rest_key, 0) > time.time():
-            errors.append(f"{model}: resting (quota)")
-            continue
-        try:
-            return call(model, min(per_call or CALL_TIMEOUT, left)), model
-        except _Http as e:
-            if e.code == 429:
-                # a daily cap rests the model for an hour, a per-minute cap for a minute
-                _resting[rest_key] = time.time() + (3600 if re.search(r"PerDay|per day|TPD|RPD", e.detail) else 60)
-            elif e.code in (401, 403, 404):
-                _resting[rest_key] = time.time() + 3600
-            errors.append(f"{model}: {e}")
-        except LLMError as e:
-            errors.append(f"{model}: {str(e)[:120]}")
+        for i, key in enumerate(keys):
+            left = deadline - time.time()
+            if left < 4:
+                errors.append("out of time")
+                raise LLMError("; ".join(errors))
+            rest_key = _slot(provider, model, i)
+            if _resting.get(rest_key, 0) > time.time():
+                errors.append(f"{model}: resting (quota)")
+                continue
+            try:
+                return call(model, min(per_call or CALL_TIMEOUT, left), key), model
+            except _Http as e:
+                if e.code == 429:
+                    # a daily cap rests the model for an hour, a per-minute cap for a minute
+                    _resting[rest_key] = time.time() + (3600 if re.search(r"PerDay|per day|TPD|RPD", e.detail) else 60)
+                elif e.code in (401, 403, 404):
+                    _resting[rest_key] = time.time() + 3600
+                errors.append(f"{model}: {e}")
+            except LLMError as e:
+                errors.append(f"{model}: {str(e)[:120]}")
     raise LLMError("; ".join(errors) or "no models configured")
 
 
@@ -102,17 +120,20 @@ def rest(models, seconds=1800):
     if not names or len(set(names)) >= len(known):
         return
     for m in names:
-        _resting.setdefault(f"gemini:{m}", time.time() + seconds)
+        for i in range(max(1, len(_keys("GEMINI_API_KEY")))):
+            _resting.setdefault(_slot("gemini", m, i), time.time() + seconds)
 
 
 def resting():
     """Reader models that are out of quota for a while yet."""
-    return [m for m in _vision_models() if _resting.get(f"gemini:{m}", 0) > time.time() + 300]
+    n = max(1, len(_keys("GEMINI_API_KEY")))  # a model rests only when it is out of quota on every key
+    return [m for m in _vision_models()
+            if all(_resting.get(_slot("gemini", m, i), 0) > time.time() + 300 for i in range(n))]
 
 
 def _gemini(prompt, file, deadline):
-    key = os.environ.get("GEMINI_API_KEY")
-    if not key:
+    keys = _keys("GEMINI_API_KEY")
+    if not keys:
         raise LLMError("GEMINI_API_KEY not set")
     parts = []
     if file:
@@ -121,7 +142,7 @@ def _gemini(prompt, file, deadline):
     body = {"contents": [{"parts": parts}],
             "generationConfig": {"temperature": 0, "responseMimeType": "application/json"}}
 
-    def call(model, timeout):
+    def call(model, timeout, key):
         out = _post(GEMINI_URL.format(model=model), {"x-goog-api-key": key}, body, timeout)
         try:
             return _parse(out["candidates"][0]["content"]["parts"][0]["text"])
@@ -129,8 +150,8 @@ def _gemini(prompt, file, deadline):
             raise LLMError("empty response") from e
 
     if not file:  # writing: the light models are quick and have the larger free allowance
-        return _chain("GEMINI_TEXT_MODELS", GEMINI_TEXT_MODELS, call, deadline, per_call=14)
-    return _chain("GEMINI_MODELS", GEMINI_MODELS, call, deadline)
+        return _chain("GEMINI_TEXT_MODELS", GEMINI_TEXT_MODELS, call, deadline, per_call=14, keys=keys)
+    return _chain("GEMINI_MODELS", GEMINI_MODELS, call, deadline, keys=keys)
 
 
 # OpenAI-compatible providers: (endpoint, key variable, text models, vision models, JSON mode)
@@ -146,8 +167,8 @@ COMPAT = {
 
 def _compat(provider, prompt, file, deadline):
     url, key_var, text_models, vision_models, json_mode = COMPAT[provider]
-    key = os.environ.get(key_var)
-    if not key:
+    keys = _keys(key_var)
+    if not keys:
         raise LLMError(f"{key_var} not set")
     if file and not file["mime"].startswith("image/"):
         raise LLMError("reads images only")
@@ -159,7 +180,7 @@ def _compat(provider, prompt, file, deadline):
         content = [{"type": "text", "text": prompt},
                    {"type": "image_url", "image_url": {"url": f"data:{file['mime']};base64,{file['data']}"}}]
 
-    def call(model, timeout):
+    def call(model, timeout, key):
         body = {"model": model, "temperature": 0, "max_tokens": 4000,
                 "messages": [{"role": "user", "content": content}]}
         if json_mode:
@@ -173,7 +194,7 @@ def _compat(provider, prompt, file, deadline):
     env = f"{provider.upper()}_{'VISION_' if file else ''}MODELS"
     # the free NVIDIA vision endpoint is accurate but slow (about 40 s), so it gets the time left
     slow = provider == "nvidia" and file
-    return _chain(env, models, call, deadline, provider, per_call=50 if slow else None)
+    return _chain(env, models, call, deadline, provider, per_call=50 if slow else None, keys=keys)
 
 
 LAST_SKIPPED = []
