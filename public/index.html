@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="only light">
+<meta name="color-scheme" content="light dark">
+<script>try{var th=localStorage.getItem("sehat_theme");if(th!=="dark"&&th!=="light")th=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=th}catch(e){document.documentElement.dataset.theme="light"}</script>
 <meta name="theme-color" content="#0F766E">
 <title>Sehat Copilot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,6 +21,7 @@
   <div class="top-right">
     <span class="local-note" id="localNote">Stored on this device</span>
     <span class="userchip" id="userChip"></span>
+    <button type="button" class="themebtn" id="themeBtn" aria-label="Switch between dark and light theme"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="moon" d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/><g class="sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></svg></button>
     <div class="lang" role="group" aria-label="Language">
       <select id="langSel" aria-label="Language">
         <option value="en">English</option>

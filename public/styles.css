@@ -1,5 +1,5 @@
 :root {
-  color-scheme: only light;
+  color-scheme: light;
   --teal: #0F766E;
   --teal-dark: #0B5C56;
   --teal-tint: #E6F2F0;
@@ -477,3 +477,70 @@ a.brand { text-decoration: none; color: inherit; }
 .userchip a { color: var(--teal-dark); font-weight: 600; text-decoration: none; padding: 5px 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
 .userchip a:hover { border-color: var(--teal); }
 @media (max-width: 820px) { .userchip .who { display: none; } }
+
+/* theme toggle */
+.themebtn { width: 36px; height: 36px; display: inline-grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--card); cursor: pointer; color: var(--ink); padding: 0; }
+.themebtn:hover { border-color: var(--teal); }
+.themebtn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.themebtn .sun { display: none; }
+:root[data-theme="dark"] .themebtn .sun { display: inline; }
+:root[data-theme="dark"] .themebtn .moon { display: none; }
+
+/* ===== Dark theme: easier on the eyes for long reading ===== */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --teal: #1F9488; --teal-dark: #6FD6C9; --teal-tint: #143330;
+  --ink: #E6EFED; --muted: #9DB3AF; --bg: #0B1514; --card: #11201E; --line: #223B38;
+  --ok: #6BD197; --warn: #F0B45A; --crit: #F59A92;
+  --ok-bg: #12301F; --warn-bg: #2E2413; --crit-bg: #351B1A;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35);
+}
+:root[data-theme="dark"] body { background: var(--bg); color: var(--ink); }
+:root[data-theme="dark"] .topbar { background: rgba(11, 21, 20, .9); border-bottom-color: var(--line); }
+:root[data-theme="dark"] .disclaimer { background: #0E1B19; border-top-color: var(--line); color: var(--muted); }
+:root[data-theme="dark"] .card, :root[data-theme="dark"] .tl-card, :root[data-theme="dark"] .trend, :root[data-theme="dark"] .stat, :root[data-theme="dark"] .how li, :root[data-theme="dark"] .msg, :root[data-theme="dark"] .pet-msg, :root[data-theme="dark"] .pet-panel, :root[data-theme="dark"] .pet-bubble, :root[data-theme="dark"] .chip, :root[data-theme="dark"] .chip-edit,
+:root[data-theme="dark"] .btn.secondary, :root[data-theme="dark"] .btn.danger, :root[data-theme="dark"] .userchip a, :root[data-theme="dark"] #langSel, :root[data-theme="dark"] .dropzone { background: var(--card); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .dropzone { border-color: #2F5650; }
+:root[data-theme="dark"] .rowcard, :root[data-theme="dark"] .srcbox, :root[data-theme="dark"] .srcline, :root[data-theme="dark"] .pet-panel header, :root[data-theme="dark"] .local-note, :root[data-theme="dark"] .flag.f-unknown, :root[data-theme="dark"] .lbl-general, :root[data-theme="dark"] .confbar, :root[data-theme="dark"] .skeleton,
+:root[data-theme="dark"] details.preview pre, :root[data-theme="dark"] .pet-btn { background: #152927; border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .srcbox.on, :root[data-theme="dark"] .lbl-records, :root[data-theme="dark"] .msg.me, :root[data-theme="dark"] .pet-msg.me, :root[data-theme="dark"] .notice.info, :root[data-theme="dark"] .badge, :root[data-theme="dark"] .how-n, :root[data-theme="dark"] .dropzone svg { background: var(--teal-tint); border-color: #24514B; color: var(--teal-dark); }
+:root[data-theme="dark"] input[type="text"], :root[data-theme="dark"] input[type="date"], :root[data-theme="dark"] input[type="number"], :root[data-theme="dark"] input[type="search"], :root[data-theme="dark"] select, :root[data-theme="dark"] textarea, :root[data-theme="dark"] input:not([type]) { background: #0E1B19; border-color: #2B4A46; color: var(--ink); }
+:root[data-theme="dark"] .chip-edit input { background: transparent; }
+:root[data-theme="dark"] .btn { color: #04110F; }
+:root[data-theme="dark"] .btn:hover { background: #2AAA9C; }
+:root[data-theme="dark"] .btn.secondary, :root[data-theme="dark"] .btn.link { color: var(--teal-dark); }
+:root[data-theme="dark"] .btn.secondary:hover, :root[data-theme="dark"] .btn.link:hover, :root[data-theme="dark"] .nav button:hover { background: var(--teal-tint); color: var(--ink); }
+:root[data-theme="dark"] .btn.danger { color: var(--crit); border-color: #5A2B28; }
+:root[data-theme="dark"] .btn.danger:hover { background: var(--crit-bg); }
+:root[data-theme="dark"] .nav button[aria-current="page"], :root[data-theme="dark"] .nav button[aria-current="page"]:hover, :root[data-theme="dark"] .chip[aria-pressed="true"] { background: var(--teal); color: #04110F; border-color: var(--teal); box-shadow: none; }
+:root[data-theme="dark"] .notice { border-color: #5A4420; color: #F3D9A6; }
+:root[data-theme="dark"] .card.unread { background: #241D10; border-color: #5A4420; }
+:root[data-theme="dark"] .lbl-doctor, :root[data-theme="dark"] .tag.amber, :root[data-theme="dark"] .flag.f-low, :root[data-theme="dark"] .flag.f-high { background: var(--warn-bg); border-color: #5A4420; color: var(--warn); }
+:root[data-theme="dark"] .lbl-emergency, :root[data-theme="dark"] .flag.f-critical { background: var(--crit-bg); border-color: #5A2B28; color: var(--crit); }
+:root[data-theme="dark"] .flag.f-normal { border-color: #1F4A30; }
+:root[data-theme="dark"] .msg.urgent, :root[data-theme="dark"] .pet-msg.urgent { border-color: #5A2B28; border-left-color: var(--crit); }
+:root[data-theme="dark"] .stat.s-teal { background: #12302D; border-color: #24514B; }
+:root[data-theme="dark"] .stat.s-amber { background: #2E2413; border-color: #5A4420; }
+:root[data-theme="dark"] .stat.s-green { background: #12301F; border-color: #1F4A30; }
+:root[data-theme="dark"] .stat.s-blue { background: #14243A; border-color: #27405F; }
+:root[data-theme="dark"] .stat.s-blue .stat-n { color: #8FB8EE; }
+:root[data-theme="dark"] .stat.s-teal .stat-n { color: var(--teal-dark); }
+:root[data-theme="dark"] .stat-l, :root[data-theme="dark"] .finding p, :root[data-theme="dark"] .pet-msg.tip, :root[data-theme="dark"] .pet-bubble button { color: var(--muted); }
+:root[data-theme="dark"] .tl::before { background: var(--line); }
+:root[data-theme="dark"] .tl-item::before { background: var(--bg); box-shadow: 0 0 0 4px var(--bg); }
+:root[data-theme="dark"] .tl-card:hover { border-color: #2F6A62; }
+:root[data-theme="dark"] .list li { border-top-color: var(--line); }
+@media (max-width: 820px) {
+  :root[data-theme="dark"] .nav { background: #0E1B19; border-top-color: var(--line); }
+  :root[data-theme="dark"] .nav button[aria-current="page"], :root[data-theme="dark"] .nav button[aria-current="page"]:hover { background: transparent; color: var(--teal-dark); box-shadow: inset 0 3px 0 var(--teal); }
+}
+
+/* phone top bar: keep brand, sign-in, theme and language on one row */
+@media (max-width: 820px) {
+  .top-right { gap: 8px; flex: none; }
+  .brand { min-width: 0; flex: 1 1 auto; gap: 8px; }
+  .brand-name { font-size: 1.02rem; overflow: hidden; text-overflow: ellipsis; }
+  .userchip a { white-space: nowrap; padding: 5px 8px; font-size: .82rem; }
+  .themebtn { width: 32px; height: 32px; }
+  #langSel { max-width: 88px; padding: 6px 4px; font-size: .88rem; }
+}

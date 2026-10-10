@@ -966,9 +966,9 @@ function chartSVG(s) {
     const top = band.hi !== null ? Y(band.hi) : pt, bot = band.lo !== null ? Y(band.lo) : H - pb;
     g += '<rect x="' + pl + '" y="' + top.toFixed(1) + '" width="' + (W - pl - pr) + '" height="' + Math.max(1, bot - top).toFixed(1) + '" fill="#0F766E" opacity="0.13"/>';
   }
-  g += '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (W - pr) + '" y2="' + (H - pb) + '" stroke="#E2E8E4"/>';
-  g += '<polyline fill="none" stroke="#64748B" stroke-width="1.5" points="' + pts.map((p, i) => X(i).toFixed(1) + ',' + Y(p.v).toFixed(1)).join(' ') + '"/>';
-  pts.forEach((p, i) => { g += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="4" fill="' + FLAGC[normFlag(p.flag)] + '" stroke="#fff" stroke-width="1.5"><title>' + esc(fmtDate(p.date) + ': ' + fmtNum(p.v) + ' ' + (s.unit || '') + ' (' + t('flag_' + normFlag(p.flag)) + ')') + '</title></circle>'; });
+  g += '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (W - pr) + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
+  g += '<polyline fill="none" stroke="var(--muted)" stroke-width="1.5" points="' + pts.map((p, i) => X(i).toFixed(1) + ',' + Y(p.v).toFixed(1)).join(' ') + '"/>';
+  pts.forEach((p, i) => { g += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="4" fill="' + FLAGC[normFlag(p.flag)] + '" stroke="var(--card)" stroke-width="1.5"><title>' + esc(fmtDate(p.date) + ': ' + fmtNum(p.v) + ' ' + (s.unit || '') + ' (' + t('flag_' + normFlag(p.flag)) + ')') + '</title></circle>'; });
   const li = pts.length - 1;
   g += '<text class="last" x="' + (X(li) + 7).toFixed(1) + '" y="' + (Y(pts[li].v) + 3).toFixed(1) + '">' + esc(fmtNum(pts[li].v)) + '</text>';
   g += '<text x="' + (pl - 5) + '" y="' + (pt + 4) + '" text-anchor="end">' + esc(fmtNum(mx)) + '</text>';
@@ -1414,3 +1414,13 @@ renderUser();
   if (!S.records.length) await loadDemo();
   try { history.replaceState(null, '', '/app'); } catch (e) { /* ignore */ }
 })();
+
+/* ================= Theme =================
+   Dark and light share one key with the site pages. The choice is applied before first
+   paint by a small script in the page head; this only handles the toggle. */
+document.addEventListener('click', e => {
+  if (!e.target || !e.target.closest || !e.target.closest('#themeBtn')) return;
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('sehat_theme', next); } catch (x) { /* ignore */ }
+});

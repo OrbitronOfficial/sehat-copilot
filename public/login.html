@@ -2,18 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="color-scheme" content="only light">
+  <meta name="color-scheme" content="light dark">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sign in · Sehat Copilot</title>
+  <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("sehat_theme")}catch(e){}if(t!=="dark"&&t!=="light"){t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=t;d.classList.add("js");setTimeout(function(){if(!window.SehatSite)d.classList.remove("js")},3000)})();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/site.css">
   <script src="/site.js" defer></script>
 </head>
-<body class="login">
+<body class="login" data-page="login">
   <aside class="side">
-    <a class="brand" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M16 25s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.800-8 11-8 11z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M11.500 16h2.500l1.500-3 2 6 1.500-3h1.500" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/></svg>Sehat Copilot</a>
+    <a class="brand" href="/" data-noi18n><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M16 25s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.800-8 11-8 11z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M11.500 16h2.500l1.500-3 2 6 1.500-3h1.500" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sehat Copilot</span></a>
     <div>
       <h2>Your records, in plain language.</h2>
       <p>Keep prescriptions and lab reports in one place and understand what they say.</p>
@@ -26,9 +27,16 @@
     <small>Student prototype. A guide to your records, not a doctor.</small>
   </aside>
   <main class="formside">
+    <div class="fields" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="logintop">
+      <a class="brand lt-brand" href="/" data-noi18n><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M16 25s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.800-8 11-8 11z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M11.500 16h2.500l1.500-3 2 6 1.500-3h1.500" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sehat Copilot</span></a>
+      <div class="tools" data-tools></div>
+    </div>
     <div class="formbox">
-      <h1 id="title">Sign in</h1>
-      <p class="sub" id="sub">Welcome back. Pick up where you left off.</p>
+      <h1>Welcome</h1>
+      <p class="sub">Try the demo in one click, or use an email.</p>
+      <button class="btn primary lg block demo-btn" type="button" id="demo"><span>Continue with demo account</span><span class="s">One click. Opens a sample record, no typing.</span></button>
+      <div class="or">or use an email</div>
       <div class="tabs" role="tablist">
         <button type="button" role="tab" id="t-in" aria-selected="true">Sign in</button>
         <button type="button" role="tab" id="t-up" aria-selected="false">Create account</button>
@@ -36,16 +44,17 @@
       <form id="f" novalidate autocomplete="on">
         <div id="nameRow" hidden><label for="name">Name</label><input id="name" autocomplete="name"><div class="msg" id="e-name"></div></div>
         <label for="email">Email</label>
-        <input id="email" type="email" autocomplete="username" placeholder="you@example.com"><div class="msg" id="e-email"></div>
+        <input id="email" type="email" autocomplete="username" placeholder="you@example.com" data-noi18n><div class="msg" id="e-email"></div>
         <label for="pw">Password</label>
         <input id="pw" type="password" autocomplete="current-password" placeholder="At least 6 characters"><div class="msg" id="e-pw"></div>
         <div class="msg" id="e-form" role="alert"></div>
-        <button class="btn primary lg block" type="submit" id="submit">Sign in</button>
+        <button class="btn block" type="submit" id="submit">Sign in</button>
       </form>
-      <div class="or">or</div>
-      <button class="btn lg block demo-btn" type="button" id="demo">Continue with demo account</button>
       <a class="guest" href="/app" id="guest">Continue as guest</a>
-      <div class="proto" role="note">Prototype: your account is stored only in this browser on this device. It is not sent to any server. Do not reuse a real password.</div>
+      <div class="info" role="note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <div><b>Your account stays on this device</b><p>Nothing you type here is sent to a server. Because it lives in this browser, it will not follow you to another device.</p></div>
+      </div>
       <a class="back" href="/">&larr; Back to Sehat Copilot</a>
     </div>
   </main>
@@ -53,16 +62,16 @@
     (function () {
       var $ = function (id) { return document.getElementById(id); };
       var signup = false;
+      function tr() { if (window.SehatSite) SehatSite.translate(); }
       function setMode(up) {
         signup = up;
         $("nameRow").hidden = !up;
         $("t-in").setAttribute("aria-selected", String(!up));
         $("t-up").setAttribute("aria-selected", String(up));
-        $("title").textContent = up ? "Create your account" : "Sign in";
-        $("sub").textContent = up ? "Free, and stored only on this device." : "Welcome back. Pick up where you left off.";
         $("submit").textContent = up ? "Create account" : "Sign in";
         $("pw").autocomplete = up ? "new-password" : "current-password";
         clearErrors();
+        tr();
       }
       function clearErrors() {
         ["e-name", "e-email", "e-pw", "e-form"].forEach(function (i) { $(i).textContent = ""; });
@@ -80,7 +89,7 @@
         if (signup && !name) ok = bad("name", "e-name", "Please enter your name.");
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ok = bad("email", "e-email", "Enter a valid email address.");
         if (pw.length < 6) ok = bad("pw", "e-pw", "Password must be at least 6 characters.");
-        if (!ok) return;
+        if (!ok) { tr(); return; }
         $("submit").disabled = true;
         try {
           if (signup) await SehatAuth.signUp(name, email, pw); else await SehatAuth.signIn(email, pw);
@@ -88,6 +97,7 @@
         } catch (err) {
           $("e-form").textContent = err.message || "Something went wrong.";
           $("submit").disabled = false;
+          tr();
         }
       });
       $("demo").addEventListener("click", function () { SehatAuth.demo(); location.assign("/app?demo=1"); });
