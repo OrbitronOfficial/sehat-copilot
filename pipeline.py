@@ -125,8 +125,27 @@ RECORDS:
 QUESTION: {question}"""
 
 
+# Languages the app writes in. English and Hindi have hand-written fixed texts; the rest use
+# model-written explanations and machine-translated interface labels.
+LANGS = {
+    "en": "English", "hi": "Hindi (Devanagari script, everyday spoken Hindi)",
+    "bn": "Bengali", "te": "Telugu", "mr": "Marathi", "ta": "Tamil", "gu": "Gujarati",
+    "kn": "Kannada", "ml": "Malayalam", "pa": "Punjabi (Gurmukhi script)",
+}
+
+
+def _lang(code):
+    return code if code in LANGS else "en"
+
+
 def _lang_name(lang):
-    return "Hindi (Devanagari script, everyday spoken Hindi)" if lang == "hi" else "English"
+    return LANGS[_lang(lang)] + ("" if lang in ("en", "hi") else " (native script, simple everyday words)")
+
+
+def _disclaimer(lang):
+    if lang in DISCLAIMER:
+        return DISCLAIMER[lang]
+    return safety.SHORT["medication"][lang] + " " + DISCLAIMER["en"]
 
 
 def _s(v, limit=300):
@@ -335,7 +354,7 @@ _SIDE = {"en": {"low": "below", "high": "above", "critical": "far outside"},
 def _plain_finding(t, lang):
     """One factual sentence built from the checked values. No model involved."""
     value = f"{t.get('value')} {t.get('unit') or ''}".strip()
-    rng = t.get("ref_text") or ("not printed" if lang == "en" else "छपी नहीं है")
+    rng = t.get("ref_text") or ("छपी नहीं है" if lang == "hi" else "not printed")
     if lang == "hi":
         return f"{t.get('name')}: {value}. यह संदर्भ सीमा ({rng}) {_SIDE['hi'][t['flag']]} है।"
     return f"{t.get('name')} is {value}, {_SIDE['en'][t['flag']]} the reference range ({rng})."
@@ -362,9 +381,9 @@ def _fallback_explanation(rec, lang):
                                                       .get("class") or "Ask your doctor or pharmacist.")}
                       for m in rec.get("medicines") or []],
         "questions": ["What do the values outside the range mean for me?",
-                      "Do I need any follow-up tests?"] if lang == "en" else
+                      "Do I need any follow-up tests?"] if lang != "hi" else
                      ["सीमा से बाहर वाले मानों का मेरे लिए क्या मतलब है?", "क्या मुझे कोई और जाँच करानी चाहिए?"],
-        "disclaimer": DISCLAIMER.get(lang, DISCLAIMER["en"]), "fallback": True,
+        "disclaimer": _disclaimer(lang), "fallback": True,
     }
 
 
@@ -384,7 +403,7 @@ def _verified_numbers(rec):
 
 
 def explain(rec, lang="en"):
-    lang = "hi" if lang == "hi" else "en"
+    lang = _lang(lang)
     by_name = {t.get("name"): t for t in rec.get("tests") or []}
     try:
         out, _ = llm.write_json(EXPLAIN_PROMPT.format(
@@ -430,7 +449,7 @@ def explain(rec, lang="en"):
     questions = [q for q in (_s(q, 300) for q in out.get("questions") or [])
                  if q and not safety.unverified(q, allowed)][:5]
     return {"summary": summary, "findings": findings, "medicines": medicines, "questions": questions,
-            "disclaimer": DISCLAIMER[lang], "guard_replaced": replaced}
+            "disclaimer": _disclaimer(lang), "guard_replaced": replaced}
 
 
 def _sorted(records):
@@ -438,28 +457,28 @@ def _sorted(records):
 
 
 def overview(patient, records, lang="en"):
-    lang = "hi" if lang == "hi" else "en"
+    lang = _lang(lang)
     if not records:
-        return {"summary": "", "highlights": [], "watch": [], "disclaimer": DISCLAIMER[lang]}
+        return {"summary": "", "highlights": [], "watch": [], "disclaimer": _disclaimer(lang)}
     out, _ = llm.write_json(OVERVIEW_PROMPT.format(
         language=_lang_name(lang), patient=json.dumps(patient or {}, ensure_ascii=False),
         records=json.dumps([_compact(r) for r in _sorted(records)[-25:]], ensure_ascii=False)))
     return {"summary": _s(out.get("summary"), 1500) or "",
             "highlights": [_s(x, 300) for x in (out.get("highlights") or []) if _s(x)][:5],
             "watch": [_s(x, 300) for x in (out.get("watch") or []) if _s(x)][:5],
-            "disclaimer": DISCLAIMER[lang]}
+            "disclaimer": _disclaimer(lang)}
 
 
 def ask(question, records, lang="en"):
-    lang = "hi" if lang == "hi" else "en"
+    lang = _lang(lang)
     question = _s(question, 600)
     if not question:
         raise ValueError("Type a question first.")
     gated = safety.gate(question, lang)  # emergency, then medication change: no model call
     if gated:
-        return dict(gated, disclaimer=DISCLAIMER[lang])
+        return dict(gated, disclaimer=_disclaimer(lang))
     if not records:
-        return {"answer": "Add a record first, then ask about it." if lang == "en"
+        return {"answer": "Add a record first, then ask about it." if lang != "hi"
                 else "पहले कोई रिकॉर्ड जोड़ें, फिर उसके बारे में पूछें।", "sources": [], "label": "general"}
     out, _ = llm.write_json(ASK_PROMPT.format(
         language=_lang_name(lang), question=question,
@@ -474,4 +493,4 @@ def ask(question, records, lang="en"):
     else:
         label = "general"
     return {"answer": (_s(out.get("answer"), 2500) or "").replace("**", ""),
-            "sources": sources, "label": label, "disclaimer": DISCLAIMER[lang]}
+            "sources": sources, "label": label, "disclaimer": _disclaimer(lang)}

@@ -20,8 +20,18 @@
   <div class="top-right">
     <span class="local-note" id="localNote">Stored on this device</span>
     <div class="lang" role="group" aria-label="Language">
-      <button type="button" data-act="lang" data-lang="en" id="langEn">EN</button>
-      <button type="button" data-act="lang" data-lang="hi" id="langHi">हिंदी</button>
+      <select id="langSel" aria-label="Language">
+        <option value="en">English</option>
+        <option value="hi">हिंदी</option>
+        <option value="bn">বাংলা</option>
+        <option value="te">తెలుగు</option>
+        <option value="mr">मराठी</option>
+        <option value="ta">தமிழ்</option>
+        <option value="gu">ગુજરાતી</option>
+        <option value="kn">ಕನ್ನಡ</option>
+        <option value="ml">മലയാളം</option>
+        <option value="pa">ਪੰਜਾਬੀ</option>
+      </select>
     </div>
   </div>
 </header>
@@ -34,6 +44,7 @@
   </main>
 </div>
 
+<div id="pet"></div>
 <footer class="disclaimer" id="disclaimer" role="note">Sehat Copilot explains your records. It is not a diagnosis. Always confirm with your doctor.</footer>
 
 <input type="file" id="fileInput" accept="image/*,application/pdf,text/plain" hidden>

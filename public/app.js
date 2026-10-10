@@ -53,6 +53,18 @@ const STR = {
     ask_ph: 'Type your question', ask_send: 'Ask',
     label_records: 'From your records', label_general: 'General information',
     label_doctor: 'Ask your doctor', label_emergency: 'Emergency',
+    pet_name: 'Saathi', pet_sub: 'Your records guide. Not a doctor.', pet_open: 'Open Saathi, your records guide', pet_close: 'Close',
+    pet_hello: 'Hi, I am Saathi. I can explain your saved records and show you around. I cannot diagnose or change medicines.',
+    pet_tip_add: 'Start here: upload a photo or PDF of a prescription or lab report, or try a sample.',
+    pet_tip_review: 'Check each value against the original on the left. Click a value to see the line it was read from, then save.',
+    pet_tip_timeline: 'Every saved record is here by date. Open one to see what it means in simple words.',
+    pet_tip_health: 'This is your whole picture: conditions, medicines, latest values and how they changed.',
+    pet_tip_ask: 'Ask me anything about your saved records. I will tell you where each answer comes from.',
+    pet_tip_abha: 'Link a mock ABHA number here, or export all records as a FHIR bundle.',
+    pet_q1: 'What changed since my last report?', pet_q2: 'Which values are outside the range?', pet_q3: 'Which medicines am I on?',
+    pet_go_ask: 'Open full chat',
+    stat_records: 'Records saved', stat_out: 'Values outside range', stat_meds: 'Current medicines', stat_cond: 'Conditions noted',
+    how_1: 'Upload', how_1s: 'A photo or PDF of any prescription or report', how_2: 'Check', how_2s: 'Compare what was read with the original', how_3: 'Understand', how_3s: 'Plain-language summary, timeline and trends',
     q1: 'What changed since my last report?', q2: 'Which medicines am I on and why?', q3: 'Which values should I discuss with my doctor?',
     thinking: 'Looking through your records...', sources: 'Sources', you: 'You', assistant: 'Sehat Copilot',
     ask_empty: 'Save at least one record to ask questions.',
@@ -132,6 +144,18 @@ const STR = {
     ask_ph: 'अपना सवाल लिखें', ask_send: 'पूछें',
     label_records: 'आपके रिकॉर्ड से', label_general: 'सामान्य जानकारी',
     label_doctor: 'अपने डॉक्टर से पूछें', label_emergency: 'आपातकाल',
+    pet_name: 'साथी', pet_sub: 'आपके रिकॉर्ड का मार्गदर्शक। डॉक्टर नहीं।', pet_open: 'साथी खोलें, आपके रिकॉर्ड का मार्गदर्शक', pet_close: 'बंद करें',
+    pet_hello: 'नमस्ते, मैं साथी हूँ। मैं आपके सहेजे रिकॉर्ड समझा सकता हूँ और ऐप में रास्ता दिखा सकता हूँ। मैं निदान नहीं करता और दवा नहीं बदलता।',
+    pet_tip_add: 'यहाँ से शुरू करें: पर्ची या लैब रिपोर्ट की फ़ोटो या PDF अपलोड करें, या कोई नमूना आज़माएँ।',
+    pet_tip_review: 'हर मान को बाईं ओर के मूल दस्तावेज़ से मिलाएँ। किसी मान पर क्लिक करें तो उसकी स्रोत पंक्ति दिखेगी, फिर सहेजें।',
+    pet_tip_timeline: 'आपके सारे रिकॉर्ड यहाँ तारीख़ के अनुसार हैं। किसी को खोलें और सरल शब्दों में उसका मतलब देखें।',
+    pet_tip_health: 'यह आपकी पूरी तस्वीर है: बीमारियाँ, दवाएँ, ताज़ा मान और उनमें आया बदलाव।',
+    pet_tip_ask: 'अपने सहेजे रिकॉर्ड के बारे में कुछ भी पूछें। मैं बताऊँगा कि हर जवाब कहाँ से आया।',
+    pet_tip_abha: 'यहाँ नकली (डेमो) ABHA नंबर जोड़ें, या सारे रिकॉर्ड FHIR बंडल के रूप में निर्यात करें।',
+    pet_q1: 'पिछली रिपोर्ट के बाद क्या बदला?', pet_q2: 'कौन से मान सीमा से बाहर हैं?', pet_q3: 'मैं कौन सी दवाएँ ले रहा हूँ?',
+    pet_go_ask: 'पूरी चैट खोलें',
+    stat_records: 'सहेजे रिकॉर्ड', stat_out: 'सीमा से बाहर मान', stat_meds: 'चालू दवाएँ', stat_cond: 'दर्ज बीमारियाँ',
+    how_1: 'अपलोड करें', how_1s: 'किसी भी पर्ची या रिपोर्ट की फ़ोटो या PDF', how_2: 'जाँचें', how_2s: 'पढ़े गए मानों को मूल दस्तावेज़ से मिलाएँ', how_3: 'समझें', how_3s: 'सरल भाषा में सार, टाइमलाइन और रुझान',
     q1: 'पिछली रिपोर्ट के बाद क्या बदला?', q2: 'मैं कौन सी दवाइयाँ ले रहा हूँ और क्यों?', q3: 'किन मानों पर मुझे डॉक्टर से बात करनी चाहिए?',
     thinking: 'आपके रिकॉर्ड देखे जा रहे हैं...', sources: 'स्रोत', you: 'आप', assistant: 'सेहत कोपायलट',
     ask_empty: 'सवाल पूछने के लिए कम से कम एक रिकॉर्ड सहेजें।',
@@ -163,7 +187,23 @@ const STR = {
 };
 
 let lang = 'en';
-try { const l = localStorage.getItem('sehat_lang'); if (l === 'hi' || l === 'en') lang = l; } catch (e) { /* ignore */ }
+const LANG_CODES = ['en', 'hi', 'bn', 'te', 'mr', 'ta', 'gu', 'kn', 'ml', 'pa'];
+try { const l = localStorage.getItem('sehat_lang'); if (LANG_CODES.indexOf(l) >= 0) lang = l; } catch (e) { /* ignore */ }
+/* English and Hindi labels are written by hand below. The other languages load a
+   machine-translated label file on demand; any missing label falls back to English. */
+async function loadLang(code) {
+  if (STR[code]) return;
+  try { const r = await fetch('/i18n/' + code + '.json'); STR[code] = r.ok ? await r.json() : {}; }
+  catch (e) { STR[code] = {}; }
+}
+async function setLang(code) {
+  if (LANG_CODES.indexOf(code) < 0) code = 'en';
+  await loadLang(code);
+  lang = code;
+  try { localStorage.setItem('sehat_lang', lang); } catch (x) { /* ignore */ }
+  if (S.error) { S.error = null; S.retry = null; }
+  render();
+}
 
 function t(key, vars) {
   let s = (STR[lang] && STR[lang][key]);
@@ -644,6 +684,7 @@ function viewAdd() {
     '<h2>' + esc(t('drop_title')) + '</h2><p class="muted">' + esc(t('drop_hint')) + '</p>' +
     '<div class="row"><button type="button" class="btn" data-act="choose">' + esc(t('choose_file')) + '</button>' +
     '<button type="button" class="btn secondary" data-act="photo">' + esc(t('take_photo')) + '</button></div></div>' +
+    '<ol class="how">' + [1, 2, 3].map(n => '<li><span class="how-n">' + n + '</span><div><strong>' + esc(t('how_' + n)) + '</strong><div class="muted small">' + esc(t('how_' + n + 's')) + '</div></div></li>').join('') + '</ol>' +
     '<p class="muted small consent">' + esc(t('consent')) + '</p>' +
     '<div class="card" style="margin-top:16px"><h2 style="margin-bottom:10px">' + esc(t('samples_title')) + '</h2>' + samples +
     '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)" class="row">' +
@@ -948,7 +989,11 @@ function viewHealth() {
   const ab = abhaNumber(p);
   const sexLbl = s => { const v = String(s || '').toLowerCase(); return v === 'male' || v === 'm' ? t('sex_male') : (v === 'female' || v === 'f' ? t('sex_female') : (s || '')); };
   const ov = S.overview[lang];
-  return head + '<div class="health-grid">' +
+  const out = P.latest.filter(o => ['low', 'high', 'critical'].indexOf(normFlag(o.x.flag)) >= 0).length;
+  const tile = (n, label, cls) => '<div class="stat ' + cls + '"><div class="stat-n">' + esc(n) + '</div><div class="stat-l">' + esc(label) + '</div></div>';
+  const tiles = '<div class="stats">' + tile(S.records.length, t('stat_records'), 's-teal') + tile(out, t('stat_out'), out ? 's-amber' : 's-green') +
+    tile(P.meds.length, t('stat_meds'), 's-blue') + tile(P.cond.length, t('stat_cond'), 's-plain') + '</div>';
+  return head + tiles + '<div class="health-grid">' +
     '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab || t('not_linked')) + '</dd></dl></div>' +
     '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_conditions')) + '</h2>' +
     (P.cond.length ? '<ul class="list">' + P.cond.map(c => '<li><span class="l">' + esc(c.name) + '</span><span class="r muted small">' + esc(t('first_seen', { d: fmtDate(c.date) })) + '</span></li>').join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>' +
@@ -1104,8 +1149,7 @@ function applyStatic() {
   $('#brandName').textContent = t('app_name');
   $('#localNote').textContent = t('local_note');
   $('#disclaimer').textContent = t('disclaimer');
-  $('#langEn').setAttribute('aria-pressed', String(lang === 'en'));
-  $('#langHi').setAttribute('aria-pressed', String(lang === 'hi'));
+  if ($('#langSel')) $('#langSel').value = lang;
   const cur = S.view === 'detail' ? 'timeline' : S.view;
   $('#nav').innerHTML = NAV.map(n => '<button type="button" data-act="nav" data-view="' + n[0] + '"' + (cur === n[0] ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[n[0]] + '</svg><span>' + esc(t(n[1])) + '</span></button>').join('');
   syncDiscHeight();
@@ -1249,3 +1293,90 @@ function showSource(e) {
 }
 document.addEventListener('focusin', showSource);
 document.addEventListener('click', showSource);
+
+/* ================= Language selector ================= */
+document.addEventListener('change', e => { if (e.target && e.target.id === 'langSel') setLang(e.target.value); });
+if (lang !== 'en' && lang !== 'hi') loadLang(lang).then(() => render());
+
+/* ================= Saathi: the floating guide =================
+   A helper that stays on every screen. It gives a tip for the current screen and
+   answers questions through the same safety-gated /api/ask as the Ask page, sharing
+   one conversation with it. It is a guide to the records, not a doctor. */
+const PET = { open: false, seen: {}, tipOff: false };
+const PET_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true" class="pet-svg">' +
+  '<ellipse cx="32" cy="59" rx="15" ry="3" fill="#0F172A" opacity=".10"/>' +
+  '<path d="M14 40c0-12 8-20 18-20s18 8 18 20v8c0 5-4 9-9 9H23c-5 0-9-4-9-9z" fill="#fff" stroke="#0F766E" stroke-width="2"/>' +
+  '<path d="M27 33l5 7 5-7" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '<circle cx="32" cy="20" r="14" fill="#F3D9C4" stroke="#0F766E" stroke-width="2"/>' +
+  '<path d="M18.5 18c1-8 7-12.500 13.500-12.500S44.500 10 45.500 18c-4-3-8-4.500-13.500-4.500S22.500 15 18.500 18z" fill="#0F766E"/>' +
+  '<g class="pet-eyes"><circle cx="27" cy="21" r="1.800" fill="#0F172A"/><circle cx="37" cy="21" r="1.800" fill="#0F172A"/></g>' +
+  '<path d="M28 26.500c2.500 2 5.500 2 8 0" fill="none" stroke="#0F172A" stroke-width="1.600" stroke-linecap="round"/>' +
+  '<path d="M22 34c-3 6-2 13 4 14.500" fill="none" stroke="#334155" stroke-width="1.800" stroke-linecap="round"/>' +
+  '<circle cx="28" cy="49" r="3" fill="#fff" stroke="#334155" stroke-width="1.800"/>' +
+  '<rect x="38" y="42" width="8" height="8" rx="1.500" fill="#0F766E"/><path d="M42 43.800v4.400M39.800 46h4.400" stroke="#fff" stroke-width="1.400" stroke-linecap="round"/>' +
+  '</svg>';
+function petScreen() {
+  if (S.view === 'add' && S.stage === 'review') return 'review';
+  return S.view === 'detail' ? 'timeline' : S.view;
+}
+function petMsgs() {
+  const kinds = ['records', 'general', 'doctor', 'emergency'];
+  const msgs = S.chat.slice(-8).map(m => {
+    if (m.role === 'me') return '<div class="pet-msg me">' + esc(m.text) + '</div>';
+    const lbl = kinds.indexOf(m.label) >= 0 ? '<span class="lbl lbl-' + m.label + '">' + esc(t('label_' + m.label)) + '</span>' : '';
+    return '<div class="pet-msg' + (m.label === 'emergency' ? ' urgent' : '') + '">' + (lbl ? '<div class="pet-lbl">' + lbl + '</div>' : '') + esc(m.text) + '</div>';
+  }).join('');
+  return '<div class="pet-msg">' + esc(t('pet_hello')) + '</div><div class="pet-msg tip">' + esc(t('pet_tip_' + petScreen())) + '</div>' + msgs +
+    (S.asking ? '<div class="pet-msg muted">' + esc(t('thinking')) + '</div>' : '');
+}
+function renderPet() {
+  const el = document.getElementById('pet');
+  if (!el) return;
+  const screen = petScreen();
+  if (!PET.open) {
+    const showTip = !PET.tipOff && !PET.seen[screen];
+    el.className = 'pet';
+    // the tip is a nudge, not an overlay: it goes away by itself after a few seconds
+    if (showTip) { clearTimeout(PET.timer); PET.timer = setTimeout(() => { PET.seen[screen] = true; renderPet(); }, 7000); }
+    el.innerHTML = (showTip ? '<div class="pet-bubble" role="status"><span>' + esc(t('pet_tip_' + screen)) + '</span><button type="button" data-pet="tipoff" aria-label="' + esc(t('pet_close')) + '">&times;</button></div>' : '') +
+      '<button type="button" class="pet-btn" data-pet="open" aria-label="' + esc(t('pet_open')) + '">' + PET_SVG + '</button>';
+    return;
+  }
+  const typed = (document.getElementById('petInput') || {}).value || '';
+  el.className = 'pet open';
+  el.innerHTML = '<section class="pet-panel" role="dialog" aria-label="' + esc(t('pet_name')) + '">' +
+    '<header><span class="pet-head">' + PET_SVG + '</span><div><strong>' + esc(t('pet_name')) + '</strong><div class="muted small">' + esc(t('pet_sub')) + '</div></div>' +
+    '<button type="button" class="xbtn" data-pet="close" aria-label="' + esc(t('pet_close')) + '">&times;</button></header>' +
+    '<div class="pet-body" id="petBody">' + petMsgs() + '</div>' +
+    '<div class="pet-chips">' + ['pet_q1', 'pet_q2', 'pet_q3'].map(k => '<button type="button" class="chip" data-pet="q" data-q="' + esc(t(k)) + '">' + esc(t(k)) + '</button>').join('') + '</div>' +
+    '<form class="pet-form" id="petForm"><input type="text" id="petInput" placeholder="' + esc(t('ask_ph')) + '" aria-label="' + esc(t('ask_ph')) + '" autocomplete="off"><button type="submit" class="btn small"' + (S.asking ? ' disabled' : '') + '>' + esc(t('ask_send')) + '</button></form>' +
+    '<button type="button" class="pet-link" data-pet="goask">' + esc(t('pet_go_ask')) + '</button></section>';
+  const input = document.getElementById('petInput');
+  if (input && typed) input.value = typed;
+  const body = document.getElementById('petBody');
+  if (body) body.scrollTop = body.scrollHeight;
+}
+const renderPage = render;
+render = function () { renderPage(); renderPet(); };
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest ? e.target.closest('[data-pet]') : null;
+  if (!b) return;
+  const a = b.getAttribute('data-pet');
+  if (a === 'open') { PET.open = true; PET.seen[petScreen()] = true; }
+  else if (a === 'close') PET.open = false;
+  else if (a === 'tipoff') PET.tipOff = true;
+  else if (a === 'q') { ask(b.getAttribute('data-q')); return; }
+  else if (a === 'goask') { PET.open = false; go('ask'); return; }
+  renderPet();
+  if (a === 'open') { const i = document.getElementById('petInput'); if (i) i.focus(); }
+});
+document.addEventListener('submit', e => {
+  if (!e.target || e.target.id !== 'petForm') return;
+  e.preventDefault();
+  const i = document.getElementById('petInput');
+  const q = i ? i.value : '';
+  if (i) i.value = '';
+  ask(q);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && PET.open) { PET.open = false; renderPet(); } });
+renderPet();

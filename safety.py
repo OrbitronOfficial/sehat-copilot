@@ -23,6 +23,8 @@ _EMERGENCY = re.compile(
     r"बेहोश|होश नहीं|दौरा पड़|दौरे पड़|मिर्गी|लकवा|"
     r"आत्महत्या|खुदकुशी|जान दे|मरना चाहत|खुद को नुकसान|"
     r"खून की उल्टी|खून बंद नहीं|"
+    # chest pain in Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Punjabi
+    r"বুকে ব্যথা|ఛాతీ నొప్పి|ఛాతీలో నొప్పి|छातीत दुख|நெஞ்சு வலி|છાતીમાં દુખાવો|ಎದೆ ನೋವು|നെഞ്ചുവേദന|നെഞ്ച് വേദന|ਛਾਤੀ ਵਿੱਚ ਦਰਦ|"
     # Hindi typed in Latin letters
     r"seene (me|mein) dard|chhati (me|mein) dard|saans nahi|sans nahi|behosh|khudkushi|aatmahatya",
     re.I)
@@ -69,7 +71,39 @@ TEMPLATES = {
     },
 }
 
+# Languages without a full reviewed template get one short native line followed by the
+# full English reply, so the message is never silently English-only. DRAFT translations.
+SHORT = {
+    "emergency": {
+        "bn": "এটি জরুরি অবস্থা হতে পারে। এখনই 112 নম্বরে ফোন করুন অথবা নিকটতম হাসপাতালে যান।",
+        "te": "ఇది అత్యవసర పరిస్థితి కావచ్చు. వెంటనే 112కు కాల్ చేయండి లేదా దగ్గరలోని ఆసుపత్రికి వెళ్లండి.",
+        "mr": "ही आपत्कालीन स्थिती असू शकते. लगेच 112 वर कॉल करा किंवा जवळच्या रुग्णालयात जा.",
+        "ta": "இது அவசர நிலையாக இருக்கலாம். உடனே 112 ஐ அழையுங்கள் அல்லது அருகிலுள்ள மருத்துவமனைக்குச் செல்லுங்கள்.",
+        "gu": "આ કટોકટી હોઈ શકે છે. તરત જ 112 પર કૉલ કરો અથવા નજીકની હોસ્પિટલમાં જાઓ.",
+        "kn": "ಇದು ತುರ್ತು ಪರಿಸ್ಥಿತಿ ಆಗಿರಬಹುದು. ತಕ್ಷಣ 112 ಗೆ ಕರೆ ಮಾಡಿ ಅಥವಾ ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆಗೆ ಹೋಗಿ.",
+        "ml": "ഇത് അടിയന്തര സാഹചര്യമാകാം. ഉടൻ 112-ൽ വിളിക്കുക അല്ലെങ്കിൽ അടുത്തുള്ള ആശുപത്രിയിൽ പോകുക.",
+        "pa": "ਇਹ ਐਮਰਜੈਂਸੀ ਹੋ ਸਕਦੀ ਹੈ। ਤੁਰੰਤ 112 'ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਨੇੜਲੇ ਹਸਪਤਾਲ ਜਾਓ।",
+    },
+    "medication": {
+        "bn": "ডাক্তারকে না জিজ্ঞেস করে কোনো ওষুধ বন্ধ বা পরিবর্তন করবেন না।",
+        "te": "మీ డాక్టర్‌ను అడగకుండా ఏ మందునూ ఆపవద్దు లేదా మార్చవద్దు.",
+        "mr": "डॉक्टरांना विचारल्याशिवाय कोणतेही औषध बंद करू नका किंवा बदलू नका.",
+        "ta": "மருத்துவரிடம் கேட்காமல் எந்த மருந்தையும் நிறுத்தவோ மாற்றவோ வேண்டாம்.",
+        "gu": "ડૉક્ટરને પૂછ્યા વિના કોઈ દવા બંધ કરશો નહીં કે બદલશો નહીં.",
+        "kn": "ವೈದ್ಯರನ್ನು ಕೇಳದೆ ಯಾವುದೇ ಔಷಧಿಯನ್ನು ನಿಲ್ಲಿಸಬೇಡಿ ಅಥವಾ ಬದಲಾಯಿಸಬೇಡಿ.",
+        "ml": "ഡോക്ടറോട് ചോദിക്കാതെ ഒരു മരുന്നും നിർത്തുകയോ മാറ്റുകയോ ചെയ്യരുത്.",
+        "pa": "ਡਾਕਟਰ ਨੂੰ ਪੁੱਛੇ ਬਿਨਾਂ ਕੋਈ ਦਵਾਈ ਬੰਦ ਨਾ ਕਰੋ ਜਾਂ ਨਾ ਬਦਲੋ।",
+    },
+}
+
 LABELS = ("records", "general", "doctor", "emergency")
+
+
+def reply(kind, lang):
+    """Text shown to the user: the full template, or a short native line plus full English."""
+    if lang in TEMPLATES[kind]:
+        return TEMPLATES[kind][lang]
+    return SHORT[kind][lang] + "\n\n" + TEMPLATES[kind]["en"]
 
 
 def template(kind, lang):
@@ -93,7 +127,7 @@ def gate(question, lang):
     kind = classify(question)
     if not kind:
         return None
-    return {"answer": template(kind, lang), "sources": [], "gate": kind,
+    return {"answer": reply(kind, lang), "sources": [], "gate": kind,
             "label": "emergency" if kind == "emergency" else "doctor"}
 
 
