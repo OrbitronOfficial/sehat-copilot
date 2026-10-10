@@ -1338,6 +1338,8 @@ function renderPet() {
   const el = document.getElementById('pet');
   if (!el) return;
   const screen = petScreen();
+  // the Ask page is already the full chat, so the floating guide would only cover the input
+  if (screen === 'ask') { PET.open = false; el.className = 'pet'; el.innerHTML = ''; return; }
   if (!PET.open) {
     const showTip = !PET.tipOff && !PET.seen[screen] && screen !== 'review';
     el.className = 'pet' + (screen === 'review' ? ' mini' : '');
@@ -1373,7 +1375,10 @@ document.addEventListener('click', e => {
   else if (a === 'q') { ask(b.getAttribute('data-q')); return; }
   else if (a === 'goask') { PET.open = false; go('ask'); return; }
   renderPet();
-  if (a === 'open') { const i = document.getElementById('petInput'); if (i) i.focus(); }
+  if (a === 'open') {
+    const panel = document.querySelector('.pet-panel'); if (panel) panel.classList.add('fresh');
+    const i = document.getElementById('petInput'); if (i) i.focus();
+  }
 });
 document.addEventListener('submit', e => {
   if (!e.target || e.target.id !== 'petForm') return;

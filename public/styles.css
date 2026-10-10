@@ -578,3 +578,43 @@ body.zooming .pet { display: none; }
   .themebtn { width: 34px; height: 34px; }
   #langSel { max-width: 104px; padding: 6px 6px; font-size: .9rem; }
 }
+
+/* ===== Atmosphere and motion in the app (matches the site pages) ===== */
+body::before {
+  content: ""; position: fixed; inset: -20vh -10vw; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(42vw 42vw at 88% 6%, rgba(15, 118, 110, .11), transparent 62%),
+    radial-gradient(38vw 38vw at 4% 92%, rgba(45, 181, 166, .09), transparent 62%);
+  animation: app-drift 28s ease-in-out infinite alternate;
+}
+:root[data-theme="dark"] body::before {
+  background:
+    radial-gradient(42vw 42vw at 88% 6%, rgba(45, 181, 166, .13), transparent 62%),
+    radial-gradient(38vw 38vw at 4% 92%, rgba(31, 148, 136, .10), transparent 62%);
+}
+@keyframes app-drift { to { transform: translate3d(-3vw, 2vh, 0) scale(1.06); } }
+.topbar { -webkit-backdrop-filter: saturate(1.2) blur(12px); backdrop-filter: saturate(1.2) blur(12px); }
+.pet-panel, .pet-bubble { -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); background: rgba(255, 255, 255, .9); }
+:root[data-theme="dark"] .pet-panel, :root[data-theme="dark"] .pet-bubble { background: rgba(17, 32, 30, .9); }
+.stat, .how li, .trend { transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; }
+.stat:hover, .how li:hover, .trend:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(15, 23, 42, .05), 0 14px 30px rgba(15, 23, 42, .09); }
+.btn { position: relative; overflow: hidden; }
+.btn:not(.secondary):not(.danger):not(.link)::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .28), transparent); transform: skewX(-18deg); transition: left .45s ease;
+}
+.btn:not(.secondary):not(.danger):not(.link):hover::after { left: 120%; }
+.nav button { transition: background .15s ease, color .15s ease, transform .1s ease; }
+.nav button:active { transform: scale(.98); }
+.chip { transition: border-color .15s ease, background .15s ease, color .15s ease; }
+.pet-btn { transition: transform .15s ease, box-shadow .15s ease; }
+.pet-btn:hover { transform: translateY(-2px) scale(1.04); }
+.pet-panel.fresh { animation: pet-in .18s ease-out; transform-origin: bottom right; }
+@keyframes pet-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+.zoom { animation: zoom-in .16s ease-out; }
+@keyframes zoom-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  body::before, .pet-panel, .zoom { animation: none; }
+  .stat, .how li, .trend, .pet-btn, .btn::after { transition: none; }
+  .stat:hover, .how li:hover, .trend:hover, .pet-btn:hover { transform: none; }
+}
