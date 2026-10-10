@@ -118,7 +118,29 @@ const STR = {
     bk_title: 'Backup', bk_download: 'Download backup', bk_restore: 'Restore from backup',
     bk_note: 'Your records live only on this device. A backup file is how you move them to another device.',
     bk_done: 'Restored {n} records from the backup.', bk_saved: 'Backup downloaded.',
-    bk_big: 'This file is larger than 40 MB, so it cannot be restored here.', bk_bad: 'This does not look like a Sehat Copilot backup file.'
+    bk_big: 'This file is larger than 40 MB, so it cannot be restored here.', bk_bad: 'This does not look like a Sehat Copilot backup file.',
+    stat_meds_rec: 'Medicines recorded', h_meds_rec: 'Medicines recorded', visit_meds_rec: 'Medicines recorded',
+    mt_title2: 'Medicine schedule from your prescriptions',
+    med_note: 'These come from your prescriptions. Only you and your doctor know what you take now.',
+    med_ended: 'Course dates have passed', med_ended_d: 'Course dates have passed (ended {d})', med_unconf: 'Not confirmed as current',
+    med_presc: 'prescribed {d}', med_dur: 'duration {x}',
+    visit_presc: 'Prescribed', visit_status: 'Status',
+    ment_title: 'Mentions ({n})', ment_open: 'Open record',
+    attn_title: 'Needs attention now', attn_none: 'Everything in your latest results is within range.',
+    trend_hist: 'Earlier results stay in each test\'s history above.',
+    cross_title: 'Things to discuss with your doctor', q_title: 'Questions for your doctor, from your records',
+    ins_loading: 'Putting your records together...',
+    src_btn: 'Source',
+    conf_label: 'Reading confidence (reported by the AI model, not calibrated): {p}%',
+    conf_note: 'It shows how clearly the model could read the item, not how likely the value is correct. Check anything marked.',
+    listen: 'Listen', listen_stop: 'Stop',
+    greet_morning: 'Good morning, {name}', greet_afternoon: 'Good afternoon, {name}', greet_evening: 'Good evening, {name}', greet_guest: 'Your health at a glance',
+    dash_attn_one: 'value needs attention', dash_attn_many: 'values need attention', dash_see: 'See what they mean',
+    dash_next: 'Next up', dash_next_none: 'Nothing scheduled in your records.', dash_next_med: '{slot}: {names}',
+    dash_changed: 'What changed', dash_changed_none: 'Not enough repeat results yet.',
+    dash_doctor: 'For your doctor', dash_doctor_n: '{n} question(s) from your records',
+    qa_ask: 'Ask Saathi', qa_export: 'Export',
+    kick_today: 'Today', kick_results: 'Results', kick_meds: 'Medicines', kick_doctor: 'For your doctor', kick_about: 'About you'
   },
   hi: {
     app_name: 'सेहत कोपायलट',
@@ -236,7 +258,29 @@ const STR = {
     bk_title: 'बैकअप', bk_download: 'बैकअप डाउनलोड करें', bk_restore: 'बैकअप से वापस लाएँ',
     bk_note: 'आपके रिकॉर्ड सिर्फ़ इसी डिवाइस पर रहते हैं। बैकअप फ़ाइल से आप उन्हें दूसरे डिवाइस पर ले जा सकते हैं।',
     bk_done: 'बैकअप से {n} रिकॉर्ड वापस लाए गए।', bk_saved: 'बैकअप डाउनलोड हो गया।',
-    bk_big: 'यह फ़ाइल 40 MB से बड़ी है, इसलिए यहाँ वापस नहीं लाई जा सकती।', bk_bad: 'यह सेहत कोपायलट की बैकअप फ़ाइल जैसी नहीं लगती।'
+    bk_big: 'यह फ़ाइल 40 MB से बड़ी है, इसलिए यहाँ वापस नहीं लाई जा सकती।', bk_bad: 'यह सेहत कोपायलट की बैकअप फ़ाइल जैसी नहीं लगती।',
+    stat_meds_rec: 'दर्ज दवाइयाँ', h_meds_rec: 'दर्ज दवाइयाँ', visit_meds_rec: 'दर्ज दवाइयाँ',
+    mt_title2: 'आपके पर्चों के अनुसार दवा की समय-सारणी',
+    med_note: 'ये आपके पर्चों से लिया गया है। अभी आप क्या लेते हैं, यह सिर्फ़ आप और आपके डॉक्टर जानते हैं।',
+    med_ended: 'कोर्स की तारीखें बीत चुकी हैं', med_ended_d: 'कोर्स की तारीखें बीत चुकी हैं ({d} को समाप्त)', med_unconf: 'चालू होने की पुष्टि नहीं',
+    med_presc: '{d} को लिखी गई', med_dur: 'अवधि {x}',
+    visit_presc: 'कब लिखी गई', visit_status: 'स्थिति',
+    ment_title: 'उल्लेख ({n})', ment_open: 'रिकॉर्ड खोलें',
+    attn_title: 'अभी ध्यान देने योग्य', attn_none: 'आपके ताज़ा नतीजों में सब कुछ सामान्य सीमा के भीतर है।',
+    trend_hist: 'पुराने नतीजे हर जाँच के इतिहास में ऊपर बने रहते हैं।',
+    cross_title: 'डॉक्टर से चर्चा के लिए बातें', q_title: 'आपके रिकॉर्ड से डॉक्टर के लिए सवाल',
+    ins_loading: 'आपके रिकॉर्ड एक साथ जोड़े जा रहे हैं...',
+    src_btn: 'स्रोत',
+    conf_label: 'पढ़ने का भरोसा (AI मॉडल द्वारा बताया गया, जाँचा हुआ नहीं): {p}%',
+    conf_note: 'यह बताता है कि मॉडल ने चीज़ को कितने साफ़ पढ़ा, यह नहीं कि मान कितना सही है। निशान लगी हर चीज़ जाँचें।',
+    listen: 'सुनें', listen_stop: 'रोकें',
+    greet_morning: 'सुप्रभात, {name}', greet_afternoon: 'नमस्कार, {name}', greet_evening: 'शुभ संध्या, {name}', greet_guest: 'आपकी सेहत एक नज़र में',
+    dash_attn_one: 'मान पर ध्यान देना है', dash_attn_many: 'मानों पर ध्यान देना है', dash_see: 'इनका मतलब देखें',
+    dash_next: 'आगे क्या', dash_next_none: 'आपके रिकॉर्ड में कुछ तय नहीं है।', dash_next_med: '{slot}: {names}',
+    dash_changed: 'क्या बदला', dash_changed_none: 'दोहराए गए नतीजे अभी पर्याप्त नहीं हैं।',
+    dash_doctor: 'डॉक्टर के लिए', dash_doctor_n: 'आपके रिकॉर्ड से {n} सवाल',
+    qa_ask: 'साथी से पूछें', qa_export: 'एक्सपोर्ट',
+    kick_today: 'आज', kick_results: 'नतीजे', kick_meds: 'दवाइयाँ', kick_doctor: 'डॉक्टर के लिए', kick_about: 'आपके बारे में'
   }
 };
 
@@ -526,7 +570,14 @@ function pdfUrl(f) {
   }
   return blobCache.get(key);
 }
+const safeUrl = u => (/^(\/|https?:\/\/)/.test(String(u || '')) && !/^\/\//.test(String(u || '')) ? String(u) : '');
+function urlFile(r) { const u = r && safeUrl(r.file_url); return u ? { mime: guessMime(u.split('?')[0]), url: u } : null; }
 function previewHTML(f) {
+  if (f && !f.dataUrl && f.url && safeUrl(f.url)) {
+    const um = f.mime || guessMime(String(f.url).split('?')[0]);
+    if (um === 'application/pdf') return '<embed src="' + esc(f.url) + '" type="application/pdf">';
+    return '<img src="' + esc(f.url) + '" alt="' + esc(t('original')) + '">';
+  }
   if (!f || !f.dataUrl) return '<p class="muted">' + esc(t('no_preview')) + '</p>';
   const m = f.mime || '';
   try {
@@ -757,7 +808,7 @@ async function startEdit(id) {
   const r = getRec(id); if (!r) return;
   S.draft = normalizeRecord(clone(r));
   S.editingId = id; S.pendingFile = null;
-  S.previewFile = await dbGet('files', id);
+  S.previewFile = (await dbGet('files', id)) || urlFile(r);
   S.dirty = false; S.reflag = false;
   S.view = 'add'; S.stage = 'review';
   render(); window.scrollTo(0, 0);
@@ -857,8 +908,9 @@ function viewReview() {
   return '<div class="page-head"><h1>' + esc(S.editingId ? t('edit_title') : t('review_title')) + '</h1><p>' + esc(t('review_sub')) + '</p></div>' +
     '<div class="row" style="margin-bottom:14px">' +
     (d.handwritten ? '<span class="tag amber hw">' + esc(t('hw_check')) + '</span>' : '') +
-    (oc !== null && !d.handwritten ? '<span class="small">' + esc(t('conf_overall', { p: oc })) + '</span><span class="confbar ' + (oc < 70 ? 'low' : '') + '"><i style="width:' + Math.max(0, Math.min(100, oc)) + '%"></i></span>' : '') +
+    (oc !== null && !d.handwritten ? '<span class="small">' + esc(t('conf_label', { p: oc })) + '</span><span class="confbar ' + (oc < 70 ? 'low' : '') + '"><i style="width:' + Math.max(0, Math.min(100, oc)) + '%"></i></span>' : '') +
     (lowN ? '<span class="tag amber">' + esc(t('items_check', { n: lowN })) + '</span>' : '') + '</div>' +
+    (oc !== null && !d.handwritten ? '<p class="muted small conf-note">' + esc(t('conf_note')) + '</p>' : '') +
     (d.warnings.length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + d.warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul></div>' : '') +
     (d.unread.length ? '<div class="card unread"><h3>' + esc(t('unread_title')) + '</h3><p class="muted small">' + esc(t('unread_sub')) + '</p><ul>' + d.unread.map(u => '<li><span class="mono">' + esc(u.text) + '</span>' + (u.reason ? ' <span class="muted small">(' + esc(u.reason) + ')</span>' : '') + '</li>').join('') + '</ul></div>' : '') +
     '<div class="review"><div class="card preview-card"><div class="preview-head"><h3>' + esc(t('original')) + '</h3><button type="button" class="btn small secondary" data-zoom="open">' + esc(t('zoom_open')) + '</button></div>' +
@@ -937,7 +989,7 @@ function timelineCard(r) {
 function explHTML(ex) {
   ex = ex || {};
   const f = arr(ex.findings), m = arr(ex.medicines), q = arr(ex.questions);
-  return (ex.summary ? '<p>' + esc(ex.summary) + '</p>' : '') +
+  return '<div class="expl-tools">' + listenBtn('expl') + '</div>' + (ex.summary ? '<p>' + esc(ex.summary) + '</p>' : '') +
     (f.length ? '<h3>' + esc(t('findings')) + '</h3>' + f.map(x =>
       '<div class="finding"><div class="nm"><span>' + esc(x.name) + '</span>' + badge(x.flag) + '</div>' + (x.meaning ? '<p>' + esc(x.meaning) + '</p>' : '') + '</div>').join('') : '') +
     (m.length ? '<h3>' + esc(t('med_purpose')) + '</h3><ul class="qlist">' + m.map(x => '<li><strong>' + esc(x.name) + '</strong>' + (x.purpose ? ': ' + esc(x.purpose) : '') + '</li>').join('') + '</ul>' : '') +
@@ -955,7 +1007,8 @@ function viewDetail() {
     '<div class="row between" style="margin-bottom:12px"><div><h1>' + esc(r.title || typeLabel(r.doc_type)) + '</h1>' +
     '<div class="row" style="margin-top:6px"><span class="badge type">' + esc(typeLabel(r.doc_type)) + '</span>' +
     (r.handwritten ? '<span class="badge">' + esc(t('handwritten')) + '</span>' : '') +
-    (oc !== null ? '<span class="muted small">' + esc(t('conf_overall', { p: oc })) + '</span>' : '') + '</div></div>' +
+    (oc !== null ? '<span class="muted small">' + esc(t('conf_label', { p: oc })) + '</span>' : '') + '</div>' +
+    (oc !== null ? '<p class="muted small conf-note">' + esc(t('conf_note')) + '</p>' : '') + '</div>' +
     '<div class="row"><button type="button" class="btn secondary" data-act="edit" data-id="' + esc(r.id) + '">' + esc(t('edit')) + '</button>' +
     '<button type="button" class="btn danger" data-act="delete" data-id="' + esc(r.id) + '">' + esc(t('delete')) + '</button></div></div>' +
     (arr(r.warnings).length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + r.warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul></div>' : '') +
@@ -963,9 +1016,9 @@ function viewDetail() {
     '<div class="card expl"><h2 style="margin-bottom:10px">' + esc(t('expl_title')) + '</h2><div id="expl"></div></div>' +
     '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('structured')) + '</h2>' + (kv ? '<dl class="kv" style="margin-bottom:12px">' + kv + '</dl>' : '') +
     (tests.length ? '<h3 style="margin:12px 0 4px">' + esc(t('sec_tests')) + '</h3><div class="tablewrap"><table class="data"><thead><tr><th>' + esc(t('t_name')) + '</th><th>' + esc(t('t_value')) + '</th><th>' + esc(t('t_range')) + '</th><th>' + esc(t('t_flag')) + '</th></tr></thead><tbody>' +
-      tests.map(x => '<tr><td>' + esc(x.name) + (isLow(x.confidence) ? '<br>' + lowTag(x.confidence) : '') + '</td><td class="mono">' + esc(x.value) + ' ' + esc(x.unit) + '</td><td class="mono">' + esc(refText(x)) + '</td><td>' + badge(x.flag) + '</td></tr>').join('') + '</tbody></table></div>' : '') +
+      tests.map((x, i) => '<tr><td>' + esc(x.name) + srcBtn(x, 'tests', i) + (isLow(x.confidence) ? '<br>' + lowTag(x.confidence) : '') + '</td><td class="mono">' + esc(x.value) + ' ' + esc(x.unit) + '</td><td class="mono">' + esc(refText(x)) + '</td><td>' + badge(x.flag) + '</td></tr>').join('') + '</tbody></table></div>' : '') +
     (meds.length ? '<h3 style="margin:14px 0 4px">' + esc(t('sec_meds')) + '</h3><div class="tablewrap"><table class="data"><thead><tr><th>' + esc(t('m_name')) + '</th><th>' + esc(t('m_dose')) + '</th><th>' + esc(t('m_freq')) + '</th><th>' + esc(t('m_duration')) + '</th></tr></thead><tbody>' +
-      meds.map(x => '<tr><td><strong>' + esc(x.name) + '</strong>' + (x.generic ? '<br><span class="muted small">' + esc(x.generic) + '</span>' : '') +
+      meds.map((x, i) => '<tr><td><strong>' + esc(x.name) + '</strong>' + srcBtn(x, 'medicines', i) + (x.generic ? '<br><span class="muted small">' + esc(x.generic) + '</span>' : '') +
         (x.instructions ? '<br><span class="small">' + esc(x.instructions) + '</span>' : '') +
         (x.known === false ? '<br><span class="tag amber">' + esc(t('unknown_med')) + '</span>' : '') + (isLow(x.confidence) ? '<br>' + lowTag(x.confidence) : '') + '</td>' +
         '<td class="mono">' + esc([x.strength, x.dose].filter(Boolean).join(' / ')) + '</td><td>' + esc([x.frequency, x.timing].filter(Boolean).join(', ')) + '</td><td>' + esc(x.duration) + '</td></tr>').join('') + '</tbody></table></div>' : '') +
@@ -973,14 +1026,18 @@ function viewDetail() {
     (adv.length ? '<h3 style="margin:14px 0 6px">' + esc(t('sec_advice')) + '</h3><ul class="qlist">' + adv.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul>' : '') +
     (r.follow_up ? '<p style="margin-top:12px"><strong>' + esc(t('f_followup')) + ':</strong> ' + esc(r.follow_up) + '</p>' : '') +
     '</div></div>' +
-    '<div class="card preview-card"><h3 style="margin-bottom:10px">' + esc(t('original')) + '</h3><div id="pv"></div></div></div>';
+    '<div class="card preview-card"><div class="preview-head"><h3>' + esc(t('original')) + '</h3><button type="button" class="btn small secondary" data-zoom="open">' + esc(t('zoom_open')) + '</button></div>' +
+    '<div class="srcbox" id="srcbox"><div class="muted small">' + esc(t('src_box')) + '</div><div class="mono" id="srctext">' + esc(t('src_hint')) + '</div></div><div class="preview-doc" data-zoom="open" id="pv"></div></div></div>';
 }
 
 const explInFlight = new Set();
 async function afterDetail() {
   const id = S.detailId, r = getRec(id);
   if (!r) return;
+  S.detailFile = null;
   dbGet('files', id).then(f => {
+    if (!f) f = urlFile(r);
+    if (S.detailId === id) S.detailFile = f || null;
     const el = $('#pv');
     if (el && S.detailId === id && S.view === 'detail') el.innerHTML = previewHTML(f);
   });
@@ -1071,7 +1128,7 @@ function chartSVG(s) {
   }
   g += '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (W - pr) + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
   g += '<polyline fill="none" stroke="var(--muted)" stroke-width="1.5" points="' + pts.map((p, i) => X(i).toFixed(1) + ',' + Y(p.v).toFixed(1)).join(' ') + '"/>';
-  pts.forEach((p, i) => { g += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="4" fill="' + FLAGC[normFlag(p.flag)] + '" stroke="var(--card)" stroke-width="1.5"><title>' + esc(fmtDate(p.date) + ': ' + fmtNum(p.v) + ' ' + (s.unit || '') + ' (' + t('flag_' + normFlag(p.flag)) + ')') + '</title></circle>'; });
+  pts.forEach((p, i) => { g += '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="4" fill="' + FLAGC[normFlag(p.flag)] + '" stroke="var(--card)" stroke-width="1.5"><title>' + esc(fmtDate(p.date) + ': ' + fmtNum(p.v) + ' ' + (s.unit || '') + ' (' + t('flag_' + normFlag(p.flag)) + ')' + (p.note ? ' - ' + p.note : '')) + '</title></circle>'; });
   const li = pts.length - 1;
   g += '<text class="last" x="' + (X(li) + 7).toFixed(1) + '" y="' + (Y(pts[li].v) + 3).toFixed(1) + '">' + esc(fmtNum(pts[li].v)) + '</text>';
   g += '<text x="' + (pl - 5) + '" y="' + (pt + 4) + '" text-anchor="end">' + esc(fmtNum(mx)) + '</text>';
@@ -1087,34 +1144,210 @@ function abhaNumber(p) {
   if (!a) return '';
   return typeof a === 'string' ? a : (a.number || a.abha_number || '');
 }
+/* ---- Insights: the server groups the records; if it fails, profile() is used instead ---- */
+function hashStr(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36); }
+function insightsKey() { return lang + '|' + S.records.length + '|' + hashStr(JSON.stringify(S.records.map(lite))); }
+const ukeyOf = u => String(u || '').replace(/\s+/g, '').toLowerCase();
+function fallbackInsights() {
+  const P = profile(), recs = sortedRecords(), map = new Map();
+  recs.forEach(r => arr(r.tests).forEach(x => {
+    const k = String(x.standard_name || x.name || '').trim().toLowerCase();
+    if (!k) return;
+    if (!map.has(k)) map.set(k, { key: k, name: x.standard_name || x.name, unit: x.unit || '', ref_low: isNum(x.ref_low) ? Number(x.ref_low) : null, ref_high: isNum(x.ref_high) ? Number(x.ref_high) : null, points: [] });
+    map.get(k).points.push({ date: r.date ? String(r.date).slice(0, 10) : null, value: isNum(x.value) ? Number(x.value) : null, unit: x.unit || '', orig_value: x.value, orig_unit: x.unit || '', flag: x.flag, record: r.id, comparable: true, note: null, ref_text: refText(x) });
+  }));
+  const tests = Array.from(map.values()).map(x => {
+    const latest = x.points[0];
+    x.points.forEach(p => { p.comparable = ukeyOf(p.unit) === ukeyOf(latest.unit); });
+    x.points.reverse();
+    x.latest = latest;
+    return x;
+  });
+  const attention = tests.filter(x => isAbn(normFlag(x.latest.flag))).map(x => ({ name: x.name, value: x.latest.orig_value, unit: x.latest.unit, flag: x.latest.flag, date: x.latest.date, record: x.latest.record, ref_text: x.latest.ref_text }));
+  return {
+    fallback: true,
+    conditions: P.cond.map(c => ({ name: c.name, first_seen: c.date || null, mentions: [{ text: c.name, date: c.date || null, record: c.id }] })),
+    medicines: P.meds.map(o => ({ name: o.m.name, generic: o.m.generic || null, strength: o.m.strength || null, dose: o.m.dose || null, frequency: o.m.frequency || null, timing: o.m.timing || null, duration: o.m.duration || null, date: o.date || null, record: o.id, ends: null, status: 'unconfirmed', mentions: 1 })),
+    tests, attention, questions: [], cross: [], disclaimer: ''
+  };
+}
+function normInsights(d) {
+  d = d && typeof d === 'object' ? d : {};
+  const tests = arr(d.tests).filter(x => x && typeof x === 'object').map(x => {
+    x.points = arr(x.points).filter(p => p && typeof p === 'object');
+    if (!x.latest) x.latest = x.points[x.points.length - 1] || {};
+    return x;
+  });
+  return { conditions: arr(d.conditions), medicines: arr(d.medicines), tests, attention: arr(d.attention), questions: arr(d.questions), cross: arr(d.cross), disclaimer: d.disclaimer || '' };
+}
+async function runInsights(key) {
+  let res = null;
+  try { res = await api('/api/insights', { records: S.records.map(lite), lang }); } catch (e) { /* fall back to profile() */ }
+  if (!S.insights || S.insights.key !== key) return;
+  if (res && typeof res === 'object' && Array.isArray(res.tests)) { S.insights.state = 'ok'; S.insights.data = normInsights(res); } else S.insights.state = 'fail';
+  if (S.view === 'health' || S.view === 'visit') render();
+}
+/* Used by views: starts the request when records or language changed. */
+function getInsights() {
+  if (!S.records.length) return { loading: false, data: fallbackInsights() };
+  const key = insightsKey();
+  if (!S.insights || S.insights.key !== key) { S.insights = { key, state: 'loading', data: null }; runInsights(key); }
+  if (S.insights.state === 'ok') return { loading: false, data: S.insights.data };
+  if (S.insights.state === 'fail') return { loading: false, data: fallbackInsights() };
+  return { loading: true, data: null };
+}
+/* Used by listeners: never starts a request. */
+function curInsights() { return S.insights && S.insights.state === 'ok' && S.insights.data ? S.insights.data : fallbackInsights(); }
+function schedMeds() { return curInsights().medicines.filter(m => m.status !== 'course_ended').map(m => ({ m, date: m.date })); }
+
+function recLink(id, label) {
+  const r = getRec(id);
+  if (!r) return '';
+  return '<button type="button" class="chip" data-act="openrec" data-id="' + esc(id) + '">' + esc(label || ((r.title || typeLabel(r.doc_type)) + (r.date ? ' (' + fmtDate(r.date) + ')' : ''))) + '</button>';
+}
+const recLinks = ids => { const h = arr(ids).map(i => recLink(i)).join(''); return h ? '<div class="chips" style="margin-top:6px">' + h + '</div>' : ''; };
+
+/* trend series built only from points the server marked comparable */
+function trendSeries(I) {
+  return I.tests.map(x => {
+    const pts = arr(x.points).filter(p => p.comparable !== false && isNum(p.value) && p.date).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    return {
+      name: x.name, unit: x.unit, skipped: arr(x.points).filter(p => p.comparable === false).length,
+      pts: pts.map(p => ({ date: String(p.date).slice(0, 10), v: Number(p.value), flag: p.flag, note: p.note || null, lo: isNum(x.ref_low) ? Number(x.ref_low) : null, hi: isNum(x.ref_high) ? Number(x.ref_high) : null }))
+    };
+  }).filter(s => s.pts.length >= 2);
+}
+function changeText(s) {
+  const a = s.pts[0], b = s.pts[s.pts.length - 1], u = s.unit ? ' ' + s.unit : '';
+  return fmtNum(a.v) + u + ' (' + fmtDate(a.date) + ')  →  ' + fmtNum(b.v) + u + ' (' + fmtDate(b.date) + ')';
+}
+function biggestChange(series) {
+  let best = null;
+  series.forEach(s => {
+    const a = s.pts[0], b = s.pts[s.pts.length - 1];
+    if (!a.v) return;
+    const rel = Math.abs((b.v - a.v) / a.v);
+    if (!best || rel > best.rel) best = { s, rel };
+  });
+  return best;
+}
+const ptVal = p => (p.orig_value != null && p.orig_value !== '' ? p.orig_value : p.value);
+const ptUnit = p => (p.orig_value != null && p.orig_value !== '' ? (p.orig_unit != null ? p.orig_unit : p.unit) : p.unit);
+
+function greetingLine() {
+  const u = currentUser(), p = S.patient || {};
+  const nm = String((u && u.name) || p.name || '').trim().split(/\s+/)[0];
+  if (!nm) return t('greet_guest');
+  const h = new Date().getHours();
+  return t(h < 12 ? 'greet_morning' : (h < 18 ? 'greet_afternoon' : 'greet_evening'), { name: nm });
+}
+function nextUpHTML() {
+  const r = sortedRecords().find(x => x.follow_up);
+  if (r) return '<p class="dash-t">' + esc(r.follow_up) + '</p><p class="muted small">' + esc(fmtDate(r.date)) + '</p>';
+  const doses = buildDoses(schedMeds()).filter(d => d.slot === 'morning' || d.slot === 'afternoon' || d.slot === 'night');
+  const order = ['morning', 'afternoon', 'night'], h = new Date().getHours(), cur = h < 12 ? 0 : (h < 18 ? 1 : 2);
+  for (let k = 0; k < 3; k++) {
+    const slot = order[(cur + k) % 3], l = doses.filter(d => d.slot === slot);
+    if (l.length) {
+      const names = Array.from(new Set(l.map(d => d.m.name))).join(', ');
+      return '<p class="dash-t">' + esc(t('dash_next_med', { slot: t('slot_' + slot), names })) + '</p>';
+    }
+  }
+  return '<p class="muted">' + esc(t('dash_next_none')) + '</p>';
+}
+const QA_ICON = {
+  add: '<path d="M12 5v14M5 12h14"/>',
+  ask: '<path d="M4 5h16v11H9l-5 4z"/>',
+  visit: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  exp: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'
+};
+function quickTile(icon, label, attrs) {
+  return '<button type="button" class="qa" ' + attrs + '><svg viewBox="0 0 24 24" aria-hidden="true">' + QA_ICON[icon] + '</svg><span>' + esc(label) + '</span></button>';
+}
+function dashHTML(I) {
+  const n = I.attention.length, latest = sortedRecords()[0], series = trendSeries(I), best = biggestChange(series);
+  const chips = I.attention.slice(0, 3).map(a => '<span class="chip static">' + esc(a.name + ' ' + (a.value == null ? '' : a.value) + (a.unit ? ' ' + a.unit : '')) + ' ' + badge(a.flag) + '</span>').join('');
+  const lead = '<div class="card dash-lead ' + (n ? 'warn' : 'ok') + '"><div class="kicker">' + esc(t('kick_today')) + '</div>' +
+    (n ? '<div class="dash-big"><span class="dash-num">' + n + '</span><span class="dash-lbl">' + esc(t(n === 1 ? 'dash_attn_one' : 'dash_attn_many')) + '</span></div>' +
+      '<div class="chips" style="margin:10px 0 14px">' + chips + '</div>' +
+      (latest ? '<button type="button" class="btn" data-act="openrec" data-id="' + esc(latest.id) + '">' + esc(t('dash_see')) + '</button>' : '')
+      : '<div class="dash-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>' + esc(t('attn_none')) + '</span></div>') + '</div>';
+  const side = '<div class="dash-side">' +
+    '<div class="card mini"><div class="kicker">' + esc(t('dash_next')) + '</div>' + nextUpHTML() + '</div>' +
+    '<div class="card mini"><div class="kicker">' + esc(t('dash_changed')) + '</div>' +
+    (best ? '<p class="dash-t"><strong>' + esc(best.s.name) + '</strong></p><p class="small" style="margin:0">' + esc(changeText(best.s)) + '</p>' : '<p class="muted">' + esc(t('dash_changed_none')) + '</p>') + '</div>' +
+    '<div class="card mini"><div class="kicker">' + esc(t('dash_doctor')) + '</div><p class="dash-t">' + esc(t('dash_doctor_n', { n: I.questions.length })) + '</p>' +
+    '<button type="button" class="btn small secondary" data-act="visit">' + esc(t('visit_btn')) + '</button></div></div>';
+  const quick = '<div class="quick">' + quickTile('add', t('nav_add'), 'data-act="nav" data-view="add"') + quickTile('ask', t('qa_ask'), 'data-pet="open"') +
+    quickTile('visit', t('visit_btn'), 'data-act="visit"') + quickTile('exp', t('qa_export'), 'data-act="nav" data-view="abha"') + '</div>';
+  return '<div class="dash">' + lead + side + '</div>' + quick;
+}
+function skelCard(n) {
+  let h = '<div class="card"><div class="skeleton" style="width:40%;height:18px"></div>';
+  for (let i = 0; i < n; i++) h += '<div class="skeleton" style="width:' + (92 - i * 9) + '%"></div>';
+  return h + '</div>';
+}
+function medStatusChip(m) {
+  if (m.status === 'course_ended') return '<span class="tag">' + esc(m.ends ? t('med_ended_d', { d: fmtDate(m.ends) }) : t('med_ended')) + '</span>';
+  return '<span class="tag amber">' + esc(t('med_unconf')) + '</span>';
+}
+function medsRecordedCard(I) {
+  return '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_meds_rec')) + '</h2>' +
+    (I.medicines.length ? '<ul class="list meds-rec">' + I.medicines.map(m => {
+      const how = [m.dose, m.frequency, m.timing].filter(Boolean).join(', ');
+      return '<li><span class="l"><strong>' + esc(m.name) + '</strong>' + (m.strength ? ' <span class="mono">' + esc(m.strength) + '</span>' : '') +
+        (how ? '<br><span class="small">' + esc(how) + '</span>' : '') +
+        '<br><span class="muted small">' + esc(t('med_presc', { d: fmtDate(m.date) })) + (m.duration ? ' · ' + esc(t('med_dur', { x: m.duration })) : '') + '</span></span>' +
+        '<span class="r">' + medStatusChip(m) + '</span></li>';
+    }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') +
+    '<p class="muted small" style="margin:10px 0 0">' + esc(t('med_note')) + '</p></div>';
+}
 function viewHealth() {
   const head = '<div class="page-head"><h1>' + esc(t('health_title')) + '</h1><p>' + esc(t('health_sub')) + '</p></div>';
   if (!S.records.length) return head + '<div class="card empty"><p>' + esc(t('none_yet')) + '</p><button type="button" class="btn" data-act="nav" data-view="add">' + esc(t('go_add')) + '</button></div>';
-  const P = profile(), p = S.patient || {};
-  const ab = abhaNumber(p);
+  const p = S.patient || {}, ab = abhaNumber(p);
   const sexLbl = s => { const v = String(s || '').toLowerCase(); return v === 'male' || v === 'm' ? t('sex_male') : (v === 'female' || v === 'f' ? t('sex_female') : (s || '')); };
-  const ov = S.overview[lang];
-  const out = P.latest.filter(o => ['low', 'high', 'critical'].indexOf(normFlag(o.x.flag)) >= 0).length;
-  const tile = (n, label, cls) => '<div class="stat ' + cls + '"><div class="stat-n">' + esc(n) + '</div><div class="stat-l">' + esc(label) + '</div></div>';
-  const tiles = '<div class="stats">' + tile(S.records.length, t('stat_records'), 's-teal') + tile(out, t('stat_out'), out ? 's-amber' : 's-green') +
-    tile(P.meds.length, t('stat_meds'), 's-blue') + tile(P.cond.length, t('stat_cond'), 's-plain') + '</div>';
-  const headV = '<div class="page-head row between"><div><h1>' + esc(t('health_title')) + '</h1><p>' + esc(t('health_sub')) + '</p></div>' +
+  const headV = '<div class="page-head row between"><div><div class="kicker">' + esc(t('health_title')) + '</div><h1>' + esc(greetingLine()) + '</h1><p>' +
+    esc(fmtDate(todayKey(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</p></div>' +
     '<button type="button" class="btn secondary" data-act="visit">' + esc(t('visit_btn')) + '</button></div>';
-  return headV + tiles + '<div class="stack" style="margin-bottom:14px">' + medsTodayCard(P) + pharmacistCard(P) + '</div><div class="health-grid">' +
-    '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab || t('not_linked')) + '</dd></dl></div>' +
-    '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_conditions')) + '</h2>' +
-    (P.cond.length ? '<ul class="list">' + P.cond.map(c => '<li><span class="l">' + esc(c.name) + '</span><span class="r muted small">' + esc(t('first_seen', { d: fmtDate(c.date) })) + '</span></li>').join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>' +
-    '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_meds')) + '</h2>' +
-    (P.meds.length ? '<ul class="list">' + P.meds.map(o => '<li><span class="l"><strong>' + esc(o.m.name) + '</strong><br><span class="muted small">' + esc([o.m.strength, o.m.dose, o.m.frequency].filter(Boolean).join(' / ')) + '</span></span><span class="r muted small">' + esc(t('from_rec', { d: fmtDate(o.date) })) + '</span></li>').join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>' +
-    '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_latest')) + '</h2>' +
-    (P.latest.length ? '<ul class="list">' + P.latest.map(o => '<li><span class="l">' + esc(o.x.name) + '<br><span class="muted small">' + esc(fmtDate(o.date)) + '</span></span><span class="r"><span class="mono">' + esc(o.x.value) + ' ' + esc(o.x.unit) + '</span><br>' + badge(o.x.flag) + '</span></li>').join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>' +
-    '<div class="card full"><h2 style="margin-bottom:10px">' + esc(t('h_trends')) + '</h2>' +
-    (P.trends.length ? '<div class="trends">' + P.trends.map(s => '<div class="trend"><h4><span>' + esc(s.name) + '</span><span class="mono muted small">' + esc(s.unit) + '</span></h4>' + chartSVG(s) + (s.skipped ? '<p class="muted small">' + esc(t('unit_skip', { n: s.skipped })) + '</p>' : '') + '</div>').join('') + '</div><p class="muted small" style="margin-top:8px">' + esc(t('band_note')) + '</p>' : '<p class="muted">' + esc(t('no_trends')) + '</p>') + '</div>' +
-    '<div class="card full"><div class="row between"><h2>' + esc(t('overview_title')) + '</h2><button type="button" class="btn secondary" data-act="overview"' + (S.busy.overview ? ' disabled' : '') + '>' + esc(S.busy.overview ? t('working') : t('gen_overview')) + '</button></div>' +
+  const g = getInsights();
+  if (g.loading) {
+    return headV + '<div class="dash"><div class="card dash-lead"><div class="skeleton" style="width:30%;height:44px"></div><div class="skeleton" style="width:70%"></div><div class="skeleton" style="width:50%"></div></div>' +
+      '<div class="dash-side">' + skelCard(2) + skelCard(2) + '</div></div><div class="stack">' + skelCard(3) + skelCard(4) + '</div><p class="muted small" role="status">' + esc(t('ins_loading')) + '</p>';
+  }
+  const I = g.data, ov = S.overview[lang];
+  const sched = I.medicines.filter(m => m.status !== 'course_ended').map(m => ({ m, date: m.date }));
+  const tile = (n, label, cls) => '<div class="stat ' + cls + '"><div class="stat-n">' + esc(n) + '</div><div class="stat-l">' + esc(label) + '</div></div>';
+  const tiles = '<div class="stats">' + tile(S.records.length, t('stat_records'), 's-teal') + tile(I.attention.length, t('stat_out'), I.attention.length ? 's-amber' : 's-green') +
+    tile(I.medicines.length, t('stat_meds_rec'), 's-blue') + tile(I.conditions.length, t('stat_cond'), 's-plain') + '</div>';
+  const series = trendSeries(I);
+  const attn = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('attn_title')) + '</h2>' +
+    (I.attention.length ? '<ul class="list">' + I.attention.map(a => '<li><span class="l"><strong>' + esc(a.name) + '</strong><br><span class="muted small">' + esc(fmtDate(a.date)) + (a.ref_text ? ' · ' + esc(t('t_range')) + ': ' + esc(a.ref_text) : '') + '</span>' + recLinks([a.record]) + '</span><span class="r"><span class="mono">' + esc(a.value == null ? '' : a.value) + ' ' + esc(a.unit || '') + '</span><br>' + badge(a.flag) + '</span></li>').join('') + '</ul>'
+      : '<p class="dash-okline">' + esc(t('attn_none')) + '</p>') + '</div>';
+  const latestCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_latest')) + '</h2>' +
+    (I.tests.length ? '<ul class="list">' + I.tests.map(x => { const l = x.latest; return '<li><span class="l">' + esc(x.name) + '<br><span class="muted small">' + esc(fmtDate(l.date)) + '</span></span><span class="r"><span class="mono">' + esc(l.value == null ? ptVal(l) : l.value) + ' ' + esc(l.unit || x.unit || '') + '</span><br>' + badge(l.flag) + '</span></li>'; }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>';
+  const trendsCard = '<div class="card full"><h2 style="margin-bottom:10px">' + esc(t('h_trends')) + '</h2>' +
+    (series.length ? '<div class="trends">' + series.map(s => '<div class="trend"><h4><span>' + esc(s.name) + '</span><span class="mono muted small">' + esc(s.unit) + '</span></h4>' + chartSVG(s) + (s.skipped ? '<p class="muted small">' + esc(t('unit_skip', { n: s.skipped })) + '</p>' : '') + '</div>').join('') + '</div><p class="muted small" style="margin-top:8px">' + esc(t('band_note')) + '</p><p class="muted small" style="margin:2px 0 0">' + esc(t('trend_hist')) + '</p>' : '<p class="muted">' + esc(t('no_trends')) + '</p>') + '</div>';
+  const crossCard = I.cross.length ? '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('cross_title')) + '</h2><ul class="list cross">' + I.cross.map(c => '<li><span class="l"><strong>' + esc(c.title) + '</strong><br><span class="small">' + esc(c.note) + '</span>' + recLinks(c.records) + '</span></li>').join('') + '</ul></div>' : '';
+  const qCard = I.questions.length ? '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('q_title')) + '</h2><ul class="list cross">' + I.questions.map(q => '<li><span class="l">' + esc(q.text) + recLinks(q.records) + '</span></li>').join('') + '</ul></div>' : '';
+  const ovCard = '<div class="card"><div class="row between"><h2>' + esc(t('overview_title')) + '</h2><div class="row">' + (ov && ov.summary ? listenBtn('overview') : '') + '<button type="button" class="btn secondary" data-act="overview"' + (S.busy.overview ? ' disabled' : '') + '>' + esc(S.busy.overview ? t('working') : t('gen_overview')) + '</button></div></div>' +
     (ov ? '<div style="margin-top:12px">' + (ov.summary ? '<p>' + esc(ov.summary) + '</p>' : '') +
       (arr(ov.highlights).length ? '<h3 style="margin:10px 0 4px">' + esc(t('highlights')) + '</h3><ul class="qlist">' + ov.highlights.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '') +
       (arr(ov.watch).length ? '<h3 style="margin:10px 0 4px">' + esc(t('watch')) + '</h3><ul class="qlist">' + ov.watch.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '') +
-      (ov.disclaimer ? '<p class="muted small" style="margin-top:10px">' + esc(ov.disclaimer) + '</p>' : '') + '</div>' : '') + '</div></div>';
+      (ov.disclaimer ? '<p class="muted small" style="margin-top:10px">' + esc(ov.disclaimer) + '</p>' : '') + '</div>' : '') + '</div>';
+  const condCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_conditions')) + '</h2>' +
+    (I.conditions.length ? '<ul class="list conds">' + I.conditions.map(c => {
+      const ms = arr(c.mentions);
+      return '<li><span class="l">' + esc(c.name) + '</span><span class="r muted small">' + (c.first_seen ? esc(t('first_seen', { d: fmtDate(c.first_seen) })) : '') + '</span>' +
+        (ms.length ? '<details class="mentions"><summary>' + esc(t('ment_title', { n: ms.length })) + '</summary><ul>' + ms.map(m => '<li>“' + esc(m.text) + '”' + (m.date ? ' <span class="muted small">' + esc(fmtDate(m.date)) + '</span>' : '') + ' ' + recLink(m.record, t('ment_open')) + '</li>').join('') + '</ul></details>' : '') + '</li>';
+    }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>';
+  const patientCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab || t('not_linked')) + '</dd></dl></div>';
+  const sec = (k, body) => '<section class="hsec"><div class="kicker">' + esc(t(k)) + '</div>' + body + '</section>';
+  return headV + dashHTML(I) + tiles +
+    sec('kick_results', '<div class="stack">' + attn + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>') +
+    sec('kick_meds', '<div class="stack">' + medsRecordedCard(I) + medsTodayCard(sched) + pharmacistCard(sched) + '</div>') +
+    sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>') +
+    sec('kick_about', '<div class="health-grid">' + patientCard + condCard + '</div>');
 }
 async function genOverview() {
   if (S.busy.overview) return;
@@ -1144,7 +1377,7 @@ function viewAsk() {
     const src = srcChips(m.sources);
     const kinds = ['records', 'general', 'doctor', 'emergency', 'signin'];
     const lbl = kinds.indexOf(m.label) >= 0 ? '<span class="lbl lbl-' + m.label + '">' + esc(t('label_' + m.label)) + '</span>' : '';
-    return '<div class="msg' + (m.label === 'emergency' ? ' urgent' : '') + '"><div class="who">' + esc(t('assistant')) + lbl + '</div>' + esc(m.label === 'signin' ? t('signin_msg') : m.text) + signinBtns(m) + (src ? '<div class="srcs"><div class="muted small" style="margin-bottom:4px">' + esc(t('sources')) + '</div><div class="chips">' + src + '</div></div>' : '') + '</div>';
+    return '<div class="msg' + (m.label === 'emergency' ? ' urgent' : '') + '"><div class="who">' + esc(t('assistant')) + lbl + '</div>' + esc(m.label === 'signin' ? t('signin_msg') : m.text) + signinBtns(m) + msgListen(m) + (src ? '<div class="srcs"><div class="muted small" style="margin-bottom:4px">' + esc(t('sources')) + '</div><div class="chips">' + src + '</div></div>' : '') + '</div>';
   }).join('');
   return head + '<div class="chips">' + qs + '</div>' +
     '<div class="chat" id="chat">' + msgs + (S.asking ? '<div class="msg muted">' + esc(t('thinking')) + '</div>' : '') + '</div>' +
@@ -1302,8 +1535,9 @@ function medSlots(m) {
   return hits.length ? hits : ['asis'];
 }
 function buildDoses(P) {
+  const list = Array.isArray(P) ? P : P.meds;
   const out = [];
-  P.meds.forEach(o => medSlots(o.m).forEach((slot, i) => {
+  list.forEach(o => medSlots(o.m).forEach((slot, i) => {
     out.push({ key: String(o.m.name || '').trim().toLowerCase() + '|' + slot + '|' + i, slot, m: o.m, date: o.date });
   }));
   return out;
@@ -1324,7 +1558,7 @@ function takenCountText(doses) {
 }
 function medsTodayCard(P) {
   const doses = buildDoses(P), tk = takenGet();
-  let h = '<div class="card medday"><h2 style="margin-bottom:10px">' + esc(t('mt_title')) + '</h2>';
+  let h = '<div class="card medday"><h2 style="margin-bottom:10px">' + esc(t('mt_title2')) + '</h2>';
   if (!doses.length) return h + '<p class="muted">' + esc(t('mt_empty')) + '</p></div>';
   h += '<p class="small" style="margin:0 0 8px"><strong id="takenCount">' + esc(takenCountText(doses)) + '</strong></p>';
   SLOT_ORDER.forEach(slot => {
@@ -1355,7 +1589,7 @@ document.addEventListener('change', async e => {
     if (el.checked) tk[key] = 1; else delete tk[key];
     takenSave();
     const c = document.getElementById('takenCount');
-    if (c) c.textContent = takenCountText(buildDoses(profile()));
+    if (c) c.textContent = takenCountText(buildDoses(schedMeds()));
   } else if (el.hasAttribute('data-remind')) {
     const den = document.getElementById('remindDenied');
     if (den) den.hidden = true;
@@ -1387,7 +1621,7 @@ function checkReminders() {
     REMINDED[mk] = 1; sent[slot] = 1;
     try { localStorage.setItem('sehat_notified_' + day, JSON.stringify(sent)); } catch (x) { /* ignore */ }
     const tk = takenGet();
-    const left = buildDoses(profile()).filter(d => d.slot === slot && !tk[d.key]).length;
+    const left = buildDoses(schedMeds()).filter(d => d.slot === slot && !tk[d.key]).length;
     if (left) { try { new Notification(t('mt_notif_title'), { body: t('mt_notif_body', { slot: t('slot_' + slot), n: left }) }); } catch (x) { /* ignore */ } }
   });
 }
@@ -1404,6 +1638,7 @@ async function runMedcheck(key, meds) {
   }
 }
 function pharmacistCard(P) {
+  P = Array.isArray(P) ? { meds: P } : P;
   if (!P.meds.length) return '';
   const meds = P.meds.map(o => ({ name: o.m.name, generic: o.m.generic, strength: o.m.strength }));
   const key = lang + '|' + JSON.stringify(meds);
@@ -1429,35 +1664,34 @@ function pharmacistCard(P) {
 /* ================= Doctor visit summary ================= */
 function viewVisit() {
   if (!S.records.length) { S.view = 'health'; return viewHealth(); }
-  const P = profile(), p = S.patient || {}, ab = abhaNumber(p);
+  const p = S.patient || {}, ab = abhaNumber(p);
   const sx = String(p.sex || '').toLowerCase();
   const sexTxt = sx === 'male' || sx === 'm' ? t('sex_male') : (sx === 'female' || sx === 'f' ? t('sex_female') : (p.sex || ''));
   const line = [p.name, p.age ? t('h_age') + ' ' + p.age : '', sexTxt, ab ? t('h_abha') + ' ' + ab : ''].filter(Boolean).join('  |  ');
+  const headBlock = '<div class="visit-head"><h1>' + esc(t('visit_title')) + '</h1>' +
+    '<p class="visit-pt">' + esc(line || '-') + '</p><p class="muted small">' + esc(t('visit_generated', { d: fmtDate(todayKey()) })) + '</p></div>';
+  const g = getInsights();
+  if (g.loading) {
+    return '<div class="visit">' + headBlock + '<div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:85%"></div><div class="skeleton" style="width:70%"></div>' +
+      '<div class="row noprint" style="margin-top:16px"><button type="button" class="btn secondary" data-act="nav" data-view="health">' + esc(t('visit_back')) + '</button></div></div>';
+  }
+  const I = g.data;
   const seen = new Set(), qs = [];
-  sortedRecords().forEach(r => {
-    const ex = r.explanation && r.explanation[lang];
-    arr(ex && ex.questions).forEach(q => {
-      const s = String(q || '').trim(), k = s.toLowerCase();
-      if (s && !seen.has(k) && qs.length < 6) { seen.add(k); qs.push(s); }
-    });
-  });
-  const abn = P.latest.filter(o => isAbn(normFlag(o.x.flag)));
+  const addQ = q => { const s = String(q || '').trim(), k = s.toLowerCase(); if (s && !seen.has(k) && qs.length < 6) { seen.add(k); qs.push(s); } };
+  I.questions.forEach(q => addQ(q && q.text));
+  sortedRecords().forEach(r => { const ex = r.explanation && r.explanation[lang]; arr(ex && ex.questions).forEach(addQ); });
   const th = a => '<thead><tr>' + a.map(x => '<th>' + esc(x) + '</th>').join('') + '</tr></thead>';
   const none = '<p class="muted">' + esc(t('visit_none')) + '</p>';
   const sec = (title, body) => '<section class="visit-sec"><h2>' + esc(title) + '</h2>' + body + '</section>';
   const notes = S.visitNotes || '';
-  return '<div class="visit">' +
-    '<div class="visit-head"><h1>' + esc(t('visit_title')) + '</h1>' +
-    '<p class="visit-pt">' + esc(line || '-') + '</p><p class="muted small">' + esc(t('visit_generated', { d: fmtDate(todayKey()) })) + '</p></div>' +
-    sec(t('visit_cond'), P.cond.length ? '<ul class="qlist">' + P.cond.map(c => '<li>' + esc(c.name) + ' <span class="muted small">(' + esc(t('first_seen', { d: fmtDate(c.date) })) + ')</span></li>').join('') + '</ul>' : none) +
-    sec(t('visit_meds'), P.meds.length ? '<div class="tablewrap"><table class="data">' + th([t('m_name'), t('m_strength'), t('visit_how'), t('visit_since')]) + '<tbody>' +
-      P.meds.map(o => '<tr><td><strong>' + esc(o.m.name) + '</strong></td><td>' + esc(o.m.strength || '') + '</td><td>' + esc([o.m.dose, o.m.frequency, o.m.timing].filter(Boolean).join(', ')) + '</td><td>' + esc(fmtDate(o.date)) + '</td></tr>').join('') + '</tbody></table></div>' : none) +
-    sec(t('visit_abn'), abn.length ? '<div class="tablewrap"><table class="data">' + th([t('t_name'), t('t_value'), t('t_range'), t('f_date'), t('t_flag')]) + '<tbody>' +
-      abn.map(o => '<tr><td>' + esc(o.x.name) + '</td><td class="mono">' + esc(o.x.value) + ' ' + esc(o.x.unit || '') + '</td><td class="mono">' + esc(refText(o.x)) + '</td><td>' + esc(fmtDate(o.date)) + '</td><td><strong>' + esc(t('flag_' + normFlag(o.x.flag))) + '</strong></td></tr>').join('') + '</tbody></table></div>' : none) +
-    sec(t('visit_changes'), P.trends.length ? '<ul class="qlist">' + P.trends.slice(0, 8).map(s => {
-      const a = s.pts[0], b = s.pts[s.pts.length - 1], u = s.unit ? ' ' + s.unit : '';
-      return '<li><strong>' + esc(s.name) + ':</strong> ' + esc(fmtNum(a.v) + u + ' (' + fmtDate(a.date) + ')  →  ' + fmtNum(b.v) + u + ' (' + fmtDate(b.date) + ')') + '</li>';
-    }).join('') + '</ul>' : none) +
+  const series = trendSeries(I).slice(0, 8);
+  return '<div class="visit">' + headBlock +
+    sec(t('visit_cond'), I.conditions.length ? '<ul class="qlist">' + I.conditions.map(c => '<li>' + esc(c.name) + (c.first_seen ? ' <span class="muted small">(' + esc(t('first_seen', { d: fmtDate(c.first_seen) })) + ')</span>' : '') + '</li>').join('') + '</ul>' : none) +
+    sec(t('visit_meds_rec'), I.medicines.length ? '<div class="tablewrap"><table class="data">' + th([t('m_name'), t('m_strength'), t('visit_how'), t('visit_presc'), t('visit_status')]) + '<tbody>' +
+      I.medicines.map(m => '<tr><td><strong>' + esc(m.name) + '</strong></td><td>' + esc(m.strength || '') + '</td><td>' + esc([m.dose, m.frequency, m.timing].filter(Boolean).join(', ')) + '</td><td>' + esc(fmtDate(m.date)) + '</td><td>' + esc(m.status === 'course_ended' ? (m.ends ? t('med_ended_d', { d: fmtDate(m.ends) }) : t('med_ended')) : t('med_unconf')) + '</td></tr>').join('') + '</tbody></table></div><p class="muted small" style="margin:8px 0 0">' + esc(t('med_note')) + '</p>' : none) +
+    sec(t('visit_abn'), I.attention.length ? '<div class="tablewrap"><table class="data">' + th([t('t_name'), t('t_value'), t('t_range'), t('f_date'), t('t_flag')]) + '<tbody>' +
+      I.attention.map(a => '<tr><td>' + esc(a.name) + '</td><td class="mono">' + esc(a.value == null ? '' : a.value) + ' ' + esc(a.unit || '') + '</td><td class="mono">' + esc(a.ref_text || '-') + '</td><td>' + esc(fmtDate(a.date)) + '</td><td><strong>' + esc(t('flag_' + normFlag(a.flag))) + '</strong></td></tr>').join('') + '</tbody></table></div>' : none) +
+    sec(t('visit_changes'), series.length ? '<ul class="qlist">' + series.map(s => '<li><strong>' + esc(s.name) + ':</strong> ' + esc(changeText(s)) + '</li>').join('') + '</ul>' : none) +
     sec(t('visit_q'), (qs.length ? '<ul class="qlist">' + qs.map(q => '<li>' + esc(q) + '</li>').join('') + '</ul>' : '<p class="muted noprint">' + esc(t('visit_noq')) + '</p>') +
       '<h3 style="margin:12px 0 6px">' + esc(t('visit_notes')) + '</h3><textarea id="visitNotes" class="visit-notes" rows="5" aria-label="' + esc(t('visit_notes')) + '">' + esc(notes) + '</textarea>' +
       '<div class="print-notes" id="visitNotesPrint">' + esc(notes) + '</div>') +
@@ -1537,6 +1771,89 @@ document.addEventListener('change', e => {
   backupRestore(f);
 });
 
+/* ================= Source buttons in the record detail ================= */
+function srcBtn(x, kind, i) {
+  return x && x.source_text ? '<br><button type="button" class="btn link small srcbtn" data-act="showsrc" data-kind="' + kind + '" data-i="' + i + '">' + esc(t('src_btn')) + '</button>' : '';
+}
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-act="showsrc"]') : null;
+  if (!el) return;
+  const kind = el.dataset.kind === 'medicines' ? 'medicines' : 'tests';
+  const r = getRec(S.detailId), x = r && arr(r[kind])[Number(el.dataset.i)];
+  const box = document.getElementById('srcbox'), text = document.getElementById('srctext');
+  if (!x || !x.source_text || !box || !text) return;
+  box.classList.add('on');
+  text.textContent = x.source_text + (x.page ? '  (p. ' + x.page + ')' : '');
+  box.scrollIntoView({ block: 'nearest' });
+});
+
+/* ================= Listen (text to speech) ================= */
+const SPEAK_LANG = { en: 'en-IN', hi: 'hi-IN', bn: 'bn-IN', te: 'te-IN', ta: 'ta-IN', mr: 'mr-IN', gu: 'gu-IN', kn: 'kn-IN', ml: 'ml-IN', pa: 'pa-IN' };
+const SPEAK = { key: null, tag: null, vk: undefined };
+const speakOK = () => typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+function stripMd(s) {
+  return String(s == null ? '' : s).replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_#`>~|]+/g, ' ')
+    .replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
+}
+function paintListen() {
+  document.querySelectorAll('[data-listen]').forEach(b => {
+    const on = SPEAK.key === b.getAttribute('data-listen');
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    const sp = b.querySelector('span');
+    if (sp) sp.textContent = t(on ? 'listen_stop' : 'listen');
+  });
+}
+function stopSpeak() {
+  SPEAK.tag = null;
+  if (speakOK()) { try { speechSynthesis.cancel(); } catch (e) { /* ignore */ } }
+  SPEAK.key = null;
+  paintListen();
+}
+function speakText(text, code) {
+  if (!speakOK()) return false;
+  const parts = stripMd(text).split('\n').filter(Boolean);
+  if (!parts.length) return false;
+  try { speechSynthesis.cancel(); } catch (e) { /* ignore */ }
+  const tag = {};
+  SPEAK.tag = tag;
+  parts.forEach((part, i) => {
+    const u = new SpeechSynthesisUtterance(part);
+    u.lang = SPEAK_LANG[code] || code;
+    u.rate = 0.95;
+    if (i === parts.length - 1) {
+      u.onend = u.onerror = () => { if (SPEAK.tag === tag) { SPEAK.tag = null; SPEAK.key = null; paintListen(); } };
+    }
+    speechSynthesis.speak(u);
+  });
+  return true;
+}
+function listenBtn(key) {
+  if (!speakOK()) return '';
+  const on = SPEAK.key === key;
+  return '<button type="button" class="btn small secondary listen" data-listen="' + esc(key) + '" aria-pressed="' + on + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg><span>' + esc(t(on ? 'listen_stop' : 'listen')) + '</span></button>';
+}
+function msgListen(m) {
+  return m && m.role === 'bot' && m.label !== 'signin' && m.text ? '<div class="msg-tools">' + listenBtn('msg:' + S.chat.indexOf(m)) + '</div>' : '';
+}
+function listenText(key) {
+  if (key === 'expl') {
+    const r = getRec(S.detailId), ex = r && r.explanation && r.explanation[lang];
+    if (!ex) return '';
+    return [ex.summary].concat(arr(ex.findings).map(f => f.name + (f.meaning ? ': ' + f.meaning : ''))).filter(Boolean).join('\n');
+  }
+  if (key === 'overview') { const ov = S.overview[lang]; return ov && ov.summary ? ov.summary : ''; }
+  if (key.indexOf('msg:') === 0) { const m = S.chat[Number(key.slice(4))]; return m ? String(m.text || '') : ''; }
+  return '';
+}
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-listen]') : null;
+  if (!el) return;
+  const key = el.getAttribute('data-listen');
+  if (SPEAK.key === key) { stopSpeak(); return; }
+  const txt = listenText(key);
+  if (txt && speakText(txt, lang)) { SPEAK.key = key; paintListen(); }
+});
+
 /* ================= Render ================= */
 const ICONS = {
   add: '<path d="M12 5v14M5 12h14"/>',
@@ -1565,6 +1882,9 @@ function syncDiscHeight() {
 }
 
 function render() {
+  const vk = S.view + ':' + (S.view === 'detail' ? S.detailId : '');
+  if (SPEAK.vk !== undefined && SPEAK.vk !== vk) stopSpeak();
+  SPEAK.vk = vk;
   applyStatic();
   const v = $('#view');
   let html;
@@ -1684,6 +2004,7 @@ window.addEventListener('resize', syncDiscHeight);
     S.patient = await dbGet('meta', 'patient');
   } catch (e) { S.records = []; }
   S.ready = true;
+  if (S.records.length && S.view === 'add' && S.stage === 'idle') S.view = 'health';
   render();
   loadSamples();
 })();
@@ -1731,7 +2052,7 @@ function petMsgs() {
   const msgs = S.chat.slice(-8).map(m => {
     if (m.role === 'me') return '<div class="pet-msg me">' + esc(m.text) + '</div>';
     const lbl = kinds.indexOf(m.label) >= 0 ? '<span class="lbl lbl-' + m.label + '">' + esc(t('label_' + m.label)) + '</span>' : '';
-    return '<div class="pet-msg' + (m.label === 'emergency' ? ' urgent' : '') + '">' + (lbl ? '<div class="pet-lbl">' + lbl + '</div>' : '') + esc(m.label === 'signin' ? t('signin_msg') : m.text) + signinBtns(m) + '</div>';
+    return '<div class="pet-msg' + (m.label === 'emergency' ? ' urgent' : '') + '">' + (lbl ? '<div class="pet-lbl">' + lbl + '</div>' : '') + esc(m.label === 'signin' ? t('signin_msg') : m.text) + signinBtns(m) + msgListen(m) + '</div>';
   }).join('');
   return '<div class="pet-msg">' + esc(t('pet_hello')) + '</div><div class="pet-msg tip">' + esc(t('pet_tip_' + petScreen())) + '</div>' + msgs +
     (S.asking ? '<div class="pet-msg muted">' + esc(t('thinking')) + '</div>' : '');
@@ -1811,6 +2132,12 @@ function renderUser() {
   link.href = '/login';
   link.textContent = u ? t('sign_out') : t('sign_in');
   if (u) link.addEventListener('click', () => { try { localStorage.removeItem('sehat_user'); } catch (e) { /* ignore */ } });
+  if (u) {
+    const av = document.createElement('span');
+    av.className = 'avatar'; av.setAttribute('aria-hidden', 'true');
+    av.textContent = String(u.name).trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase();
+    el.appendChild(av);
+  }
   el.appendChild(who); el.appendChild(link);
 }
 const renderWithPet = render;
@@ -1825,6 +2152,7 @@ renderUser();
     renderUser();
   }
   if (!S.records.length) await loadDemo();
+  if (S.records.length && S.stage === 'idle') { S.view = 'health'; render(); }
   try { history.replaceState(null, '', '/app'); } catch (e) { /* ignore */ }
 })();
 
@@ -1843,8 +2171,8 @@ document.addEventListener('click', e => {
    pinned on the review screen, and one tap opens it full screen, where a tap zooms. */
 function closeZoom() { const z = document.getElementById('zoom'); if (z) z.remove(); document.body.classList.remove('zooming'); }
 function openZoom() {
-  const f = S.pendingFile || S.previewFile;
-  if (!f || !f.dataUrl) return;
+  const f = (S.view === 'detail' && S.detailFile) || S.pendingFile || S.previewFile;
+  if (!f || !(f.dataUrl || f.url)) return;
   closeZoom();
   const z = document.createElement('div');
   z.id = 'zoom'; z.className = 'zoom'; z.setAttribute('role', 'dialog'); z.setAttribute('aria-label', t('original'));
