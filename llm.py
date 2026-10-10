@@ -16,8 +16,9 @@ import urllib.request
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GEMINI_MODELS = ("gemini-3.8-flash,gemini-3-flash-preview,gemini-3.5-flash-lite,"
-                 "gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-3.7-flash")
+# best first; the preview model answers in 30 s or more, so the quick light models come before it
+GEMINI_MODELS = ("gemini-3.8-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite,"
+                 "gemini-flash-lite-latest,gemini-3-flash-preview,gemini-3.7-flash")
 GROQ_MODELS = "openai/gpt-oss-120b,qwen/qwen3.8-27b,openai/gpt-oss-20b"
 GEMINI_TEXT_MODELS = "gemini-3.1-flash-lite,gemini-3.5-flash-lite,gemini-flash-lite-latest"
 CALL_TIMEOUT = 28   # one model
