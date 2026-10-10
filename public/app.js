@@ -65,6 +65,11 @@ const STR = {
     abha_bad: 'Enter a 14-digit ABHA number.',
     fhir_title: 'Export for ABDM / FHIR', fhir_note: 'Creates a FHIR R4 bundle of your profile and records.',
     fhir_btn: 'Export FHIR bundle', fhir_prev: 'Preview bundle', fhir_counts: 'Resources in the bundle',
+    src_from: 'Read from', src_box: 'Source line', src_hint: 'Click a value to see the line it was read from.',
+    unread_title: 'Lines not used', unread_sub: 'These lines looked like data but could not be read reliably, so nothing was guessed. Add them by hand if they matter.',
+    unit_skip: '{n} result(s) in a different unit are not compared.',
+    consent: 'When you upload, the document is sent to third-party AI services (Google Gemini, with Groq, NVIDIA or OpenRouter as backups) only to read and explain it. Our server stores nothing. Records are kept on this device and you can delete any record or all data at any time.',
+    privacy: 'Built around the consent, purpose-limitation and erasure principles of India\'s Digital Personal Data Protection Act, 2023. This is a student prototype, not a certified or audited service. Use sample or non-sensitive documents.',
     data_title: 'Your data', wipe_btn: 'Delete all my data', wipe_hint: 'Removes everything stored on this device.',
     confirm_wipe: 'Delete all records and your profile from this device? This cannot be undone.',
     err_network: 'Could not reach the server. Check your connection and try again.',
@@ -139,6 +144,11 @@ const STR = {
     abha_bad: '14 अंकों का आभा नंबर डालें।',
     fhir_title: 'ABDM / FHIR के लिए एक्सपोर्ट', fhir_note: 'आपकी प्रोफ़ाइल और रिकॉर्ड का FHIR R4 बंडल बनाता है।',
     fhir_btn: 'FHIR बंडल एक्सपोर्ट करें', fhir_prev: 'बंडल का पूर्वावलोकन', fhir_counts: 'बंडल में संसाधन',
+    src_from: 'यहाँ से पढ़ा', src_box: 'स्रोत पंक्ति', src_hint: 'किसी मान पर क्लिक करें, जिस पंक्ति से वह पढ़ा गया वह दिखेगी।',
+    unread_title: 'जो पंक्तियाँ उपयोग नहीं हुईं', unread_sub: 'ये पंक्तियाँ डेटा जैसी लगीं पर ठीक से पढ़ी नहीं जा सकीं, इसलिए कोई अनुमान नहीं लगाया गया। ज़रूरी हों तो खुद जोड़ें।',
+    unit_skip: '{n} नतीजे अलग इकाई में हैं, इसलिए उनकी तुलना नहीं की गई।',
+    consent: 'अपलोड करने पर दस्तावेज़ केवल पढ़ने और समझाने के लिए बाहरी AI सेवाओं (Google Gemini; बैकअप में Groq, NVIDIA या OpenRouter) को भेजा जाता है। हमारा सर्वर कुछ भी सहेजता नहीं। रिकॉर्ड इसी डिवाइस पर रहते हैं और आप कोई भी रिकॉर्ड या सारा डेटा कभी भी हटा सकते हैं।',
+    privacy: 'यह भारत के डिजिटल व्यक्तिगत डेटा संरक्षण अधिनियम, 2023 के सहमति, उद्देश्य-सीमा और डेटा हटाने के सिद्धांतों को ध्यान में रखकर बनाया गया है। यह छात्रों का प्रोटोटाइप है, कोई प्रमाणित सेवा नहीं। नमूना या गैर-संवेदनशील दस्तावेज़ ही इस्तेमाल करें।',
     data_title: 'आपका डेटा', wipe_btn: 'मेरा सारा डेटा हटाएँ', wipe_hint: 'इस डिवाइस पर सहेजी हर चीज़ हट जाएगी।',
     confirm_wipe: 'इस डिवाइस से सभी रिकॉर्ड और आपकी प्रोफ़ाइल हटाएँ? इसे वापस नहीं किया जा सकता।',
     err_network: 'सर्वर से संपर्क नहीं हो सका। कनेक्शन जाँचकर फिर कोशिश करें।',
@@ -211,6 +221,7 @@ function normalizeRecord(r) {
   r.diagnoses = arr(r.diagnoses).map(x => (typeof x === 'string' ? { name: x, confidence: 1 } : Object.assign({ name: '' }, x || {})));
   r.advice = arr(r.advice).map(x => (x == null ? '' : String(x)));
   r.warnings = arr(r.warnings);
+  r.unread = arr(r.unread);
   r.explanation = r.explanation && typeof r.explanation === 'object' ? r.explanation : {};
   return r;
 }
@@ -633,6 +644,7 @@ function viewAdd() {
     '<h2>' + esc(t('drop_title')) + '</h2><p class="muted">' + esc(t('drop_hint')) + '</p>' +
     '<div class="row"><button type="button" class="btn" data-act="choose">' + esc(t('choose_file')) + '</button>' +
     '<button type="button" class="btn secondary" data-act="photo">' + esc(t('take_photo')) + '</button></div></div>' +
+    '<p class="muted small consent">' + esc(t('consent')) + '</p>' +
     '<div class="card" style="margin-top:16px"><h2 style="margin-bottom:10px">' + esc(t('samples_title')) + '</h2>' + samples +
     '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)" class="row">' +
     '<button type="button" class="btn secondary" data-act="demo"' + (S.busy.demo ? ' disabled' : '') + '>' + esc(S.busy.demo ? t('working') : t('demo_btn')) + '</button>' +
@@ -658,23 +670,25 @@ function sel(label, path, val, opts, o) {
     opts.map(op => '<option value="' + esc(op[0]) + '"' + (op[0] === val ? ' selected' : '') + '>' + esc(op[1]) + '</option>').join('') + '</select></label>';
 }
 
+function srcAttr(x) { return x && x.source_text ? ' data-src="' + esc(x.source_text) + '"' + (x.page ? ' data-page="' + esc(x.page) + '"' : '') : ''; }
+function srcLine(x) { return x && x.source_text ? '<div class="srcline"><span class="muted">' + esc(t('src_from')) + ':</span> ' + esc(x.source_text) + '</div>' : ''; }
 function testRow(x, i) {
   const p = 'tests.' + i + '.';
   const src = x.ref_source === 'report' ? t('ref_report') : (x.ref_source === 'standard' ? t('ref_standard') : '');
-  return '<div class="rowcard"><div class="fields">' +
+  return '<div class="rowcard"' + srcAttr(x) + '><div class="fields">' +
     fld(t('t_name'), p + 'name', x.name, { cls: 'w2' }) +
     fld(t('t_value'), p + 'value', x.value, { mono: 1, num: 'val' }) +
     fld(t('t_unit'), p + 'unit', x.unit, { mono: 1 }) +
     fld(t('t_low'), p + 'ref_low', x.ref_low, { mono: 1, num: 'ref', inputmode: 'decimal' }) +
     fld(t('t_high'), p + 'ref_high', x.ref_high, { mono: 1, num: 'ref', inputmode: 'decimal' }) +
     sel(t('t_flag'), p + 'flag', normFlag(x.flag), FLAGS.map(f => [f, t('flag_' + f)])) +
-    '</div><div class="foot"><div class="tags">' + badge(x.flag) + lowTag(x.confidence) +
+    '</div>' + srcLine(x) + '<div class="foot"><div class="tags">' + badge(x.flag) + lowTag(x.confidence) +
     (src ? '<span class="muted small">' + esc(src) + '</span>' : '') +
     '</div><button type="button" class="xbtn" data-act="delrow" data-kind="tests" data-i="' + i + '">' + esc(t('remove')) + '</button></div></div>';
 }
 function medRow(x, i) {
   const p = 'medicines.' + i + '.';
-  return '<div class="rowcard"><div class="fields">' +
+  return '<div class="rowcard"' + srcAttr(x) + '><div class="fields">' +
     fld(t('m_name'), p + 'name', x.name, { cls: 'w2' }) +
     fld(t('m_generic'), p + 'generic', x.generic) +
     fld(t('m_strength'), p + 'strength', x.strength, { mono: 1 }) +
@@ -683,7 +697,7 @@ function medRow(x, i) {
     fld(t('m_timing'), p + 'timing', x.timing) +
     fld(t('m_duration'), p + 'duration', x.duration) +
     fld(t('m_instr'), p + 'instructions', x.instructions, { cls: 'wide' }) +
-    '</div><div class="foot"><div class="tags">' + lowTag(x.confidence) +
+    '</div>' + srcLine(x) + '<div class="foot"><div class="tags">' + lowTag(x.confidence) +
     (x.known === false ? '<span class="tag amber">' + esc(t('unknown_med')) + '</span>' : '') +
     '</div><button type="button" class="xbtn" data-act="delrow" data-kind="medicines" data-i="' + i + '">' + esc(t('remove')) + '</button></div></div>';
 }
@@ -700,7 +714,9 @@ function viewReview() {
     (oc !== null ? '<span class="small">' + esc(t('conf_overall', { p: oc })) + '</span><span class="confbar ' + (oc < 70 ? 'low' : '') + '"><i style="width:' + Math.max(0, Math.min(100, oc)) + '%"></i></span>' : '') +
     (lowN ? '<span class="tag amber">' + esc(t('items_check', { n: lowN })) + '</span>' : '') + '</div>' +
     (d.warnings.length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + d.warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul></div>' : '') +
-    '<div class="review"><div class="card preview-card"><h3 style="margin-bottom:10px">' + esc(t('original')) + '</h3>' + previewHTML(f) + '</div>' +
+    (d.unread.length ? '<div class="card unread"><h3>' + esc(t('unread_title')) + '</h3><p class="muted small">' + esc(t('unread_sub')) + '</p><ul>' + d.unread.map(u => '<li><span class="mono">' + esc(u.text) + '</span>' + (u.reason ? ' <span class="muted small">(' + esc(u.reason) + ')</span>' : '') + '</li>').join('') + '</ul></div>' : '') +
+    '<div class="review"><div class="card preview-card"><h3 style="margin-bottom:10px">' + esc(t('original')) + '</h3>' +
+    '<div class="srcbox" id="srcbox"><div class="muted small">' + esc(t('src_box')) + '</div><div class="mono" id="srctext">' + esc(t('src_hint')) + '</div></div>' + previewHTML(f) + '</div>' +
     '<div class="stack"><div class="card"><div class="fields">' +
     sel(t('f_type'), 'doc_type', d.doc_type, TYPES.map(ty => [ty, t('type_' + ty)])) +
     fld(t('f_date'), 'date', d.date, { type: 'date' }) +
@@ -876,9 +892,11 @@ function profile() {
     if (!r.date) return;
     arr(r.tests).forEach(x => {
       if (!isNum(x.value)) return;
-      const k = String(x.name || '').trim().toLowerCase();
+      const k = String(x.standard_name || x.name || '').trim().toLowerCase();
       if (!k) return;
-      if (!series.has(k)) series.set(k, { name: x.name, unit: x.unit, pts: [] });
+      const unit = String(x.unit || '').replace(/\s+/g, '').toLowerCase();
+      if (!series.has(k)) series.set(k, { name: x.standard_name || x.name, unit: x.unit, ukey: unit, pts: [], skipped: 0 });
+      if (series.get(k).ukey !== unit) { series.get(k).skipped++; return; }
       series.get(k).pts.push({ date: String(r.date).slice(0, 10), v: Number(x.value), flag: x.flag, lo: isNum(x.ref_low) ? Number(x.ref_low) : null, hi: isNum(x.ref_high) ? Number(x.ref_high) : null });
     });
   });
@@ -939,7 +957,7 @@ function viewHealth() {
     '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_latest')) + '</h2>' +
     (P.latest.length ? '<ul class="list">' + P.latest.map(o => '<li><span class="l">' + esc(o.x.name) + '<br><span class="muted small">' + esc(fmtDate(o.date)) + '</span></span><span class="r"><span class="mono">' + esc(o.x.value) + ' ' + esc(o.x.unit) + '</span><br>' + badge(o.x.flag) + '</span></li>').join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>' +
     '<div class="card full"><h2 style="margin-bottom:10px">' + esc(t('h_trends')) + '</h2>' +
-    (P.trends.length ? '<div class="trends">' + P.trends.map(s => '<div class="trend"><h4><span>' + esc(s.name) + '</span><span class="mono muted small">' + esc(s.unit) + '</span></h4>' + chartSVG(s) + '</div>').join('') + '</div><p class="muted small" style="margin-top:8px">' + esc(t('band_note')) + '</p>' : '<p class="muted">' + esc(t('no_trends')) + '</p>') + '</div>' +
+    (P.trends.length ? '<div class="trends">' + P.trends.map(s => '<div class="trend"><h4><span>' + esc(s.name) + '</span><span class="mono muted small">' + esc(s.unit) + '</span></h4>' + chartSVG(s) + (s.skipped ? '<p class="muted small">' + esc(t('unit_skip', { n: s.skipped })) + '</p>' : '') + '</div>').join('') + '</div><p class="muted small" style="margin-top:8px">' + esc(t('band_note')) + '</p>' : '<p class="muted">' + esc(t('no_trends')) + '</p>') + '</div>' +
     '<div class="card full"><div class="row between"><h2>' + esc(t('overview_title')) + '</h2><button type="button" class="btn secondary" data-act="overview"' + (S.busy.overview ? ' disabled' : '') + '>' + esc(S.busy.overview ? t('working') : t('gen_overview')) + '</button></div>' +
     (ov ? '<div style="margin-top:12px">' + (ov.summary ? '<p>' + esc(ov.summary) + '</p>' : '') +
       (arr(ov.highlights).length ? '<h3 style="margin:10px 0 4px">' + esc(t('highlights')) + '</h3><ul class="qlist">' + ov.highlights.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '') +
@@ -1020,7 +1038,7 @@ function viewAbha() {
     (S.fhir ? '<div style="margin-top:14px"><div class="muted small">' + esc(t('fhir_counts')) + '</div><div class="counts-list">' +
       Object.keys(counts).map(k => '<span class="badge"><span class="mono">' + esc(k) + '</span>&nbsp;' + counts[k] + '</span>').join('') + '</div>' +
       '<details class="preview"><summary>' + esc(t('fhir_prev')) + '</summary><pre>' + esc(JSON.stringify(S.fhir, null, 2)) + '</pre></details></div>' : '') + '</div>' +
-    '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('data_title')) + '</h2><p class="muted">' + esc(t('wipe_hint')) + '</p><button type="button" class="btn danger" data-act="wipe">' + esc(t('wipe_btn')) + '</button></div></div>';
+    '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('data_title')) + '</h2><p class="muted">' + esc(t('consent')) + '</p><p class="muted small">' + esc(t('privacy')) + '</p><p class="muted">' + esc(t('wipe_hint')) + '</p><button type="button" class="btn danger" data-act="wipe">' + esc(t('wipe_btn')) + '</button></div></div>';
 }
 async function linkAbha(digits, importOnly) {
   if (S.busy.abha) return;
@@ -1218,3 +1236,16 @@ window.addEventListener('resize', syncDiscHeight);
   render();
   loadSamples();
 })();
+
+/* Source line: focusing or clicking an extracted row shows the line it was read from. */
+function showSource(e) {
+  const row = e.target && e.target.closest ? e.target.closest('.rowcard[data-src]') : null;
+  const box = document.getElementById('srcbox'), text = document.getElementById('srctext');
+  if (!row || !box || !text) return;
+  document.querySelectorAll('.rowcard.picked').forEach(r => r.classList.remove('picked'));
+  row.classList.add('picked');
+  box.classList.add('on');
+  text.textContent = row.getAttribute('data-src') + (row.getAttribute('data-page') ? '  (p. ' + row.getAttribute('data-page') + ')' : '');
+}
+document.addEventListener('focusin', showSource);
+document.addEventListener('click', showSource);

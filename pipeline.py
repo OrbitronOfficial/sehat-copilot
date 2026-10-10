@@ -49,12 +49,13 @@ Schema:
  "patient": {"name": str|null, "age": str|null, "sex": "M"|"F"|null},
  "language_detected": "en" | "hi" | "mixed" | other ISO code,
  "handwritten": true if the clinical content is handwritten,
- "tests": [{"name": test name as printed, "value": number (or string when not numeric, e.g. "Positive"), "unit": str|null, "ref_low": number|null, "ref_high": number|null, "ref_text": the reference range exactly as printed or null, "confidence": 0-1}],
- "medicines": [{"name": brand or drug name as written, "generic": generic name ONLY if it is written, else null, "strength": e.g. "500 mg" or null, "dose": e.g. "1 tablet" or null, "frequency": plain words, e.g. "twice a day (morning and night)", "timing": e.g. "after food" or null, "duration": e.g. "5 days" or null, "instructions": any other instruction or null, "confidence": 0-1}],
+ "tests": [{"name": test name as printed, "value": number (or string when not numeric, e.g. "Positive"), "unit": str|null, "ref_low": number|null, "ref_high": number|null, "ref_text": the reference range exactly as printed or null, "source_text": the whole line this result was read from, copied exactly as printed, "page": page number (1 for a single image), "confidence": 0-1}],
+ "medicines": [{"name": brand or drug name as written, "generic": generic name ONLY if it is written, else null, "strength": e.g. "500 mg" or null, "dose": e.g. "1 tablet" or null, "frequency": plain words, e.g. "twice a day (morning and night)", "timing": e.g. "after food" or null, "duration": e.g. "5 days" or null, "instructions": any other instruction or null, "source_text": the whole line this medicine was read from, copied exactly as written (before you expand shorthand), "page": page number, "confidence": 0-1}],
  "diagnoses": [{"name": str, "confidence": 0-1}],
  "advice": [short strings: diet, lifestyle, follow-up tests the doctor wrote],
  "follow_up": str|null,
- "overall_confidence": 0-1
+ "overall_confidence": 0-1,
+ "unread": [{"text": the line as best you can read it, "reason": short reason}]
 }
 
 Rules:
@@ -63,6 +64,7 @@ Rules:
 - A lab report's "ref_low"/"ref_high" come ONLY from the range printed beside that test. "< 200" means ref_high 200; "> 40" means ref_low 40.
 - For discharge summaries, put investigation results in "tests", discharge medicines in "medicines", and final diagnoses in "diagnoses".
 - "diagnoses" lists only conditions the document itself states. Do not infer a diagnosis from test values or medicines.
+- "unread" lists every line that looks like a result, medicine or diagnosis but that you could not read or parse with confidence (smudged, cut off, garbled digits such as "2l.1", a value with no test name). Put it there and leave it OUT of tests/medicines/diagnoses. Never repair a doubtful value by guessing. Do not list headers, addresses or signatures.
 - Confidence reflects how clearly you could read that item: printed and sharp = 0.95+, blurry or handwritten and uncertain = below 0.7.
 - If the document is not a health record, return doc_type "other" with empty arrays and overall_confidence 0.
 Return JSON only."""
@@ -92,7 +94,7 @@ RECORD:
 {record}"""
 
 OVERVIEW_PROMPT = """You are summarising one person's health records for them in {language}, in simple words.
-Use only the records below. Flags on tests were decided by software; do not change them. Do not diagnose and do not advise starting, stopping or changing any medicine.
+Use only the records below. Flags on tests were decided by software; do not change them. Compare two results of the same test only when their units match; if they differ, say they cannot be compared directly. Do not diagnose and do not advise starting, stopping or changing any medicine.
 
 Return ONE JSON object:
 {{
@@ -113,7 +115,7 @@ First decide which kind of answer this is:
 - "general": the question is about what a test, term or medicine generally is, and the records are not needed. Give a short general explanation and say it is general information, not about them.
 - "doctor": the question asks what treatment to take, whether to start, stop or change anything, for a diagnosis, or for a prognosis. Do not answer it. Say this needs their doctor and, if useful, which values from the records to show the doctor.
 
-Rules: never diagnose. Never advise starting, stopping or changing a medicine or dose. Never write a number that is not in the records. Plain text only, no markdown (no asterisks, no headings); short lines.
+Rules: compare two results of the same test only when their units match; if the units differ, say they cannot be compared directly. Never diagnose. Never advise starting, stopping or changing a medicine or dose. Never write a number that is not in the records. Plain text only, no markdown (no asterisks, no headings); short lines.
 
 Return ONE JSON object: {{"kind": "records" | "general" | "doctor", "answer": str, "sources": [ids of the records you used, empty unless kind is "records"]}}
 
@@ -139,6 +141,13 @@ def _conf(v, default=0.5):
         return max(0.0, min(1.0, float(v)))
     except (TypeError, ValueError):
         return default
+
+
+def _page(v):
+    try:
+        return max(1, int(v))
+    except (TypeError, ValueError):
+        return None
 
 
 def _date(v):
@@ -192,7 +201,7 @@ def normalise(raw, source="upload"):
         "advice": [_s(a) for a in (raw.get("advice") or []) if _s(a)][:20],
         "follow_up": _s(raw.get("follow_up")),
         "overall_confidence": _conf(raw.get("overall_confidence")),
-        "warnings": [], "explanation": {}, "source": source,
+        "warnings": [], "unread": [], "explanation": {}, "source": source,
     }
     for t in (raw.get("tests") or [])[:120]:
         if not isinstance(t, dict) or not _s(t.get("name")):
@@ -207,6 +216,7 @@ def normalise(raw, source="upload"):
             "ref_high": ranges.to_number(t.get("ref_high")),
             "ref_text": _s(t.get("ref_text"), 80),
             "ref_source": None, "flag": "unknown",
+            "source_text": _s(t.get("source_text"), 240), "page": _page(t.get("page")),
             "confidence": _conf(t.get("confidence")),
         })
     for m in (raw.get("medicines") or [])[:60]:
@@ -215,12 +225,18 @@ def normalise(raw, source="upload"):
         rec["medicines"].append({k: _s(m.get(k), 200) for k in
                                  ("name", "generic", "strength", "dose", "frequency", "timing",
                                   "duration", "instructions")}
-                                | {"confidence": _conf(m.get("confidence"))})
+                                | {"source_text": _s(m.get("source_text"), 240), "page": _page(m.get("page")),
+                                   "confidence": _conf(m.get("confidence"))})
     for d in (raw.get("diagnoses") or [])[:30]:
         name = _s(d.get("name") if isinstance(d, dict) else d, 160)
         if name:
             rec["diagnoses"].append({"name": name,
                                      "confidence": _conf(d.get("confidence") if isinstance(d, dict) else None, 0.8)})
+    for u in (raw.get("unread") or [])[:20]:
+        text = _s(u.get("text") if isinstance(u, dict) else u, 240)
+        if text:
+            rec["unread"].append({"text": text,
+                                  "reason": _s(u.get("reason") if isinstance(u, dict) else None, 120)})
     return check(rec)
 
 
@@ -245,6 +261,9 @@ def check(rec):
         warnings.append("The date on this document is in the future. Please check it.")
     if rec.get("handwritten"):
         warnings.append("This document is handwritten. Please check every medicine name and dose against the original.")
+    if rec.get("unread"):
+        warnings.append(f"{len(rec['unread'])} line(s) could not be read reliably and were left out. "
+                        "They are listed under \"Lines not used\"; add them by hand if they matter.")
     low = sum(1 for x in (rec.get("tests") or []) + (rec.get("medicines") or [])
               if _conf(x.get("confidence")) < 0.7)
     if low:
