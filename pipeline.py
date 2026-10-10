@@ -17,6 +17,7 @@ import ranges
 import safety
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+HANDWRITTEN_CAP = 0.6
 DOC_TYPES = ("lab_report", "prescription", "discharge_summary", "diagnostic_report", "other")
 MIME_OK = ("image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain")
 
@@ -251,6 +252,12 @@ def normalise(raw, source="upload"):
         if name:
             rec["diagnoses"].append({"name": name,
                                      "confidence": _conf(d.get("confidence") if isinstance(d, dict) else None, 0.8)})
+    if rec["handwritten"]:
+        # Handwriting is the hardest case and the costliest to get wrong, so the model's own
+        # confidence is not trusted: every item is capped below the "please verify" line.
+        for item in rec["tests"] + rec["medicines"] + rec["diagnoses"]:
+            item["confidence"] = min(item["confidence"], HANDWRITTEN_CAP)
+        rec["overall_confidence"] = min(rec["overall_confidence"], HANDWRITTEN_CAP)
     for u in (raw.get("unread") or [])[:20]:
         text = _s(u.get("text") if isinstance(u, dict) else u, 240)
         if text:

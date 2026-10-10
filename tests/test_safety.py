@@ -144,5 +144,21 @@ class NumericGuardTests(Base):
         self.assertIn("संदर्भ सीमा", pipeline.explain(RECORD, "hi")["findings"][0]["meaning"])
 
 
+class HandwritingTests(unittest.TestCase):
+    def test_handwritten_items_are_always_marked_for_checking(self):
+        rec = pipeline.normalise({
+            "doc_type": "prescription", "handwritten": True, "date": "2026-10-02", "overall_confidence": 0.9,
+            "medicines": [{"name": "Glycomet", "strength": "500 mg", "confidence": 0.95}],
+            "tests": [{"name": "HbA1c", "value": 7.1, "unit": "%", "confidence": 0.92}]})
+        self.assertLessEqual(rec["overall_confidence"], 0.6)
+        self.assertTrue(all(x["confidence"] <= 0.6 for x in rec["medicines"] + rec["tests"]))
+        self.assertTrue(any("handwritten" in w.lower() for w in rec["warnings"]))
+
+    def test_printed_documents_keep_their_confidence(self):
+        rec = pipeline.normalise({"doc_type": "lab_report", "handwritten": False, "date": "2026-10-02",
+                                  "tests": [{"name": "HbA1c", "value": 7.1, "unit": "%", "confidence": 0.97}]})
+        self.assertEqual(rec["tests"][0]["confidence"], 0.97)
+
+
 if __name__ == "__main__":
     unittest.main()

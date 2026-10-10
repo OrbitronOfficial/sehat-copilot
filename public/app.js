@@ -63,6 +63,7 @@ const STR = {
     pet_tip_abha: 'Link a mock ABHA number here, or export all records as a FHIR bundle.',
     pet_q1: 'What changed since my last report?', pet_q2: 'Which values are outside the range?', pet_q3: 'Which medicines am I on?',
     pet_go_ask: 'Open full chat',
+    zoom_open: 'Enlarge', zoom_hint: 'Tap the document to zoom in and out.', hw_check: 'Handwritten: check every item against the original',
     sign_in: 'Sign in', sign_out: 'Sign out', guest: 'Guest', demo_user: 'Demo account',
     stat_records: 'Records saved', stat_out: 'Values outside range', stat_meds: 'Current medicines', stat_cond: 'Conditions noted',
     how_1: 'Upload', how_1s: 'A photo or PDF of any prescription or report', how_2: 'Check', how_2s: 'Compare what was read with the original', how_3: 'Understand', how_3s: 'Plain-language summary, timeline and trends',
@@ -155,6 +156,7 @@ const STR = {
     pet_tip_abha: 'यहाँ नकली (डेमो) ABHA नंबर जोड़ें, या सारे रिकॉर्ड FHIR बंडल के रूप में निर्यात करें।',
     pet_q1: 'पिछली रिपोर्ट के बाद क्या बदला?', pet_q2: 'कौन से मान सीमा से बाहर हैं?', pet_q3: 'मैं कौन सी दवाएँ ले रहा हूँ?',
     pet_go_ask: 'पूरी चैट खोलें',
+    zoom_open: 'बड़ा करें', zoom_hint: 'ज़ूम करने के लिए दस्तावेज़ पर टैप करें।', hw_check: 'हाथ से लिखा है: हर चीज़ को मूल दस्तावेज़ से मिलाएँ',
     sign_in: 'साइन इन', sign_out: 'साइन आउट', guest: 'अतिथि', demo_user: 'डेमो खाता',
     stat_records: 'सहेजे रिकॉर्ड', stat_out: 'सीमा से बाहर मान', stat_meds: 'चालू दवाएँ', stat_cond: 'दर्ज बीमारियाँ',
     how_1: 'अपलोड करें', how_1s: 'किसी भी पर्ची या रिपोर्ट की फ़ोटो या PDF', how_2: 'जाँचें', how_2s: 'पढ़े गए मानों को मूल दस्तावेज़ से मिलाएँ', how_3: 'समझें', how_3s: 'सरल भाषा में सार, टाइमलाइन और रुझान',
@@ -753,13 +755,13 @@ function viewReview() {
   const saving = !!S.busy.save;
   return '<div class="page-head"><h1>' + esc(S.editingId ? t('edit_title') : t('review_title')) + '</h1><p>' + esc(t('review_sub')) + '</p></div>' +
     '<div class="row" style="margin-bottom:14px">' +
-    (d.handwritten ? '<span class="badge">' + esc(t('handwritten')) + '</span>' : '') +
-    (oc !== null ? '<span class="small">' + esc(t('conf_overall', { p: oc })) + '</span><span class="confbar ' + (oc < 70 ? 'low' : '') + '"><i style="width:' + Math.max(0, Math.min(100, oc)) + '%"></i></span>' : '') +
+    (d.handwritten ? '<span class="tag amber hw">' + esc(t('hw_check')) + '</span>' : '') +
+    (oc !== null && !d.handwritten ? '<span class="small">' + esc(t('conf_overall', { p: oc })) + '</span><span class="confbar ' + (oc < 70 ? 'low' : '') + '"><i style="width:' + Math.max(0, Math.min(100, oc)) + '%"></i></span>' : '') +
     (lowN ? '<span class="tag amber">' + esc(t('items_check', { n: lowN })) + '</span>' : '') + '</div>' +
     (d.warnings.length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + d.warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul></div>' : '') +
     (d.unread.length ? '<div class="card unread"><h3>' + esc(t('unread_title')) + '</h3><p class="muted small">' + esc(t('unread_sub')) + '</p><ul>' + d.unread.map(u => '<li><span class="mono">' + esc(u.text) + '</span>' + (u.reason ? ' <span class="muted small">(' + esc(u.reason) + ')</span>' : '') + '</li>').join('') + '</ul></div>' : '') +
-    '<div class="review"><div class="card preview-card"><h3 style="margin-bottom:10px">' + esc(t('original')) + '</h3>' +
-    '<div class="srcbox" id="srcbox"><div class="muted small">' + esc(t('src_box')) + '</div><div class="mono" id="srctext">' + esc(t('src_hint')) + '</div></div>' + previewHTML(f) + '</div>' +
+    '<div class="review"><div class="card preview-card"><div class="preview-head"><h3>' + esc(t('original')) + '</h3><button type="button" class="btn small secondary" data-zoom="open">' + esc(t('zoom_open')) + '</button></div>' +
+    '<div class="srcbox" id="srcbox"><div class="muted small">' + esc(t('src_box')) + '</div><div class="mono" id="srctext">' + esc(t('src_hint')) + '</div></div><div class="preview-doc" data-zoom="open">' + previewHTML(f) + '</div></div>' +
     '<div class="stack"><div class="card"><div class="fields">' +
     sel(t('f_type'), 'doc_type', d.doc_type, TYPES.map(ty => [ty, t('type_' + ty)])) +
     fld(t('f_date'), 'date', d.date, { type: 'date' }) +
@@ -1337,8 +1339,8 @@ function renderPet() {
   if (!el) return;
   const screen = petScreen();
   if (!PET.open) {
-    const showTip = !PET.tipOff && !PET.seen[screen];
-    el.className = 'pet';
+    const showTip = !PET.tipOff && !PET.seen[screen] && screen !== 'review';
+    el.className = 'pet' + (screen === 'review' ? ' mini' : '');
     // the tip is a nudge, not an overlay: it goes away by itself after a few seconds
     if (showTip) { clearTimeout(PET.timer); PET.timer = setTimeout(() => { PET.seen[screen] = true; renderPet(); }, 7000); }
     el.innerHTML = (showTip ? '<div class="pet-bubble" role="status"><span>' + esc(t('pet_tip_' + screen)) + '</span><button type="button" data-pet="tipoff" aria-label="' + esc(t('pet_close')) + '">&times;</button></div>' : '') +
@@ -1424,3 +1426,27 @@ document.addEventListener('click', e => {
   document.documentElement.dataset.theme = next;
   try { localStorage.setItem('sehat_theme', next); } catch (x) { /* ignore */ }
 });
+
+/* ================= Enlarge the original =================
+   Checking a medicine line against the source must not need scrolling: the original stays
+   pinned on the review screen, and one tap opens it full screen, where a tap zooms. */
+function closeZoom() { const z = document.getElementById('zoom'); if (z) z.remove(); document.body.classList.remove('zooming'); }
+function openZoom() {
+  const f = S.pendingFile || S.previewFile;
+  if (!f || !f.dataUrl) return;
+  closeZoom();
+  const z = document.createElement('div');
+  z.id = 'zoom'; z.className = 'zoom'; z.setAttribute('role', 'dialog'); z.setAttribute('aria-label', t('original'));
+  z.innerHTML = '<div class="zoom-bar"><span>' + esc(t('zoom_hint')) + '</span><button type="button" class="btn small" data-zoom="close">' + esc(t('pet_close')) + '</button></div><div class="zoom-body" data-zoom="toggle">' + previewHTML(f) + '</div>';
+  document.body.appendChild(z);
+  document.body.classList.add('zooming');
+}
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-zoom]') : null;
+  if (!el) return;
+  const a = el.getAttribute('data-zoom');
+  if (a === 'open') openZoom();
+  else if (a === 'close') closeZoom();
+  else if (a === 'toggle') el.classList.toggle('big');
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom(); });
