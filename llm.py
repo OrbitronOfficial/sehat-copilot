@@ -36,11 +36,13 @@ class _Http(LLMError):
 
 
 def _post(url, headers, body, timeout=CALL_TIMEOUT):
+    if not url.startswith("https://"):  # provider endpoints only, never file: or other schemes
+        raise LLMError("refusing a non-https model endpoint")
     req = urllib.request.Request(
         url, data=json.dumps(body).encode("utf-8"),
         headers={"Content-Type": "application/json", "User-Agent": "sehat-copilot/1.0", **headers})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with urllib.request.urlopen(req, timeout=timeout) as r:  # nosec B310 - scheme checked above
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         raise _Http(e.code, e.read().decode("utf-8", "replace")) from e
