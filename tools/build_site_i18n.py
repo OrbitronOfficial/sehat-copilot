@@ -87,8 +87,7 @@ def english():
         js = f.read()
     for page in PAGES:  # and by the small inline scripts in each page
         with open(os.path.join(PUBLIC, page), encoding="utf-8") as f:
-            js += "
-".join(re.findall(r"<script[^>]*>(.*?)</script>", f.read(), re.S))
+            js += " ".join(re.findall(r"<script[^>]*>(.*?)</script>", f.read(), re.S))
     for m in re.finditer(r"'((?:[^'\\\n]|\\.)*)'|\"((?:[^\"\\\n]|\\.)*)\"", js):
         text = norm((m.group(1) if m.group(1) is not None else m.group(2)).replace("\\'", "'").replace('\\"', '"'))
         if re.match(r"[A-Z]", text) and " " in text and len(text) > 8 and not re.search(r"[<>{}=;]|\\[nu]", text):
