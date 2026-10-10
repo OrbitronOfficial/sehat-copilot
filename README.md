@@ -39,6 +39,8 @@ Design decisions:
 - **Safety gate before the model.** Questions are screened in code first (`safety.py`): emergency wording gets a fixed reply pointing to 112, then questions about stopping, skipping or changing a medicine get a fixed "ask your prescriber" reply. Neither reaches a model.
 - **Labelled answers.** Each chat answer is marked "From your records", "General information" or "Ask your doctor". The first is only shown when the answer cites a saved record.
 - **Every value is traceable.** The reader returns the exact line each test and medicine was read from; the review screen shows it under the value and beside the original when the value is clicked.
+- **Impossible values are caught.** A value no living adult has (HbA1c of 76 %, say) is treated as a misread, usually a lost decimal point: it is never shown as critical, its confidence drops to the "please verify" level and the user is asked to correct it from the original.
+- **Handwriting is never trusted.** For a handwritten document every item is capped below the "please verify" line, whatever confidence the model reports.
 - **Nothing is guessed.** Lines that look like data but could not be read reliably (smudged, cut off, garbled digits) go to a "Lines not used" list on the review screen and stay out of the record.
 - **Like-for-like trends.** Results are grouped by standard test name and compared only when their units match.
 - **Human in the loop.** Nothing is saved until the user has seen the extraction next to the original. Items read with low confidence, handwritten documents and medicines not in the reference list are marked for checking.
@@ -85,7 +87,7 @@ Then open http://localhost:8820. Needs a `.env` with `GEMINI_API_KEY` and `GROQ_
 - In those eight languages the fixed safety replies are one short native line followed by the full English text, and the emergency word list only covers "chest pain". English and Hindi have the full lists.
 - The backup on-device OCR reads English and Hindi only.
 - DRAFT: the Hindi safety replies and Hindi template sentences were written by the team with AI help and have not been reviewed by a clinician or a professional translator.
-- Untested: the in-browser Tesseract fallback has not been exercised end to end in a browser.
+- The in-browser Tesseract fallback was exercised end to end on a printed sample (about 5 seconds). On that run it dropped a decimal point (7.6 read as 76), which is why the plausibility guard below exists. It has not been tried on handwriting.
 
 ## Prior work
 

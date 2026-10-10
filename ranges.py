@@ -49,6 +49,20 @@ _T = [
 _COUNT_SCALE = {"Platelet Count": 150000, "Total WBC Count": 4000}
 
 
+# Values no living adult has. A reading outside these almost always means the reader lost a
+# decimal point or merged two numbers ("7.6" read as "76"), so it is treated as a misread
+# and never shown as a critical result.
+PLAUSIBLE = {
+    "Hemoglobin": (2, 25), "HbA1c": (3, 20), "Hematocrit": (8, 75), "MCV": (40, 160),
+    "Fasting Blood Sugar": (15, 1500), "Post Prandial Blood Sugar": (15, 1500), "Random Blood Sugar": (15, 1500),
+    "Total Cholesterol": (40, 1000), "LDL Cholesterol": (5, 700), "HDL Cholesterol": (3, 200),
+    "Triglycerides": (10, 6000), "Serum Creatinine": (0.1, 30), "Blood Urea": (2, 500),
+    "Uric Acid": (0.5, 25), "Sodium": (90, 190), "Potassium": (1, 10), "Total Bilirubin": (0.05, 60),
+    "TSH": (0.001, 600), "Free T4": (0.05, 12), "Vitamin D (25-OH)": (1, 300), "Vitamin B12": (30, 20000),
+    "Serum Calcium": (3, 20), "ESR": (0, 200),
+}
+
+
 def _key(s):
     s = re.sub(r"\(.*?\)", " ", (s or "").lower())
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
@@ -136,6 +150,12 @@ def flag_test(t):
         elif row[5] is not None and crit_value > row[5]:
             flag = "critical"
     t["flag"] = flag
+    limits = PLAUSIBLE.get(row[0]) if row else None
+    if limits and not (limits[0] <= value <= limits[1]):
+        t["implausible"] = True
+        t["flag"] = "unknown"
+    else:
+        t.pop("implausible", None)
     return t
 
 

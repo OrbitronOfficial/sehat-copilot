@@ -160,5 +160,26 @@ class HandwritingTests(unittest.TestCase):
         self.assertEqual(rec["tests"][0]["confidence"], 0.97)
 
 
+class PlausibilityTests(unittest.TestCase):
+    def test_lost_decimal_point_is_not_shown_as_critical(self):
+        rec = pipeline.check({"doc_type": "lab_report", "date": "2026-06-18", "tests": [
+            {"name": "HbA1c (Glycated Hemoglobin)", "value": 76, "unit": "%", "ref_low": 4.0, "ref_high": 5.6, "confidence": 0.9},
+            {"name": "Hemoglobin", "value": 14.1, "unit": "g/dL", "ref_low": 13, "ref_high": 17, "confidence": 0.9}]})
+        bad, good = rec["tests"]
+        self.assertEqual(bad["flag"], "unknown")
+        self.assertLessEqual(bad["confidence"], 0.3)
+        self.assertTrue(any("not a possible value" in w for w in rec["warnings"]))
+        self.assertEqual(good["flag"], "normal")
+        self.assertEqual(good["confidence"], 0.9)
+
+    def test_correcting_the_value_clears_the_mark(self):
+        t = {"name": "HbA1c", "value": 76, "unit": "%", "ref_low": 4.0, "ref_high": 5.6, "confidence": 0.9}
+        rec = pipeline.check({"doc_type": "lab_report", "date": "2026-06-18", "tests": [t]})
+        rec["tests"][0]["value"] = 7.6
+        rec = pipeline.check(rec)
+        self.assertEqual(rec["tests"][0]["flag"], "high")
+        self.assertNotIn("implausible", rec["tests"][0])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -306,3 +306,17 @@
     if (l !== "en") setLang(l); else root.lang = "en";
   });
 })();
+
+/* Text added after load (form errors, the guide's answers, the waitlist note) is translated
+   too. Only added nodes are watched, so the translation pass cannot trigger itself. */
+(function () {
+  function watch() {
+    if (!window.SehatSite || !window.MutationObserver || !document.body) return;
+    var timer;
+    new MutationObserver(function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { if (SehatSite.getLang() !== "en") SehatSite.translate(); }, 60);
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch();
+})();

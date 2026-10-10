@@ -294,6 +294,11 @@ def check(rec):
               if _conf(x.get("confidence")) < 0.7)
     if low:
         warnings.append(f"{low} item(s) were read with low confidence and are marked below.")
+    for t in rec.get("tests") or []:
+        if t.get("implausible"):
+            t["confidence"] = min(_conf(t.get("confidence")), 0.3)
+            warnings.append(f"{t.get('name')}: {t.get('value')} {t.get('unit') or ''} is not a possible value. "
+                            "A decimal point was probably missed. Please correct it from the original.")
     if any(t.get("flag") == "critical" for t in rec.get("tests") or []):
         warnings.append("One or more values are far outside the usual range. Please contact your doctor promptly.")
     if rec.get("doc_type") == "other" and not rec.get("tests") and not rec.get("medicines"):
