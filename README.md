@@ -41,7 +41,7 @@ Design decisions:
 
 ## Stack
 
-Python 3 standard library server (no framework), vanilla JS frontend, Gemini (document reading), Groq (writing), Tesseract.js (backup OCR), deployed on Vercel.
+Python 3 standard library server (no framework), vanilla JS frontend, Gemini (document reading), Groq (writing), NVIDIA NIM and OpenRouter (fallback readers and writers), Tesseract.js (backup OCR), deployed on Vercel.
 
 | File | Role |
 |---|---|
@@ -59,7 +59,7 @@ Python 3 standard library server (no framework), vanilla JS frontend, Gemini (do
 python server.py
 ```
 
-Then open http://localhost:8820. Needs a `.env` with `GEMINI_API_KEY` and `GROQ_API_KEY`.
+Then open http://localhost:8820. Needs a `.env` with `GEMINI_API_KEY` and `GROQ_API_KEY`; `NVIDIA_API_KEY` and `OPENROUTER_API_KEY` are optional fallbacks.
 
 ## What is real and what is mocked
 

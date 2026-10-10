@@ -117,6 +117,8 @@ RECORDS (oldest first):
 ASK_PROMPT = """You answer a patient's question about their own health records in {language}, in simple words.
 Use ONLY the records below. If the records do not contain the answer, say so plainly and suggest asking their doctor. Do not diagnose. Do not advise starting, stopping or changing a medicine or dose. Mention dates and values when you cite a result.
 
+Write the answer as plain text with no markdown (no asterisks, no headings); use short lines.
+
 Return ONE JSON object: {{"answer": str, "sources": [ids of the records you used]}}
 
 RECORDS:
@@ -389,7 +391,7 @@ def ask(question, records, lang="en"):
         language=_lang_name(lang), question=question,
         records=json.dumps([_compact(r) for r in _sorted(records)[-25:]], ensure_ascii=False)))
     ids = {r.get("id") for r in records if isinstance(r, dict)}
-    answer = _s(out.get("answer"), 2500) or ""
+    answer = (_s(out.get("answer"), 2500) or "").replace("**", "")
     if _RED_FLAGS.search(question):
         answer = EMERGENCY[lang] + answer
     return {"answer": answer, "sources": [s for s in (out.get("sources") or []) if s in ids],

@@ -1,8 +1,8 @@
 """Model calls. Every call asks for JSON and returns a parsed dict.
 
-Reading a document (image/PDF) needs a vision model: Gemini.
-Writing (explanations, answers, structuring OCR text) goes to Groq first, so the
-scarce vision quota is spent only on reading.
+Reading a document needs a vision model: Gemini first (images and PDFs), then
+OpenRouter (images). NVIDIA and OpenRouter also back up Groq for writing. Writing (explanations, answers, structuring OCR
+text) goes to Groq first, so the scarce vision quota is spent only on reading.
 
 Free-tier quotas are per model, so each provider has a chain of models and a
 model that reports "quota exhausted" is skipped until its cool-down passes.
@@ -59,7 +59,7 @@ def _parse(text):
         raise LLMError(f"bad JSON from model: {e}") from e
 
 
-def _chain(env_name, default, call, deadline):
+def _chain(env_name, default, call, deadline, provider="gemini", per_call=None):
     """Try each model in turn. Returns (json, model). Raises LLMError listing why each failed."""
     errors = []
     for model in [m.strip() for m in os.environ.get(env_name, default).split(",") if m.strip()]:
@@ -67,17 +67,18 @@ def _chain(env_name, default, call, deadline):
         if left < 4:
             errors.append("out of time")
             break
-        if _resting.get(model, 0) > time.time():
+        rest_key = f"{provider}:{model}"
+        if _resting.get(rest_key, 0) > time.time():
             errors.append(f"{model}: resting (quota)")
             continue
         try:
-            return call(model, min(CALL_TIMEOUT, left)), model
+            return call(model, min(per_call or CALL_TIMEOUT, left)), model
         except _Http as e:
             if e.code == 429:
                 # a daily cap rests the model for an hour, a per-minute cap for a minute
-                _resting[model] = time.time() + (3600 if "PerDay" in e.detail else 60)
-            elif e.code in (403, 404):
-                _resting[model] = time.time() + 3600
+                _resting[rest_key] = time.time() + (3600 if "PerDay" in e.detail else 60)
+            elif e.code in (401, 403, 404):
+                _resting[rest_key] = time.time() + 3600
             errors.append(f"{model}: {e}")
         except LLMError as e:
             errors.append(f"{model}: {str(e)[:120]}")
@@ -105,35 +106,76 @@ def _gemini(prompt, file, deadline):
     return _chain("GEMINI_MODELS", GEMINI_MODELS, call, deadline)
 
 
-def _groq(prompt, deadline):
-    key = os.environ.get("GROQ_API_KEY")
+# OpenAI-compatible providers: (endpoint, key variable, text models, vision models, JSON mode)
+COMPAT = {
+    "groq": (GROQ_URL, "GROQ_API_KEY", GROQ_MODELS, "", True),
+    "nvidia": ("https://integrate.api.nvidia.com/v1/chat/completions", "NVIDIA_API_KEY",
+               "google/gemma-4-31b-it", "google/gemma-4-31b-it", False),
+    "openrouter": ("https://openrouter.ai/api/v1/chat/completions", "OPENROUTER_API_KEY",
+                   "google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free",
+                   "google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free", False),
+}
+
+
+def _compat(provider, prompt, file, deadline):
+    url, key_var, text_models, vision_models, json_mode = COMPAT[provider]
+    key = os.environ.get(key_var)
     if not key:
-        raise LLMError("GROQ_API_KEY not set")
+        raise LLMError(f"{key_var} not set")
+    if file and not file["mime"].startswith("image/"):
+        raise LLMError("reads images only")
+    models = vision_models if file else text_models
+    if not models:
+        raise LLMError("no model for this task")
+    content = prompt
+    if file:
+        content = [{"type": "text", "text": prompt},
+                   {"type": "image_url", "image_url": {"url": f"data:{file['mime']};base64,{file['data']}"}}]
 
     def call(model, timeout):
-        body = {"model": model, "temperature": 0, "response_format": {"type": "json_object"},
-                "messages": [{"role": "user", "content": prompt}]}
-        out = _post(GROQ_URL, {"Authorization": f"Bearer {key}"}, body, timeout)
+        body = {"model": model, "temperature": 0, "max_tokens": 4000,
+                "messages": [{"role": "user", "content": content}]}
+        if json_mode:
+            body["response_format"] = {"type": "json_object"}
+        out = _post(url, {"Authorization": f"Bearer {key}"}, body, timeout)
         try:
             return _parse(out["choices"][0]["message"]["content"])
-        except (KeyError, IndexError) as e:
+        except (KeyError, IndexError, TypeError) as e:
             raise LLMError("empty response") from e
 
-    return _chain("GROQ_MODELS", GROQ_MODELS, call, deadline)
+    env = f"{provider.upper()}_{'VISION_' if file else ''}MODELS"
+    # the free NVIDIA vision endpoint is accurate but slow (about 40 s), so it gets the time left
+    slow = provider == "nvidia" and file
+    return _chain(env, models, call, deadline, provider, per_call=50 if slow else None)
+
+
+def _first(order, prompt, file):
+    """Try providers in order. Returns (json, "provider/model")."""
+    deadline = time.time() + BUDGET
+    errors = []
+    for provider in order:
+        try:
+            if provider == "gemini":
+                out, model = _gemini(prompt, file, deadline)
+            else:
+                out, model = _compat(provider, prompt, file, deadline)
+            return out, model if provider == "gemini" else f"{provider}: {model}"
+        except LLMError as e:
+            errors.append(f"{provider}: {e}")
+    raise LLMError(" | ".join(errors))
 
 
 def read_document(prompt, file):
-    """Vision. Returns (json, model name)."""
-    return _gemini(prompt, file, time.time() + BUDGET)
+    """Vision. Gemini reads images and PDFs; the others read images only.
+
+    NVIDIA's free vision endpoint takes 40-50 s per page, which would use up the whole
+    request and block the faster on-device fallback, so it is opt-in via VISION_ORDER.
+    """
+    order = os.environ.get("VISION_ORDER", "gemini,openrouter").split(",")
+    return _first([p.strip() for p in order], prompt, file)
 
 
 def write_json(prompt):
-    """Text only. Groq first, Gemini as backup. Returns (json, model name)."""
-    deadline = time.time() + BUDGET
-    try:
-        return _groq(prompt, deadline)
-    except LLMError as first:
-        try:
-            return _gemini(prompt, None, deadline)
-        except LLMError as second:
-            raise LLMError(f"groq: {first} | gemini: {second}") from second
+    """Text only: explanations, answers, structuring OCR text."""
+    order = os.environ.get("TEXT_ORDER", "groq,nvidia,openrouter,gemini").split(",")
+    return _first([p.strip() for p in order], prompt, None)
