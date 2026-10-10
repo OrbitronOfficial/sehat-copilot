@@ -212,5 +212,13 @@ class LanguageTests(unittest.TestCase):
         self.assertEqual(pipeline._lang("fr"), "fr")
 
 
+class DateSanityTests(unittest.TestCase):
+    def test_a_date_years_in_the_past_is_questioned(self):
+        old = pipeline.check({"doc_type": "prescription", "date": "2020-10-02", "tests": [], "medicines": []})
+        self.assertTrue(any("more than two years ago" in w for w in old["warnings"]))
+        recent = pipeline.check({"doc_type": "prescription", "date": __import__("datetime").date.today().isoformat(), "tests": [], "medicines": []})
+        self.assertFalse(any("two years ago" in w for w in recent["warnings"]))
+
+
 if __name__ == "__main__":
     unittest.main()

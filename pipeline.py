@@ -64,7 +64,7 @@ Schema:
 }
 
 Rules:
-- Expand prescription shorthand into plain words in "frequency": OD = once a day, BD/BID = twice a day, TDS/TID = three times a day, QID = four times a day, HS = at bedtime, SOS = only when needed, 1-0-1 = morning and night, 1-1-1 = morning, afternoon and night, 0-0-1 = night only. AC = before food, PC = after food.
+- Expand prescription shorthand into plain words in "frequency": OD = once a day, BD/BID = twice a day, TDS/TID = three times a day, QID = four times a day, HS = at bedtime, SOS = only when needed, 1-0-1 = morning and night, 1-1-1 = morning, afternoon and night, 0-0-1 = night only. AC = before food, PC = after food. When a line has both a schedule and SOS (for example "1-1-1 SOS"), keep both: "up to three times a day, only when needed". Never drop SOS.
 - Translate Hindi instructions into English in the fields, keeping the meaning exact.
 - A lab report's "ref_low"/"ref_high" come ONLY from the range printed beside that test. "< 200" means ref_high 200; "> 40" means ref_low 40.
 - For discharge summaries, put investigation results in "tests", discharge medicines in "medicines", and final diagnoses in "diagnoses".
@@ -318,6 +318,10 @@ def check(rec):
         warnings.append("No date was found on this document. Please add it so it appears in the right place on your timeline.")
     elif rec["date"] > today:
         warnings.append("The date on this document is in the future. Please check it.")
+    elif rec["date"] < (dt.date.today() - dt.timedelta(days=730)).isoformat():
+        # a misread digit in the year is common, especially in handwriting ("2026" read as "2020")
+        warnings.append(f"The date was read as {rec['date']}, more than two years ago. If this is a recent "
+                        "document, a digit was probably misread. Please check it.")
     if rec.get("handwritten"):
         warnings.append("This document is handwritten. Please check every medicine name and dose against the original.")
     if rec.get("unread"):

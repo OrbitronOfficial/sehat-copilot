@@ -8,6 +8,10 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("sehat_theme")}catch(e){}if(t!=="dark"&&t!=="light"){t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=t;d.classList.add("js");setTimeout(function(){if(!window.SehatSite)d.classList.remove("js")},3000)})();</script>
   <link rel="stylesheet" href="/site.css">
+  <link rel="prefetch" href="/app">
+  <link rel="prefetch" href="/app.js" as="script">
+  <link rel="prefetch" href="/styles.css" as="style">
+  <link rel="prefetch" href="/faq.js" as="script">
   <script src="/faq.js"></script>
   <script src="/site.js" defer></script>
 </head>
@@ -76,16 +80,20 @@
         if (pw.length < 6) ok = bad("pw", "e-pw", "Password must be at least 6 characters.");
         if (!ok) { tr(); return; }
         $("submit").disabled = true;
+        var label = $("submit").textContent;
+        $("submit").textContent = "Opening your records…";
         try {
           if (signup) await SehatAuth.signUp(name, email, pw); else await SehatAuth.signIn(email, pw);
           location.assign("/app");
         } catch (err) {
           $("e-form").textContent = err.message || "Something went wrong.";
           $("submit").disabled = false;
+          $("submit").textContent = label;
           tr();
         }
       });
-      $("demo").addEventListener("click", function () { SehatAuth.demo(); location.assign("/app?demo=1"); });
+      $("demo").addEventListener("click", function () { this.disabled = true; SehatAuth.demo(); location.assign("/app?demo=1"); });
+      try { fetch("/api/health"); } catch (e) { /* only a warm-up */ }
       $("guest").addEventListener("click", function () { SehatAuth.guest(); });
     })();
   </script>

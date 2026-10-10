@@ -1184,15 +1184,28 @@ async function runInsights(key) {
   let res = null;
   try { res = await api('/api/insights', { records: S.records.map(lite), lang }); } catch (e) { /* fall back to profile() */ }
   if (!S.insights || S.insights.key !== key) return;
-  if (res && typeof res === 'object' && Array.isArray(res.tests)) { S.insights.state = 'ok'; S.insights.data = normInsights(res); } else S.insights.state = 'fail';
+  if (res && typeof res === 'object' && Array.isArray(res.tests)) {
+    S.insights.state = 'ok'; S.insights.data = normInsights(res); S.insights.stale = null;
+    try { localStorage.setItem('sehat_insights', JSON.stringify({ key, day: new Date().toISOString().slice(0, 10), data: res })); } catch (x) { /* ignore */ }
+  } else S.insights.state = 'fail';
   if (S.view === 'health' || S.view === 'visit') render();
 }
 /* Used by views: starts the request when records or language changed. */
 function getInsights() {
   if (!S.records.length) return { loading: false, data: fallbackInsights() };
   const key = insightsKey();
-  if (!S.insights || S.insights.key !== key) { S.insights = { key, state: 'loading', data: null }; runInsights(key); }
+  if (!S.insights || S.insights.key !== key) {
+    // while the new profile loads, keep showing the previous one rather than a blank state
+    const stale = S.insights && (S.insights.data || S.insights.stale) || null;
+    S.insights = { key, state: 'loading', data: null, stale };
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('sehat_insights') || 'null'); } catch (x) { /* ignore */ }
+    if (saved && saved.key === key && saved.day === new Date().toISOString().slice(0, 10) && saved.data && Array.isArray(saved.data.tests)) {
+      S.insights.state = 'ok'; S.insights.data = normInsights(saved.data);
+    } else runInsights(key);
+  }
   if (S.insights.state === 'ok') return { loading: false, data: S.insights.data };
+  if (S.insights.state === 'loading' && S.insights.stale) return { loading: false, data: S.insights.stale };
   if (S.insights.state === 'fail') return { loading: false, data: fallbackInsights() };
   return { loading: true, data: null };
 }

@@ -70,6 +70,8 @@ Design decisions:
 | No invented tests | 5 of 5 |
 | **All fields** | **140 of 140** |
 
+One handwriting-style test (`tools/testdata/handwritten-style.png`, a prescription drawn in a script font with tilt and blur, not real handwriting): all four medicines, their strengths and durations, both diagnoses and the follow-up were read correctly, and the document was recognised as handwritten, so every item was marked for checking. Two things were wrong on the first run: the year was read as 2020 instead of 2026, and "1-1-1 SOS" lost its "only when needed". The first is now caught by a warning on dates more than two years old; the second led to a prompt rule that SOS is never dropped. One sample is an anecdote, not a benchmark.
+
 Read this number narrowly: these are clean, printed, synthetic documents rendered by our own script. It is not a measure of accuracy on photographed paper or handwriting, where we expect errors and rely on the review screen, the confidence cap and the plausibility guard.
 
 ## Stack
