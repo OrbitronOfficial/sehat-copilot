@@ -96,6 +96,10 @@ const STR = {
     privacy: 'Built around the consent, purpose-limitation and erasure principles of India\'s Digital Personal Data Protection Act, 2023. This is a student prototype, not a certified or audited service. Use sample or non-sensitive documents.',
     data_title: 'Your data', wipe_btn: 'Delete all my data', wipe_hint: 'Removes everything stored on this device.',
     confirm_wipe: 'Delete all records and your profile from this device? This cannot be undone.',
+    confirm_other: 'This document is for {a}. Your profile is {b}. Save it to this profile anyway?',
+    attn_age: '{n} months old. A newer test may show something different.',
+    cur_title: 'Are you still taking these?', cur_hint: 'These are written in your records, but nothing here shows you take them today. Only medicines you confirm go into the schedule and reminders.',
+    cur_yes: 'Yes, I take this', cur_undo: 'Remove from schedule', cur_empty: 'Confirm a medicine above to see it in a schedule.',
     err_network: 'Could not reach the server. Check your connection and try again.',
     err_busy: 'The document reader is busy right now. Nothing was lost. Please try again in a minute.',
     err_server: 'The server returned an error ({code}).',
@@ -137,7 +141,7 @@ const STR = {
     med_presc: 'prescribed {d}', med_dur: 'duration {x}',
     visit_presc: 'Prescribed', visit_status: 'Status',
     ment_title: 'Mentions ({n})', ment_open: 'Open record',
-    attn_title: 'Needs attention now', attn_none: 'Everything in your latest results is within range.',
+    attn_title: 'Out of range in your latest results', attn_none: 'Everything in your latest results is within range.',
     trend_hist: 'Earlier results stay in each test\'s history above.',
     cross_title: 'Things to discuss with your doctor', q_title: 'Questions for your doctor, from your records',
     ins_loading: 'Putting your records together...',
@@ -255,6 +259,10 @@ const STR = {
     privacy: 'यह भारत के डिजिटल व्यक्तिगत डेटा संरक्षण अधिनियम, 2023 के सहमति, उद्देश्य-सीमा और डेटा हटाने के सिद्धांतों को ध्यान में रखकर बनाया गया है। यह छात्रों का प्रोटोटाइप है, कोई प्रमाणित सेवा नहीं। नमूना या गैर-संवेदनशील दस्तावेज़ ही इस्तेमाल करें।',
     data_title: 'आपका डेटा', wipe_btn: 'मेरा सारा डेटा हटाएँ', wipe_hint: 'इस डिवाइस पर सहेजी हर चीज़ हट जाएगी।',
     confirm_wipe: 'इस डिवाइस से सभी रिकॉर्ड और आपकी प्रोफ़ाइल हटाएँ? इसे वापस नहीं किया जा सकता।',
+    confirm_other: 'यह दस्तावेज़ {a} का है। आपकी प्रोफ़ाइल {b} की है। फिर भी इसी प्रोफ़ाइल में सहेजें?',
+    attn_age: '{n} महीने पुराना। नई जाँच में नतीजा अलग हो सकता है।',
+    cur_title: 'क्या आप ये दवाएँ अभी भी ले रहे हैं?', cur_hint: 'ये दवाएँ आपके रिकॉर्ड में लिखी हैं, पर यहाँ से पता नहीं चलता कि आप इन्हें आज ले रहे हैं। जिन दवाओं की आप पुष्टि करेंगे, वही समय-सारणी और रिमाइंडर में आएँगी।',
+    cur_yes: 'हाँ, मैं यह लेता/लेती हूँ', cur_undo: 'समय-सारणी से हटाएँ', cur_empty: 'समय-सारणी देखने के लिए ऊपर किसी दवा की पुष्टि करें।',
     err_network: 'सर्वर से संपर्क नहीं हो सका। कनेक्शन जाँचकर फिर कोशिश करें।',
     err_busy: 'दस्तावेज़ पढ़ने वाली सेवा अभी व्यस्त है। कुछ खोया नहीं है। कृपया एक मिनट बाद फिर कोशिश करें।',
     err_server: 'सर्वर में त्रुटि हुई ({code})।',
@@ -800,6 +808,10 @@ function emptyToNull(o, keys) { keys.forEach(k => { if (o[k] === '' || o[k] === 
 
 async function saveDraft() {
   if (!S.draft || S.busy.save) return;
+  const first = v => String(v || '').trim().toLowerCase().replace(/^(mr|mrs|ms|smt|shri|sri|dr)\.?\s+/, '').split(/\s+/)[0];
+  const docName = (S.draft.patient || {}).name, myName = (S.patient || {}).name;
+  if (!S.editingId && first(docName) && first(myName) && first(docName) !== first(myName) &&
+      !confirm(t('confirm_other', { a: docName, b: myName }))) return;
   S.busy.save = true; clearError(); render();
   try {
     let rec = clone(S.draft);
@@ -1255,8 +1267,29 @@ function getInsights() {
 }
 /* Used by listeners: never starts a request. */
 function curInsights() { return S.insights && S.insights.state === 'ok' && S.insights.data ? S.insights.data : fallbackInsights(); }
-function schedMeds() { return curInsights().medicines.filter(m => m.status !== 'course_ended').map(m => ({ m, date: m.date })); }
+/* A medicine written in a record is not proof it is taken today: the user confirms each one
+   before it can enter the schedule, the reminders or "Next up". Kept on this device. */
+function curKey(m) { return String((m && m.name) || '').trim().toLowerCase(); }
+function curGet() { try { return JSON.parse(localStorage.getItem('sehat_current') || '{}') || {}; } catch (e) { return {}; } }
+function curSet(k, on) {
+  const c = curGet();
+  if (on) c[k] = 1; else delete c[k];
+  try { localStorage.setItem('sehat_current', JSON.stringify(c)); } catch (e) { /* storage blocked */ }
+}
+function schedAll() { return curInsights().medicines.filter(m => m.status !== 'course_ended').map(m => ({ m, date: m.date })); }
+function schedMeds() { const c = curGet(); return schedAll().filter(x => c[curKey(x.m)]); }
+function confirmMedsCard() {
+  const all = schedAll(), c = curGet();
+  if (!all.length) return '';
+  return '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('cur_title')) + '</h2><p class="muted small">' + esc(t('cur_hint')) + '</p><ul class="list">' +
+    all.map(x => { const k = curKey(x.m), on = !!c[k]; return '<li><span class="l"><strong>' + esc(x.m.name) + '</strong>' + (x.date ? '<br><span class="muted small">' + esc(fmtDate(x.date)) + '</span>' : '') +
+      '</span><span class="r"><button type="button" class="btn small' + (on ? ' link' : ' secondary') + '" data-act="curmed" data-k="' + esc(k) + '" data-on="' + (on ? '0' : '1') + '">' + esc(t(on ? 'cur_undo' : 'cur_yes')) + '</button></span></li>'; }).join('') + '</ul></div>';
+}
 
+function attnAge(date) {
+  const n = date ? Math.floor((Date.now() - new Date(date).getTime()) / (30.4 * 864e5)) : 0;
+  return n >= 2 ? '<br><span class="small" style="color:var(--warn)">' + esc(t('attn_age', { n: n })) + '</span>' : '';
+}
 function recLink(id, label) {
   const r = getRec(id);
   if (!r) return '';
@@ -1382,7 +1415,7 @@ function viewHealth() {
     tile(I.medicines.length, t('stat_meds_rec'), 's-blue') + tile(I.conditions.length, t('stat_cond'), 's-plain') + '</div>';
   const series = trendSeries(I);
   const attn = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('attn_title')) + '</h2>' +
-    (I.attention.length ? '<ul class="list">' + I.attention.map(a => '<li><span class="l"><strong>' + esc(a.name) + '</strong><br><span class="muted small">' + esc(fmtDate(a.date)) + (a.ref_text ? ' · ' + esc(t('t_range')) + ': ' + esc(a.ref_text) : '') + '</span>' + recLinks([a.record]) + '</span><span class="r"><span class="mono">' + esc(a.value == null ? '' : a.value) + ' ' + esc(a.unit || '') + '</span><br>' + badge(a.flag) + '</span></li>').join('') + '</ul>'
+    (I.attention.length ? '<ul class="list">' + I.attention.map(a => '<li><span class="l"><strong>' + esc(a.name) + '</strong><br><span class="muted small">' + esc(fmtDate(a.date)) + (a.ref_text ? ' · ' + esc(t('t_range')) + ': ' + esc(a.ref_text) : '') + '</span>' + attnAge(a.date) + recLinks([a.record]) + '</span><span class="r"><span class="mono">' + esc(a.value == null ? '' : a.value) + ' ' + esc(a.unit || '') + '</span><br>' + badge(a.flag) + '</span></li>').join('') + '</ul>'
       : '<p class="dash-okline">' + esc(t('attn_none')) + '</p>') + '</div>';
   const latestCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_latest')) + '</h2>' +
     (I.tests.length ? '<ul class="list">' + I.tests.map(x => { const l = x.latest; return '<li><span class="l">' + esc(x.name) + '<br><span class="muted small">' + esc(fmtDate(l.date)) + '</span></span><span class="r"><span class="mono">' + esc(l.value == null ? ptVal(l) : l.value) + ' ' + esc(l.unit || x.unit || '') + '</span><br>' + badge(l.flag) + '</span></li>'; }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>';
@@ -1405,7 +1438,7 @@ function viewHealth() {
   const sec = (k, body) => '<section class="hsec"><div class="kicker">' + esc(t(k)) + '</div>' + body + '</section>';
   return headV + dashHTML(I) + sec('kick_wellness', wellnessCard(I)) + tiles +
     sec('kick_results', '<div class="stack">' + attn + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>') +
-    sec('kick_meds', '<div class="stack">' + medsRecordedCard(I) + medsTodayCard(sched) + pharmacistCard(sched) + '</div>') +
+    sec('kick_meds', '<div class="stack">' + medsRecordedCard(I) + confirmMedsCard() + medsTodayCard(schedMeds()) + pharmacistCard(sched) + '</div>') +
     sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>') +
     sec('kick_about', '<div class="health-grid">' + patientCard + condCard + '</div>');
 }
@@ -1704,7 +1737,7 @@ function takenCountText(doses) {
 function medsTodayCard(P) {
   const doses = buildDoses(P), tk = takenGet();
   let h = '<div class="card medday"><h2 style="margin-bottom:10px">' + esc(t('mt_title2')) + '</h2>';
-  if (!doses.length) return h + '<p class="muted">' + esc(t('mt_empty')) + '</p></div>';
+  if (!doses.length) return h + '<p class="muted">' + esc(t(schedAll().length ? 'cur_empty' : 'mt_empty')) + '</p></div>';
   h += '<p class="small" style="margin:0 0 8px"><strong id="takenCount">' + esc(takenCountText(doses)) + '</strong></p>';
   SLOT_ORDER.forEach(slot => {
     const list = doses.filter(d => d.slot === slot);
@@ -2223,6 +2256,7 @@ document.addEventListener('click', e => {
     case 'overview': genOverview(); break;
     case 'askq': ask(t(el.dataset.q)); break;
     case 'abhaimport': { const d = abhaNumber(S.patient).replace(/\D/g, ''); if (d.length === 14) abhaStart(d, true); break; }
+    case 'curmed': curSet(el.dataset.k, el.dataset.on === '1'); render(); break;
     case 'abhacancel': S.abhaFlow = null; clearError(); render(); break;
     case 'fhir': exportFhir(); break;
     case 'wipe': wipeAll(); break;
