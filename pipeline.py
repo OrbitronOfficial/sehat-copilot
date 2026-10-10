@@ -14,6 +14,7 @@ import uuid
 
 import llm
 import ranges
+import safety
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOC_TYPES = ("lab_report", "prescription", "discharge_summary", "diagnostic_report", "other")
@@ -25,16 +26,6 @@ DISCLAIMER = {
     "hi": "यह जानकारी केवल आपके रिकॉर्ड को समझने के लिए है। यह कोई निदान या चिकित्सा सलाह नहीं है। "
           "अपने डॉक्टर से पूछे बिना कोई दवा शुरू, बंद या बदलें नहीं।",
 }
-EMERGENCY = {
-    "en": "If this is happening right now, treat it as an emergency: call 108 or go to the "
-          "nearest emergency department. ",
-    "hi": "अगर यह अभी हो रहा है, तो इसे आपातकाल मानें: 108 पर कॉल करें या नज़दीकी आपातकालीन "
-          "विभाग जाएँ। ",
-}
-_RED_FLAGS = re.compile(
-    r"chest pain|can'?t breathe|cannot breathe|breathless|unconscious|faint|seizure|stroke|"
-    r"suicid|overdose|bleeding heavily|vomiting blood|सीने में दर्द|सांस नहीं|साँस नहीं|बेहोश|दौरा", re.I)
-
 with open(os.path.join(ROOT, "data", "medicines.json"), encoding="utf-8") as f:
     _MEDS = json.load(f)
 _MED_NAMES = {}
@@ -86,6 +77,7 @@ Safety rules:
 - For each abnormal test say plainly what the test measures, whether it is above or below the range, and what that commonly means. Keep it calm and factual.
 - A "critical" flag: say it needs prompt medical attention.
 - Medicines: give the common purpose of each medicine in one line. If you do not recognise it, say so.
+- Numbers: write only numbers that appear in the record. Never add a typical range, target or duration as digits; if you need one, write it in words.
 
 Return ONE JSON object:
 {{
@@ -115,11 +107,15 @@ RECORDS (oldest first):
 {records}"""
 
 ASK_PROMPT = """You answer a patient's question about their own health records in {language}, in simple words.
-Use ONLY the records below. If the records do not contain the answer, say so plainly and suggest asking their doctor. Do not diagnose. Do not advise starting, stopping or changing a medicine or dose. Mention dates and values when you cite a result.
 
-Write the answer as plain text with no markdown (no asterisks, no headings); use short lines.
+First decide which kind of answer this is:
+- "records": the answer is in the records below. Quote the value, its unit, the reference range and the report date. If part of what they ask is missing from the records, say exactly what is missing.
+- "general": the question is about what a test, term or medicine generally is, and the records are not needed. Give a short general explanation and say it is general information, not about them.
+- "doctor": the question asks what treatment to take, whether to start, stop or change anything, for a diagnosis, or for a prognosis. Do not answer it. Say this needs their doctor and, if useful, which values from the records to show the doctor.
 
-Return ONE JSON object: {{"answer": str, "sources": [ids of the records you used]}}
+Rules: never diagnose. Never advise starting, stopping or changing a medicine or dose. Never write a number that is not in the records. Plain text only, no markdown (no asterisks, no headings); short lines.
+
+Return ONE JSON object: {{"kind": "records" | "general" | "doctor", "answer": str, "sources": [ids of the records you used, empty unless kind is "records"]}}
 
 RECORDS:
 {records}
@@ -313,53 +309,109 @@ def _compact(rec):
     }
 
 
+_SIDE = {"en": {"low": "below", "high": "above", "critical": "far outside"},
+         "hi": {"low": "से कम", "high": "से अधिक", "critical": "से बहुत बाहर"}}
+
+
+def _plain_finding(t, lang):
+    """One factual sentence built from the checked values. No model involved."""
+    value = f"{t.get('value')} {t.get('unit') or ''}".strip()
+    rng = t.get("ref_text") or ("not printed" if lang == "en" else "छपी नहीं है")
+    if lang == "hi":
+        return f"{t.get('name')}: {value}. यह संदर्भ सीमा ({rng}) {_SIDE['hi'][t['flag']]} है।"
+    return f"{t.get('name')} is {value}, {_SIDE['en'][t['flag']]} the reference range ({rng})."
+
+
+def _plain_summary(rec, lang):
+    tests = rec.get("tests") or []
+    abnormal = sum(1 for t in tests if t.get("flag") in ("low", "high", "critical"))
+    meds = len(rec.get("medicines") or [])
+    if lang == "hi":
+        return (f"{rec.get('title')}: {len(tests)} जाँच मान, जिनमें से {abnormal} संदर्भ सीमा से बाहर हैं; "
+                f"{meds} दवा(एँ)।")
+    return (f"{rec.get('title')}: {len(tests)} test value(s), {abnormal} outside the reference range, "
+            f"{meds} medicine(s).")
+
+
 def _fallback_explanation(rec, lang):
     """Used when no model is reachable: plain facts from the flags, nothing more."""
-    findings = []
-    for t in rec.get("tests") or []:
-        if t.get("flag") in ("low", "high", "critical"):
-            side = {"low": "below", "high": "above", "critical": "far outside"}[t["flag"]]
-            findings.append({"name": t["name"], "flag": t["flag"],
-                             "meaning": f"{t['name']} is {t.get('value')} {t.get('unit') or ''}, {side} "
-                                        f"the reference range ({t.get('ref_text') or 'not printed'})."})
-    abnormal = len(findings)
     return {
-        "summary": f"{rec.get('title')}: {len(rec.get('tests') or [])} test value(s), {abnormal} outside "
-                   f"the reference range, {len(rec.get('medicines') or [])} medicine(s). "
-                   "A detailed explanation is unavailable right now.",
-        "findings": findings,
+        "summary": _plain_summary(rec, lang),
+        "findings": [{"name": t["name"], "flag": t["flag"], "meaning": _plain_finding(t, lang)}
+                     for t in rec.get("tests") or [] if t.get("flag") in ("low", "high", "critical")],
         "medicines": [{"name": m["name"], "purpose": (_MED_NAMES.get((m.get("generic") or m["name"]).lower(), {})
                                                       .get("class") or "Ask your doctor or pharmacist.")}
                       for m in rec.get("medicines") or []],
         "questions": ["What do the values outside the range mean for me?",
-                      "Do I need any follow-up tests?"],
+                      "Do I need any follow-up tests?"] if lang == "en" else
+                     ["सीमा से बाहर वाले मानों का मेरे लिए क्या मतलब है?", "क्या मुझे कोई और जाँच करानी चाहिए?"],
         "disclaimer": DISCLAIMER.get(lang, DISCLAIMER["en"]), "fallback": True,
     }
 
 
+def _verified_numbers(rec):
+    """Every number the model is allowed to repeat: what is in the checked record, plus counts."""
+    allowed = safety.numbers(json.dumps(_compact(rec), ensure_ascii=False))
+    for t in rec.get("tests") or []:
+        allowed |= safety.numbers(f"{t.get('ref_low')} {t.get('ref_high')}")
+    allowed |= safety.numbers(json.dumps(rec.get("patient") or {}, ensure_ascii=False))
+    tests = rec.get("tests") or []
+    abnormal = sum(1 for t in tests if t.get("flag") in ("low", "high", "critical"))
+    unknown = sum(1 for t in tests if t.get("flag") == "unknown")
+    allowed |= {float(n) for n in (len(tests), abnormal, unknown, abnormal + unknown,
+                                   len(tests) - abnormal, len(tests) - abnormal - unknown,
+                                   len(rec.get("medicines") or []), len(rec.get("diagnoses") or []))}
+    return allowed
+
+
 def explain(rec, lang="en"):
     lang = "hi" if lang == "hi" else "en"
-    flags = {t.get("name"): t.get("flag") for t in rec.get("tests") or []}
+    by_name = {t.get("name"): t for t in rec.get("tests") or []}
     try:
         out, _ = llm.write_json(EXPLAIN_PROMPT.format(
             language=_lang_name(lang), record=json.dumps(_compact(rec), ensure_ascii=False)))
     except llm.LLMError:
         return _fallback_explanation(rec, lang)
+
+    # Numeric guard: a number the model wrote that is not in the checked record is treated as
+    # invented, and that piece of text is replaced by the plain factual template.
+    allowed = _verified_numbers(rec)
+    replaced = 0
     findings = []
     for f in out.get("findings") or []:
-        if isinstance(f, dict) and _s(f.get("name")) and _s(f.get("meaning"), 600):
-            name = _s(f["name"], 100)
-            # the code's flag wins over whatever the model wrote back
-            findings.append({"name": name, "flag": flags.get(name, _s(f.get("flag"), 10) or "unknown"),
-                             "meaning": _s(f["meaning"], 600)})
-    return {
-        "summary": _s(out.get("summary"), 1200) or "",
-        "findings": findings,
-        "medicines": [{"name": _s(m.get("name"), 100), "purpose": _s(m.get("purpose"), 300)}
-                      for m in out.get("medicines") or [] if isinstance(m, dict) and _s(m.get("name"))],
-        "questions": [_s(q, 300) for q in (out.get("questions") or []) if _s(q)][:5],
-        "disclaimer": DISCLAIMER[lang],
-    }
+        if not (isinstance(f, dict) and _s(f.get("name")) and _s(f.get("meaning"), 600)):
+            continue
+        name = _s(f["name"], 100)
+        test = by_name.get(name)
+        meaning = _s(f["meaning"], 600)
+        # the code's flag wins over whatever the model wrote back
+        flag = test.get("flag") if test else (_s(f.get("flag"), 10) or "unknown")
+        if safety.unverified(meaning, allowed):
+            replaced += 1
+            if not (test and flag in _SIDE["en"]):
+                continue
+            meaning = _plain_finding(test, lang)
+        findings.append({"name": name, "flag": flag, "meaning": meaning})
+
+    summary = _s(out.get("summary"), 1200) or ""
+    if not summary or safety.unverified(summary, allowed):
+        replaced += bool(summary)
+        summary = _plain_summary(rec, lang)
+
+    medicines = []
+    for m in out.get("medicines") or []:
+        if not (isinstance(m, dict) and _s(m.get("name"))):
+            continue
+        purpose = _s(m.get("purpose"), 300)
+        if purpose and safety.unverified(purpose, allowed):
+            replaced += 1
+            purpose = None
+        medicines.append({"name": _s(m["name"], 100), "purpose": purpose})
+
+    questions = [q for q in (_s(q, 300) for q in out.get("questions") or [])
+                 if q and not safety.unverified(q, allowed)][:5]
+    return {"summary": summary, "findings": findings, "medicines": medicines, "questions": questions,
+            "disclaimer": DISCLAIMER[lang], "guard_replaced": replaced}
 
 
 def _sorted(records):
@@ -384,15 +436,23 @@ def ask(question, records, lang="en"):
     question = _s(question, 600)
     if not question:
         raise ValueError("Type a question first.")
+    gated = safety.gate(question, lang)  # emergency, then medication change: no model call
+    if gated:
+        return dict(gated, disclaimer=DISCLAIMER[lang])
     if not records:
         return {"answer": "Add a record first, then ask about it." if lang == "en"
-                else "पहले कोई रिकॉर्ड जोड़ें, फिर उसके बारे में पूछें।", "sources": []}
+                else "पहले कोई रिकॉर्ड जोड़ें, फिर उसके बारे में पूछें।", "sources": [], "label": "general"}
     out, _ = llm.write_json(ASK_PROMPT.format(
         language=_lang_name(lang), question=question,
         records=json.dumps([_compact(r) for r in _sorted(records)[-25:]], ensure_ascii=False)))
     ids = {r.get("id") for r in records if isinstance(r, dict)}
-    answer = (_s(out.get("answer"), 2500) or "").replace("**", "")
-    if _RED_FLAGS.search(question):
-        answer = EMERGENCY[lang] + answer
-    return {"answer": answer, "sources": [s for s in (out.get("sources") or []) if s in ids],
-            "disclaimer": DISCLAIMER[lang]}
+    sources = [x for x in (out.get("sources") or []) if x in ids]
+    # "From your records" is only shown when the answer really cites a saved record
+    if out.get("kind") == "doctor":
+        label = "doctor"
+    elif sources:
+        label = "records"
+    else:
+        label = "general"
+    return {"answer": (_s(out.get("answer"), 2500) or "").replace("**", ""),
+            "sources": sources, "label": label, "disclaimer": DISCLAIMER[lang]}

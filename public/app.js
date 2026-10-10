@@ -51,6 +51,8 @@ const STR = {
     none_yet: 'Nothing here yet. Save a record first.', band_note: 'Shaded band is the reference range.',
     ask_title: 'Ask about your records', ask_sub: 'Answers come only from the records saved on this device.',
     ask_ph: 'Type your question', ask_send: 'Ask',
+    label_records: 'From your records', label_general: 'General information',
+    label_doctor: 'Ask your doctor', label_emergency: 'Emergency',
     q1: 'What changed since my last report?', q2: 'Which medicines am I on and why?', q3: 'Which values should I discuss with my doctor?',
     thinking: 'Looking through your records...', sources: 'Sources', you: 'You', assistant: 'Sehat Copilot',
     ask_empty: 'Save at least one record to ask questions.',
@@ -123,6 +125,8 @@ const STR = {
     none_yet: 'अभी यहाँ कुछ नहीं है। पहले एक रिकॉर्ड सहेजें।', band_note: 'रंगीन पट्टी सामान्य सीमा दिखाती है।',
     ask_title: 'अपने रिकॉर्ड के बारे में पूछें', ask_sub: 'उत्तर केवल इस डिवाइस पर सहेजे रिकॉर्ड से आते हैं।',
     ask_ph: 'अपना सवाल लिखें', ask_send: 'पूछें',
+    label_records: 'आपके रिकॉर्ड से', label_general: 'सामान्य जानकारी',
+    label_doctor: 'अपने डॉक्टर से पूछें', label_emergency: 'आपातकाल',
     q1: 'पिछली रिपोर्ट के बाद क्या बदला?', q2: 'मैं कौन सी दवाइयाँ ले रहा हूँ और क्यों?', q3: 'किन मानों पर मुझे डॉक्टर से बात करनी चाहिए?',
     thinking: 'आपके रिकॉर्ड देखे जा रहे हैं...', sources: 'स्रोत', you: 'आप', assistant: 'सेहत कोपायलट',
     ask_empty: 'सवाल पूछने के लिए कम से कम एक रिकॉर्ड सहेजें।',
@@ -968,7 +972,9 @@ function viewAsk() {
   const msgs = S.chat.map(m => {
     if (m.role === 'me') return '<div class="msg me"><div class="who">' + esc(t('you')) + '</div>' + esc(m.text) + '</div>';
     const src = srcChips(m.sources);
-    return '<div class="msg"><div class="who">' + esc(t('assistant')) + '</div>' + esc(m.text) + (src ? '<div class="srcs"><div class="muted small" style="margin-bottom:4px">' + esc(t('sources')) + '</div><div class="chips">' + src + '</div></div>' : '') + '</div>';
+    const kinds = ['records', 'general', 'doctor', 'emergency'];
+    const lbl = kinds.indexOf(m.label) >= 0 ? '<span class="lbl lbl-' + m.label + '">' + esc(t('label_' + m.label)) + '</span>' : '';
+    return '<div class="msg' + (m.label === 'emergency' ? ' urgent' : '') + '"><div class="who">' + esc(t('assistant')) + lbl + '</div>' + esc(m.text) + (src ? '<div class="srcs"><div class="muted small" style="margin-bottom:4px">' + esc(t('sources')) + '</div><div class="chips">' + src + '</div></div>' : '') + '</div>';
   }).join('');
   return head + '<div class="chips">' + qs + '</div>' +
     '<div class="chat" id="chat">' + msgs + (S.asking ? '<div class="msg muted">' + esc(t('thinking')) + '</div>' : '') + '</div>' +
@@ -981,7 +987,7 @@ async function ask(q) {
   S.asking = true; clearError(); render(); scrollChat();
   try {
     const res = await api('/api/ask', { question: q, records: S.records.map(lite), lang });
-    S.chat.push({ role: 'bot', text: res.answer || '', sources: arr(res.sources) });
+    S.chat.push({ role: 'bot', text: res.answer || '', sources: arr(res.sources), label: res.label || null });
   } catch (e) {
     showError(e.message, () => ask(q));
   }

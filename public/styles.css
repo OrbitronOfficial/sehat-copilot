@@ -332,3 +332,11 @@ details.preview pre { max-height: 360px; overflow: auto; background: #F1F5F3; bo
 @media (max-width: 380px) {
   .fields { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* answer source labels in Ask */
+.lbl { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.lbl-records { color: #0F766E; border-color: #9FD0C8; background: #EEF7F5; }
+.lbl-general { color: #475569; background: #F1F5F4; }
+.lbl-doctor { color: #B45309; border-color: #F1D3A8; background: #FFF8EC; }
+.lbl-emergency { color: #B91C1C; border-color: #F1B5B5; background: #FEF2F2; }
+.msg.urgent { border-color: #F1B5B5; border-left: 4px solid #B91C1C; }
