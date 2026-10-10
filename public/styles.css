@@ -795,3 +795,7 @@ img.pet-svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
 
 .pet-form .pet-add { flex: none; padding: 0 10px; display: inline-flex; align-items: center; }
 .pet-msg .doc-ul { padding-left: 16px; }
+
+.tag.green { color: var(--ok); background: var(--ok-bg); border-color: #BFE3C8; }
+.okrow { margin-left: 6px; padding: 3px 10px; }
+:root[data-theme="dark"] .tag.green { background: rgba(34, 197, 94, .14); border-color: rgba(34, 197, 94, .35); color: #86EFAC; }

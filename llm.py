@@ -19,6 +19,7 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GEMINI_MODELS = ("gemini-3.8-flash,gemini-3-flash-preview,gemini-3.5-flash-lite,"
                  "gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-3.7-flash")
 GROQ_MODELS = "openai/gpt-oss-120b,qwen/qwen3.8-27b,openai/gpt-oss-20b"
+GEMINI_TEXT_MODELS = "gemini-3.1-flash-lite,gemini-3.5-flash-lite,gemini-flash-lite-latest"
 CALL_TIMEOUT = 28   # one model
 BUDGET = 52         # whole request; Vercel cuts the function at 60 s
 
@@ -126,6 +127,8 @@ def _gemini(prompt, file, deadline):
         except (KeyError, IndexError) as e:
             raise LLMError("empty response") from e
 
+    if not file:  # writing: the light models are quick and have the larger free allowance
+        return _chain("GEMINI_TEXT_MODELS", GEMINI_TEXT_MODELS, call, deadline, per_call=14)
     return _chain("GEMINI_MODELS", GEMINI_MODELS, call, deadline)
 
 
@@ -204,5 +207,5 @@ def read_document(prompt, file):
 
 def write_json(prompt):
     """Text only: explanations, answers, structuring OCR text."""
-    order = os.environ.get("TEXT_ORDER", "groq,openrouter,nvidia,gemini").split(",")
+    order = os.environ.get("TEXT_ORDER", "groq,openrouter,gemini,nvidia").split(",")
     return _first([p.strip() for p in order], prompt, None)

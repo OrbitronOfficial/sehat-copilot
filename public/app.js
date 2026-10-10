@@ -14,6 +14,15 @@ const STR = {
     samples_title: 'Try a sample', samples_none: 'No samples available right now.',
     demo_btn: 'Load full demo profile', demo_hint: 'Adds a sample patient with several records and opens the timeline.',
     processing_title: 'Reading your document',
+    warn_hand: 'This document is handwritten. Please check every medicine name and dose against the original.',
+    warn_unread: '{n} line(s) could not be read reliably and were left out. They are listed under "Lines not used"; add them by hand if they matter.',
+    warn_low: '{n} item(s) were read with low confidence and are marked below.',
+    warn_nodate: 'No date was found on this document. Please add it so it appears in the right place on your timeline.',
+    warn_future: 'The date on this document is in the future. Please check it.',
+    warn_old: 'The date was read as {date}, more than two years ago. If this is a recent document, please correct the date.',
+    warn_critical: 'One or more values are far outside the usual range. Please contact your doctor promptly.',
+    warn_notrecord: 'This does not look like a health record, or it could not be read. Try a sharper photo.',
+    warn_saved: 'The live reader is busy, so this sample shows its saved reading.',
     wait_hint: 'This usually takes 10 to 20 seconds. Handwriting can take a little longer.',
     step_read: 'Reading document', step_extract: 'Extracting', step_check: 'Checking values', step_write: 'Writing summary',
     review_title: 'Review and correct',
@@ -29,7 +38,7 @@ const STR = {
     add_test: 'Add test', add_med: 'Add medicine', add_dx: 'Add diagnosis', add_advice: 'Add advice', remove: 'Remove',
     no_items: 'None found.',
     flag_normal: 'Normal', flag_low: 'Low', flag_high: 'High', flag_critical: 'Critical', flag_unknown: 'Unknown',
-    low_conf: 'Low confidence - please verify', unknown_med: 'Not in our medicine list - please verify',
+    low_conf: 'Low confidence - please verify', ok_row: 'This is right', ok_done: 'Checked by you', ok_hint: 'If it matches the original, press "This is right". If not, correct it.', unknown_med: 'Not in our medicine list - please verify',
     handwritten: 'Handwritten', conf_overall: 'Extraction confidence: {p}%', items_check: '{n} items need checking',
     ref_report: 'Range from your report', ref_standard: 'Standard range, not from your report',
     save: 'Save to my records', save_changes: 'Save changes', discard: 'Discard', cancel: 'Cancel', saving: 'Saving...',
@@ -184,6 +193,15 @@ const STR = {
     samples_title: 'नमूना आज़माएँ', samples_none: 'अभी कोई नमूना उपलब्ध नहीं है।',
     demo_btn: 'पूरी डेमो प्रोफ़ाइल लोड करें', demo_hint: 'एक नमूना मरीज़ और कई रिकॉर्ड जोड़कर टाइमलाइन खोलता है।',
     processing_title: 'आपका दस्तावेज़ पढ़ा जा रहा है',
+    warn_hand: 'यह दस्तावेज़ हाथ से लिखा है। कृपया हर दवा का नाम और खुराक मूल दस्तावेज़ से मिलाएँ।',
+    warn_unread: '{n} पंक्ति(याँ) ठीक से पढ़ी नहीं जा सकीं और छोड़ दी गईं। वे "उपयोग न की गई पंक्तियाँ" में दी गई हैं; ज़रूरी हों तो उन्हें खुद जोड़ें।',
+    warn_low: '{n} चीज़ें कम भरोसे के साथ पढ़ी गईं और नीचे चिह्नित हैं।',
+    warn_nodate: 'इस दस्तावेज़ पर कोई तारीख़ नहीं मिली। कृपया तारीख़ जोड़ें ताकि यह टाइमलाइन में सही जगह दिखे।',
+    warn_future: 'इस दस्तावेज़ की तारीख़ भविष्य की है। कृपया जाँच लें।',
+    warn_old: 'तारीख़ {date} पढ़ी गई, जो दो साल से ज़्यादा पुरानी है। अगर यह हाल का दस्तावेज़ है तो कृपया तारीख़ ठीक करें।',
+    warn_critical: 'एक या अधिक मान सामान्य सीमा से बहुत बाहर हैं। कृपया जल्द अपने डॉक्टर से संपर्क करें।',
+    warn_notrecord: 'यह स्वास्थ्य रिकॉर्ड जैसा नहीं लगता, या इसे पढ़ा नहीं जा सका। ज़्यादा साफ़ फ़ोटो आज़माएँ।',
+    warn_saved: 'पढ़ने वाली सेवा अभी व्यस्त है, इसलिए इस नमूने की सहेजी हुई रीडिंग दिखाई जा रही है।',
     wait_hint: 'इसमें आम तौर पर 10 से 20 सेकंड लगते हैं। हाथ की लिखावट में थोड़ा ज़्यादा समय लग सकता है।',
     step_read: 'दस्तावेज़ पढ़ना', step_extract: 'जानकारी निकालना', step_check: 'मान जाँचना', step_write: 'सारांश लिखना',
     review_title: 'जाँचें और सुधारें',
@@ -199,7 +217,7 @@ const STR = {
     add_test: 'जाँच जोड़ें', add_med: 'दवा जोड़ें', add_dx: 'निदान जोड़ें', add_advice: 'सलाह जोड़ें', remove: 'हटाएँ',
     no_items: 'कुछ नहीं मिला।',
     flag_normal: 'सामान्य', flag_low: 'कम', flag_high: 'अधिक', flag_critical: 'गंभीर', flag_unknown: 'अज्ञात',
-    low_conf: 'कम भरोसा - कृपया जाँचें', unknown_med: 'हमारी दवा सूची में नहीं - कृपया जाँचें',
+    low_conf: 'कम भरोसा - कृपया जाँचें', ok_row: 'यह सही है', ok_done: 'आपने जाँच लिया', ok_hint: 'अगर यह मूल दस्तावेज़ से मिलता है तो "यह सही है" दबाएँ। नहीं तो इसे ठीक करें।', unknown_med: 'हमारी दवा सूची में नहीं - कृपया जाँचें',
     handwritten: 'हाथ से लिखा', conf_overall: 'जानकारी निकालने का भरोसा: {p}%', items_check: '{n} चीज़ें जाँचने योग्य हैं',
     ref_report: 'सीमा आपकी रिपोर्ट से', ref_standard: 'मानक सीमा, आपकी रिपोर्ट से नहीं',
     save: 'मेरे रिकॉर्ड में सहेजें', save_changes: 'बदलाव सहेजें', discard: 'रद्द करें', cancel: 'वापस', saving: 'सहेजा जा रहा है...',
@@ -448,6 +466,18 @@ function fmtDate(d, opts) {
 }
 function typeLabel(ty) { return TYPES.indexOf(ty) >= 0 ? t('type_' + ty) : t('type_other'); }
 function badge(flag) { const f = normFlag(flag); return '<span class="flag f-' + f + '">' + esc(t('flag_' + f)) + '</span>'; }
+/* Review screen: a doubtful item stays marked until the user confirms it or corrects it. */
+function reviewTag(x, kind, i) {
+  if (x.verified) return '<span class="tag green">' + esc(t('ok_done')) + '</span>';
+  if (!isLow(x.confidence)) return '';
+  return '<span class="tag amber" title="' + esc(t('ok_hint')) + '">' + esc(t('low_conf')) + '</span>' +
+    '<button type="button" class="btn small secondary okrow" data-act="okrow" data-kind="' + kind + '" data-i="' + i + '">' + esc(t('ok_row')) + '</button>';
+}
+function verifyItem(x) {
+  if (!x || x.verified || !isLow(x.confidence)) return false;
+  x.read_confidence = x.confidence; x.confidence = 1; x.verified = true;
+  return true;
+}
 function lowTag(c) { return isLow(c) ? '<span class="tag amber">' + esc(t('low_conf')) + '</span>' : ''; }
 function refText(x) {
   if (x.ref_text) return x.ref_text;
@@ -799,6 +829,8 @@ function onEdit(el) {
   if (el.dataset.num === 'ref') v = isNum(v) ? Number(v) : null;
   else if (el.dataset.num === 'val') v = isNum(v) ? Number(v) : v;
   setPath(S.draft, path, v);
+  const hit = /^(tests|medicines|diagnoses)\.(\d+)\./.exec(path);
+  if (hit) verifyItem(S.draft[hit[1]][Number(hit[2])]);
   S.dirty = true;
   if (/^tests\./.test(path) && /\.(value|unit|ref_low|ref_high|name|flag)$/.test(path)) S.reflag = true;
 }
@@ -836,6 +868,8 @@ async function saveDraft() {
     rec.diagnoses = rec.diagnoses.filter(x => x.name);
     rec.advice = rec.advice.filter(x => x && x.trim());
     rec.medicines.forEach(m => emptyToNull(m, ['generic', 'strength', 'dose', 'frequency', 'timing', 'duration', 'instructions']));
+    const stillLow = rec.tests.concat(rec.medicines, rec.diagnoses).filter(x => isLow(x.confidence)).length;
+    rec.warnings = arr(rec.warnings).map(w => /item\(s\) were read with low confidence/.test(w) ? (stillLow ? stillLow + ' item(s) were read with low confidence and are marked below.' : null) : w).filter(Boolean);
     if (S.reflag) {
       const res = await api('/api/reflag', { record: lite(rec) });
       if (res.record) {
@@ -926,6 +960,25 @@ function skipGet() {
 function skipSet(models) {
   try { localStorage.setItem('sehat_skip', JSON.stringify({ at: Date.now(), models: arr(models) })); } catch (e) { /* storage blocked */ }
 }
+/* The server writes its notices in English. The fixed ones are shown in the reader's language. */
+const WARN_MAP = [
+  [/^This document is handwritten/, 'warn_hand'],
+  [/^(\d+) line\(s\) could not be read/, 'warn_unread', 'n'],
+  [/^(\d+) item\(s\) were read with low confidence/, 'warn_low', 'n'],
+  [/^No date was found/, 'warn_nodate'],
+  [/date on this document is in the future/, 'warn_future'],
+  [/^The date was read as (\S+), more than two years/, 'warn_old', 'date'],
+  [/far outside the usual range/, 'warn_critical'],
+  [/does not look like a health record/, 'warn_notrecord'],
+  [/live reader is busy/, 'warn_saved']
+];
+function warnText(w) {
+  for (const [re, key, arg] of WARN_MAP) {
+    const m = re.exec(String(w || ''));
+    if (m) return t(key, arg ? { [arg]: arg === 'date' ? fmtDate(m[1]) : m[1] } : undefined);
+  }
+  return w;
+}
 function viewProcessing() {
   const steps = ['step_read', 'step_extract', 'step_check', 'step_write'];
   return '<div class="page-head"><h1>' + esc(t('processing_title')) + '</h1></div><div class="card"><ol class="stepper">' +
@@ -957,7 +1010,7 @@ function testRow(x, i) {
     fld(t('t_low'), p + 'ref_low', x.ref_low, { mono: 1, num: 'ref', inputmode: 'decimal' }) +
     fld(t('t_high'), p + 'ref_high', x.ref_high, { mono: 1, num: 'ref', inputmode: 'decimal' }) +
     sel(t('t_flag'), p + 'flag', normFlag(x.flag), FLAGS.map(f => [f, t('flag_' + f)])) +
-    '</div>' + srcLine(x) + '<div class="foot"><div class="tags">' + badge(x.flag) + lowTag(x.confidence) +
+    '</div>' + srcLine(x) + '<div class="foot"><div class="tags">' + badge(x.flag) + reviewTag(x, 'tests', i) +
     (src ? '<span class="muted small">' + esc(src) + '</span>' : '') +
     '</div><button type="button" class="xbtn" data-act="delrow" data-kind="tests" data-i="' + i + '">' + esc(t('remove')) + '</button></div></div>';
 }
@@ -972,7 +1025,7 @@ function medRow(x, i) {
     fld(t('m_timing'), p + 'timing', x.timing) +
     fld(t('m_duration'), p + 'duration', x.duration) +
     fld(t('m_instr'), p + 'instructions', x.instructions, { cls: 'wide' }) +
-    '</div>' + srcLine(x) + '<div class="foot"><div class="tags">' + lowTag(x.confidence) +
+    '</div>' + srcLine(x) + '<div class="foot"><div class="tags">' + reviewTag(x, 'medicines', i) +
     (x.known === false ? '<span class="tag amber">' + esc(t('unknown_med')) + '</span>' : '') +
     '</div><button type="button" class="xbtn" data-act="delrow" data-kind="medicines" data-i="' + i + '">' + esc(t('remove')) + '</button></div></div>';
 }
@@ -989,7 +1042,7 @@ function viewReview() {
     (oc !== null && !d.handwritten ? '<span class="small">' + esc(t('conf_label', { p: oc })) + '</span><span class="confbar ' + (oc < 70 ? 'low' : '') + '"><i style="width:' + Math.max(0, Math.min(100, oc)) + '%"></i></span>' : '') +
     (lowN ? '<span class="tag amber">' + esc(t('items_check', { n: lowN })) + '</span>' : '') + '</div>' +
     (oc !== null && !d.handwritten ? '<p class="muted small conf-note">' + esc(t('conf_note')) + '</p>' : '') +
-    (d.warnings.length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + d.warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul></div>' : '') +
+    (d.warnings.length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + d.warnings.map(w => '<li>' + esc(warnText(w)) + '</li>').join('') + '</ul></div>' : '') +
     (d.unread.length ? '<div class="card unread"><h3>' + esc(t('unread_title')) + '</h3><p class="muted small">' + esc(t('unread_sub')) + '</p><ul>' + d.unread.map(u => '<li><span class="mono">' + esc(u.text) + '</span>' + (u.reason ? ' <span class="muted small">(' + esc(u.reason) + ')</span>' : '') + '</li>').join('') + '</ul></div>' : '') +
     '<div class="review"><div class="card preview-card"><div class="preview-head"><h3>' + esc(t('original')) + '</h3><button type="button" class="btn small secondary" data-zoom="open">' + esc(t('zoom_open')) + '</button></div>' +
     '<div class="srcbox" id="srcbox"><div class="muted small">' + esc(t('src_box')) + '</div><div class="mono" id="srctext">' + esc(t('src_hint')) + '</div></div><div class="preview-doc" data-zoom="open">' + previewHTML(f) + '</div></div>' +
@@ -1007,7 +1060,7 @@ function viewReview() {
     '<div class="card"><div class="sec-title"><h2>' + esc(t('sec_dx')) + '</h2><button type="button" class="btn small secondary" data-act="addrow" data-kind="diagnoses">' + esc(t('add_dx')) + '</button></div>' +
     '<div class="chips">' + d.diagnoses.map((x, i) =>
       '<span class="chip-edit"><input type="text" data-path="diagnoses.' + i + '.name" value="' + esc(x.name) + '" aria-label="' + esc(t('sec_dx')) + '">' +
-      (isLow(x.confidence) ? '<span class="tag amber">' + esc(t('low_conf')) + '</span>' : '') +
+      reviewTag(x, 'diagnoses', i) +
       '<button type="button" class="xbtn" data-act="delrow" data-kind="diagnoses" data-i="' + i + '" aria-label="' + esc(t('remove')) + '">&times;</button></span>').join('') + '</div>' +
     (d.diagnoses.length ? '' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>' +
     '<div class="card"><div class="sec-title"><h2>' + esc(t('sec_advice')) + '</h2><button type="button" class="btn small secondary" data-act="addrow" data-kind="advice">' + esc(t('add_advice')) + '</button></div>' +
@@ -1089,7 +1142,7 @@ function viewDetail() {
     (oc !== null ? '<p class="muted small conf-note">' + esc(t('conf_note')) + '</p>' : '') + '</div>' +
     '<div class="row"><button type="button" class="btn secondary" data-act="edit" data-id="' + esc(r.id) + '">' + esc(t('edit')) + '</button>' +
     '<button type="button" class="btn danger" data-act="delete" data-id="' + esc(r.id) + '">' + esc(t('delete')) + '</button></div></div>' +
-    (arr(r.warnings).length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + r.warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul></div>' : '') +
+    (arr(r.warnings).length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + r.warnings.map(w => '<li>' + esc(warnText(w)) + '</li>').join('') + '</ul></div>' : '') +
     '<div class="detail"><div class="stack">' +
     '<div class="card expl"><h2 style="margin-bottom:10px">' + esc(t('expl_title')) + '</h2><div id="expl"></div></div>' +
     '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('structured')) + '</h2>' + (kv ? '<dl class="kv" style="margin-bottom:12px">' + kv + '</dl>' : '') +
@@ -1543,7 +1596,7 @@ async function chatFile(file) {
     S.chat.push({ role: 'bot', label: 'review', doc: {
       id: rec.id, title: rec.title || typeLabel(rec.doc_type), date: rec.date, patient: (rec.patient || {}).name || '', ex,
       meds: arr(rec.medicines).map(x => { const unsure = isNum(x.confidence) && x.confidence < 0.7; return { name: [x.name, x.strength].filter(Boolean).join(' '), unsure, purpose: unsure ? '' : (purpose[x.name] || '') }; }),
-      warnings: arr(rec.warnings), unread: arr(rec.unread).length
+      warnings: arr(rec.warnings).map(warnText), unread: arr(rec.unread).length
     } });
   } catch (e) {
     S.chat.push({ role: 'bot', text: e.message || t('err_generic'), label: 'general' });
@@ -2336,6 +2389,7 @@ document.addEventListener('click', e => {
     case 'demo': loadDemo(); break;
     case 'addrow': addRow(el.dataset.kind); break;
     case 'delrow': delRow(el.dataset.kind, Number(el.dataset.i)); break;
+    case 'okrow': if (S.draft && verifyItem((S.draft[el.dataset.kind] || [])[Number(el.dataset.i)])) { S.dirty = true; render(); } break;
     case 'save': saveDraft(); break;
     case 'discard': discardDraft(); break;
     case 'filter': S.filter = el.dataset.type; render(); break;
