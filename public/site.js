@@ -233,7 +233,7 @@
   }
 
   /* ---------- Saathi guide ---------- */
-  var MASCOT = '<svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><ellipse cx="32" cy="59" rx="15" ry="3" fill="#0F172A" opacity=".10"/><path d="M14 40c0-12 8-20 18-20s18 8 18 20v8c0 5-4 9-9 9H23c-5 0-9-4-9-9z" fill="#fff" stroke="#0F766E" stroke-width="2"/><path d="M27 33l5 7 5-7" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="20" r="14" fill="#F3D9C4" stroke="#0F766E" stroke-width="2"/><path d="M18.5 18c1-8 7-12.5 13.5-12.5S44.5 10 45.5 18c-4-3-8-4.5-13.5-4.5S22.5 15 18.5 18z" fill="#0F766E"/><circle cx="27" cy="21" r="1.8" fill="#0F172A"/><circle cx="37" cy="21" r="1.8" fill="#0F172A"/><path d="M28 26.5c2.5 2 5.5 2 8 0" fill="none" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/><path d="M22 34c-3 6-2 13 4 14.5" fill="none" stroke="#334155" stroke-width="1.8" stroke-linecap="round"/><circle cx="28" cy="49" r="3" fill="#fff" stroke="#334155" stroke-width="1.8"/><rect x="38" y="42" width="8" height="8" rx="1.5" fill="#0F766E"/><path d="M42 43.8v4.4M39.8 46h4.4" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  var MASCOT = '<img src="/saathi.svg" width="56" height="56" alt="">';
   var TIPS = {
     landing: "Sehat Copilot explains your prescriptions and lab reports in plain language. Try the live demo to see a sample record.",
     login: "An account is optional. The demo account opens a sample record in one click. Anything you create is kept only in this browser, on this device.",
@@ -451,8 +451,11 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch();
 })();
 
-/* Saathi's 3D figure (saathi3d.js) is fetched after the page is idle; the flat icon stays if it cannot load. */
+/* The DNA helix (dna3d.js) is decoration: fetched after the page is idle, and only on pages that have a place for it. */
 (function () {
-  function load() { var m = document.createElement("script"); m.type = "module"; m.src = "/saathi3d.js"; document.head.appendChild(m); }
+  function load() {
+    if (!document.querySelector("[data-dna]")) return;
+    var m = document.createElement("script"); m.type = "module"; m.src = "/dna3d.js"; document.head.appendChild(m);
+  }
   if (document.readyState === "complete") setTimeout(load, 1500); else window.addEventListener("load", function () { setTimeout(load, 1500); });
 })();

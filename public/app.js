@@ -1267,7 +1267,7 @@ function quickTile(icon, label, attrs) {
 function dashHTML(I) {
   const n = I.attention.length, latest = sortedRecords()[0], series = trendSeries(I), best = biggestChange(series);
   const chips = I.attention.slice(0, 3).map(a => '<span class="chip static">' + esc(a.name + ' ' + (a.value == null ? '' : a.value) + (a.unit ? ' ' + a.unit : '')) + ' ' + badge(a.flag) + '</span>').join('');
-  const lead = '<div class="card dash-lead ' + (n ? 'warn' : 'ok') + '"><div class="kicker">' + esc(t('kick_today')) + '</div>' +
+  const lead = '<div class="card dash-lead ' + (n ? 'warn' : 'ok') + '"><div class="dna" data-dna aria-hidden="true"></div><div class="kicker">' + esc(t('kick_today')) + '</div>' +
     (n ? '<div class="dash-big"><span class="dash-num">' + n + '</span><span class="dash-lbl">' + esc(t(n === 1 ? 'dash_attn_one' : 'dash_attn_many')) + '</span></div>' +
       '<div class="chips" style="margin:10px 0 14px">' + chips + '</div>' +
       (latest ? '<button type="button" class="btn" data-act="openrec" data-id="' + esc(latest.id) + '">' + esc(t('dash_see')) + '</button>' : '')
@@ -2031,18 +2031,7 @@ if (lang !== 'en' && lang !== 'hi') loadLang(lang).then(() => render());
    answers questions through the same safety-gated /api/ask as the Ask page, sharing
    one conversation with it. It is a guide to the records, not a doctor. */
 const PET = { open: false, seen: {}, tipOff: false };
-const PET_SVG = '<svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true" class="pet-svg">' +
-  '<ellipse cx="32" cy="59" rx="15" ry="3" fill="#0F172A" opacity=".10"/>' +
-  '<path d="M14 40c0-12 8-20 18-20s18 8 18 20v8c0 5-4 9-9 9H23c-5 0-9-4-9-9z" fill="#fff" stroke="#0F766E" stroke-width="2"/>' +
-  '<path d="M27 33l5 7 5-7" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
-  '<circle cx="32" cy="20" r="14" fill="#F3D9C4" stroke="#0F766E" stroke-width="2"/>' +
-  '<path d="M18.5 18c1-8 7-12.500 13.500-12.500S44.500 10 45.500 18c-4-3-8-4.500-13.500-4.500S22.500 15 18.500 18z" fill="#0F766E"/>' +
-  '<g class="pet-eyes"><circle cx="27" cy="21" r="1.800" fill="#0F172A"/><circle cx="37" cy="21" r="1.800" fill="#0F172A"/></g>' +
-  '<path d="M28 26.500c2.500 2 5.500 2 8 0" fill="none" stroke="#0F172A" stroke-width="1.600" stroke-linecap="round"/>' +
-  '<path d="M22 34c-3 6-2 13 4 14.500" fill="none" stroke="#334155" stroke-width="1.800" stroke-linecap="round"/>' +
-  '<circle cx="28" cy="49" r="3" fill="#fff" stroke="#334155" stroke-width="1.800"/>' +
-  '<rect x="38" y="42" width="8" height="8" rx="1.500" fill="#0F766E"/><path d="M42 43.800v4.400M39.800 46h4.400" stroke="#fff" stroke-width="1.400" stroke-linecap="round"/>' +
-  '</svg>';
+const PET_SVG = '<img class="pet-svg" src="/saathi.svg" width="64" height="64" alt="">';
 function petScreen() {
   if (S.view === 'add' && S.stage === 'review') return 'review';
   return S.view === 'detail' ? 'timeline' : (S.view === 'visit' ? 'health' : S.view);
@@ -2194,10 +2183,14 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom();
 loadLangList();
 loadSiteMap(lang);
 
-/* ================= Saathi in 3D =================
-   The guide's figure is a small Three.js scene (saathi3d.js). It is fetched after the page is
-   idle so it never delays the app, and the flat icon stays if it cannot load. */
+/* ================= DNA helix =================
+   A decorative Three.js helix (dna3d.js) for the dashboard's lead card. It is fetched only
+   once a host element exists, after the page is idle, so it never delays the app. */
 (function () {
-  const load = () => { const m = document.createElement('script'); m.type = 'module'; m.src = '/saathi3d.js'; document.head.appendChild(m); };
-  if (document.readyState === 'complete') setTimeout(load, 900); else window.addEventListener('load', () => setTimeout(load, 900));
+  let done = false;
+  const tick = setInterval(() => {
+    if (done || !document.querySelector('[data-dna]')) return;
+    done = true; clearInterval(tick);
+    const m = document.createElement('script'); m.type = 'module'; m.src = '/dna3d.js'; document.head.appendChild(m);
+  }, 1500);
 })();

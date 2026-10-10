@@ -379,10 +379,13 @@ html.js .pane.cur { animation: paneIn .45s var(--ease) both; }
   .chart .ln { stroke-dashoffset: 0; }
 }
 
-/* Saathi as a 3D figure */
-.saathi3d { display: block; width: 100%; height: 100%; pointer-events: none; }
-.saathi-btn.has3d { width: 84px; height: 112px; padding: 0; border-radius: 26px; overflow: hidden; background: linear-gradient(180deg, #F2FAF8, #D9EEEA); border-color: #BFE0DA; }
-:root[data-theme="dark"] .saathi-btn.has3d { background: linear-gradient(180deg, #17302D, #0F211F); border-color: #24514B; }
-.sa-head.has3d { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: linear-gradient(180deg, #F2FAF8, #D9EEEA); }
-:root[data-theme="dark"] .sa-head.has3d { background: linear-gradient(180deg, #17302D, #0F211F); }
-@media (max-width: 720px) { .saathi-btn.has3d { width: 66px; height: 88px; border-radius: 22px; } }
+/* Saathi's portrait and the DNA helix */
+.saathi-btn { padding: 0; overflow: hidden; }
+.saathi-btn img, .sa-head img { display: block; width: 100%; height: 100%; border-radius: 50%; }
+.dna3d { display: block; width: 100%; height: 100%; pointer-events: none; }
+.cta-band { position: relative; overflow: hidden; }
+.cta-band > *:not(.dna) { position: relative; z-index: 1; }
+.cta-band .dna { position: absolute; top: -10px; bottom: -10px; width: 190px; opacity: .6; pointer-events: none; }
+.cta-band .dna.left { left: 3%; }
+.cta-band .dna.right { right: 3%; }
+@media (max-width: 900px) { .cta-band .dna { display: none; } }
