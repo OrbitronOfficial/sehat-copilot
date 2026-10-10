@@ -1,4 +1,3 @@
-# Move this file to .github/workflows/ci.yml to enable it (pushing workflow files needs a token with the workflow scope).
 name: CI
 
 on:
