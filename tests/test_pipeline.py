@@ -474,5 +474,34 @@ class MockAbhaTests(unittest.TestCase):
                 self.assertIn(t["flag"], ("low", "normal", "high", "critical", "unknown"))
 
 
+class NeutralNotes(unittest.TestCase):
+    """Interaction notes state a risk and never tell the reader what to do."""
+
+    def test_instruction_clauses_are_dropped(self):
+        cases = {
+            "Higher risk of serious bleeding; avoid the combination": "Higher risk of serious bleeding.",
+            "Reduces levothyroxine absorption; separate by at least 4 hours": "Reduces levothyroxine absorption.",
+            "Markedly reduces warfarin effect; needs INR monitoring": "Markedly reduces warfarin effect.",
+            "Reduces steroid effect; dose may need increase": "Reduces steroid effect.",
+            "Severe, possibly fatal drop in blood pressure - never take together":
+                "Severe, possibly fatal drop in blood pressure.",
+        }
+        for note, want in cases.items():
+            self.assertEqual(pipeline._neutral(note), want)
+
+    def test_no_reference_note_keeps_an_instruction(self):
+        import json as _json
+        import os as _os
+        path = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "data", "medicines.json")
+        with open(path, encoding="utf-8") as f:
+            data = _json.load(f)
+        meds = data if isinstance(data, list) else data.get("medicines", [])
+        for m in meds:
+            for i in m.get("interactions", []):
+                out = pipeline._neutral(i.get("note", "")).lower()
+                for word in ("avoid", "never", "separate by", "take the", "monitor", "dose may"):
+                    self.assertNotIn(word, out, i.get("note"))
+
+
 if __name__ == "__main__":
     unittest.main()

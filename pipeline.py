@@ -493,7 +493,7 @@ def explain(rec, lang="en"):
     questions = [q for q in (_s(q, 300) for q in out.get("questions") or [])
                  if q and not safety.unverified(q, allowed)][:5]
     return {"summary": summary, "findings": findings, "medicines": medicines, "questions": questions,
-            "disclaimer": _disclaimer(lang), "guard_replaced": replaced, "model": model, "skipped": list(llm.LAST_SKIPPED)}
+            "disclaimer": _disclaimer(lang), "guard_replaced": replaced, "model": model}
 
 
 def _sorted(records):
@@ -599,7 +599,7 @@ def _neutral(note):
     note = _s(note, 300) or ""
     parts = [p.strip() for p in note.split(";") if p.strip()]
     # the first clause states the risk; later clauses that tell the reader what to do are dropped
-    keep = parts[:1] + [p for p in parts[1:] if not _INSTRUCTION.match(p)]
+    keep = parts[:1] + [p for p in parts[1:] if not (_INSTRUCTION.match(p) or re.search(r"(dose|doses|monitor\w*|adjust\w*)", p, re.I))]
     note = "; ".join(keep)
     return re.sub(r"[;,.]?\s*(avoid|do not|don't|stop|must not|never)\b[^.;]*", "", note, flags=re.I).strip(" ;,.-") + "."
 
