@@ -99,7 +99,7 @@ class LabelTests(Base):
 
     def test_records_claim_without_a_source_is_downgraded(self):
         self.use({"kind": "records", "answer": "Your HbA1c is fine.", "sources": ["rec_made_up"]})
-        out = pipeline.ask("What is my HbA1c?", [RECORD], "en")
+        out = pipeline.ask("Explain what my HbA1c means", [RECORD], "en")
         self.assertEqual(out["label"], "general")
         self.assertEqual(out["sources"], [])
 

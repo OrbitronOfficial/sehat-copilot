@@ -503,5 +503,61 @@ class NeutralNotes(unittest.TestCase):
                     self.assertNotIn(word, out, i.get("note"))
 
 
+class DirectLookup(unittest.TestCase):
+    """Plain "what is my X" questions are answered by code from the saved records."""
+
+    RECS = [
+        {"id": "r1", "title": "Old panel", "date": "2026-03-12",
+         "tests": [{"name": "HbA1c", "value": 8.4, "unit": "%", "ref_text": "4.0 - 5.6", "flag": "high"}]},
+        {"id": "r2", "title": "New panel", "date": "2026-09-22",
+         "tests": [{"name": "HbA1c", "value": 6.9, "unit": "%", "ref_text": "4.0 - 5.6", "flag": "high"},
+                   {"name": "Haemoglobin", "value": 13.9, "unit": "g/dL", "ref_text": "13 - 17", "flag": "normal"}]},
+    ]
+
+    def test_latest_value_is_cited_without_a_model(self):
+        out = pipeline.ask("What is my latest HbA1c?", self.RECS, "en")
+        self.assertTrue(out.get("direct"))
+        self.assertEqual(out["sources"], ["r2"])
+        self.assertEqual(out["label"], "records")
+        self.assertIn("6.9 %", out["answer"])
+        self.assertIn("above", out["answer"])
+        self.assertNotIn("8.4", out["answer"])
+
+    def test_hindi_answer_is_in_devanagari(self):
+        out = pipeline.ask("mera HbA1c kitna hai", self.RECS, "hi")
+        self.assertTrue(out.get("direct"))
+        self.assertIn("6.9 %", out["answer"])
+        self.assertTrue(any("\u0900" <= ch <= "\u097f" for ch in out["answer"]))
+
+    def test_explaining_or_two_tests_is_left_to_the_model(self):
+        self.assertIsNone(pipeline._direct("Why did my HbA1c change?", self.RECS, "en"))
+        self.assertIsNone(pipeline._direct("HbA1c and haemoglobin please", self.RECS, "en"))
+        self.assertIsNone(pipeline._direct("What medicines am I on?", self.RECS, "en"))
+
+    def test_a_document_under_review_is_never_the_direct_answer(self):
+        recs = self.RECS + [{"id": "d1", "under_review": True, "date": "2026-10-10",
+                             "tests": [{"name": "HbA1c", "value": 11.0, "unit": "%"}]}]
+        self.assertEqual(pipeline.ask("What is my HbA1c?", recs, "en")["sources"], ["r2"])
+
+    def test_emergency_still_wins(self):
+        out = pipeline.ask("I have chest pain, what is my HbA1c", self.RECS, "en")
+        self.assertFalse(out.get("direct"))
+
+
+class Caution(unittest.TestCase):
+    def test_uncertain_and_unread_reach_the_writer(self):
+        c = pipeline._compact({"id": "d1", "under_review": True, "handwritten": True, "patient": {"name": "Sanchita"},
+                               "medicines": [{"name": "Tab. Domperidone", "confidence": 0.6}, {"name": "Clear", "confidence": 0.95}],
+                               "diagnoses": [{"name": "Acute Gastritis", "confidence": 0.6}],
+                               "unread": [{"text": "Inj. ? 1 amp stat", "reason": "x"}]})
+        self.assertIn("NOT saved", c["status"])
+        self.assertEqual(c["patient"], "Sanchita")
+        self.assertEqual(c["uncertain_items"], ["Tab. Domperidone", "Acute Gastritis"])
+        self.assertEqual(c["lines_not_read"], ["Inj. ? 1 amp stat"])
+
+    def test_a_clean_saved_record_adds_nothing(self):
+        self.assertNotIn("status", pipeline._compact({"id": "r", "medicines": [{"name": "A", "confidence": 0.98}]}))
+
+
 if __name__ == "__main__":
     unittest.main()

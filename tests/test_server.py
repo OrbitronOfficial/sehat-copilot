@@ -226,7 +226,7 @@ class ServerTests(unittest.TestCase):
     def test_ask_normal_question_reaches_model(self):
         reply = {"kind": "records", "answer": "Your Hemoglobin is 10 g/dL.", "sources": ["r1"]}
         with mock.patch.object(llm, "write_json", return_value=(reply, "stub")) as m:
-            status, out = self.post("/api/ask", {"question": "What is my hemoglobin?", "records": [LAB]})
+            status, out = self.post("/api/ask", {"question": "Explain what my hemoglobin means", "records": [LAB]})
         self.assertEqual(status, 200)
         m.assert_called_once()
         self.assertEqual(out["label"], "records")

@@ -51,6 +51,11 @@ const STR = {
     none_yet: 'Nothing here yet. Save a record first.', band_note: 'Shaded band is the reference range.',
     ask_title: 'Ask about your records', ask_sub: 'Answers come only from the records saved on this device.',
     ask_ph: 'Type your question', ask_send: 'Ask',
+    ask_ctx: 'Answering for {name} from {n} saved records.', ask_ctx_none: 'No saved records yet.',
+    ask_ctx_draft: 'Open document, not saved yet: {title}', ask_attach: 'Add a document', ask_reading: 'Reading your document...',
+    ask_doc_me: 'Document: {name}', label_review: 'Under review, not saved', doc_for: 'For', doc_found: 'What stands out', doc_meds: 'Medicines read',
+    doc_check: 'To check', doc_unread: '{n} line(s) could not be read and were left out.', doc_save: 'Check against the original and save',
+    doc_ask: 'You can ask about this document now. It joins your records only after you check and save it.',
     label_records: 'From your records', label_general: 'General information',
     label_doctor: 'Ask your doctor', label_emergency: 'Emergency',
     pet_name: 'Saathi', pet_sub: 'Your records guide. Not a doctor.', pet_open: 'Open Saathi, your records guide', pet_close: 'Close',
@@ -214,6 +219,11 @@ const STR = {
     none_yet: 'अभी यहाँ कुछ नहीं है। पहले एक रिकॉर्ड सहेजें।', band_note: 'रंगीन पट्टी सामान्य सीमा दिखाती है।',
     ask_title: 'अपने रिकॉर्ड के बारे में पूछें', ask_sub: 'उत्तर केवल इस डिवाइस पर सहेजे रिकॉर्ड से आते हैं।',
     ask_ph: 'अपना सवाल लिखें', ask_send: 'पूछें',
+    ask_ctx: '{name} के लिए, {n} सहेजे रिकॉर्ड से उत्तर।', ask_ctx_none: 'अभी कोई रिकॉर्ड सहेजा नहीं गया है।',
+    ask_ctx_draft: 'खुला दस्तावेज़, अभी सहेजा नहीं: {title}', ask_attach: 'दस्तावेज़ जोड़ें', ask_reading: 'आपका दस्तावेज़ पढ़ा जा रहा है...',
+    ask_doc_me: 'दस्तावेज़: {name}', label_review: 'जाँच में, अभी सहेजा नहीं', doc_for: 'किसके लिए', doc_found: 'ध्यान देने वाली बातें', doc_meds: 'पढ़ी गई दवाएँ',
+    doc_check: 'जाँचने के लिए', doc_unread: '{n} पंक्ति(याँ) पढ़ी नहीं जा सकीं और छोड़ दी गईं।', doc_save: 'मूल से मिलाएँ और सहेजें',
+    doc_ask: 'आप इस दस्तावेज़ के बारे में अभी पूछ सकते हैं। यह आपके रिकॉर्ड में तभी जुड़ेगा जब आप जाँचकर सहेजेंगे।',
     label_records: 'आपके रिकॉर्ड से', label_general: 'सामान्य जानकारी',
     label_doctor: 'अपने डॉक्टर से पूछें', label_emergency: 'आपातकाल',
     pet_name: 'साथी', pet_sub: 'आपके रिकॉर्ड का मार्गदर्शक। डॉक्टर नहीं।', pet_open: 'साथी खोलें, आपके रिकॉर्ड का मार्गदर्शक', pet_close: 'बंद करें',
@@ -1457,24 +1467,83 @@ async function genOverview() {
 function srcChips(ids) {
   return arr(ids).map(id => {
     const r = getRec(id);
+    if (!r && S.draft && (S.draft.id === id || id === 'open_document')) return '<button type="button" class="chip" data-act="nav" data-view="add">' + esc(t('ask_ctx_draft', { title: S.draft.title || typeLabel(S.draft.doc_type) })) + '</button>';
     if (!r) return '';
     return '<button type="button" class="chip" data-act="openrec" data-id="' + esc(id) + '">' + esc((r.title || typeLabel(r.doc_type)) + (r.date ? ' (' + fmtDate(r.date) + ')' : '')) + '</button>';
   }).join('');
 }
+/* A document dropped into the chat is read and explained right there. It stays a draft
+   ("under review") until the user checks it against the original and saves it. */
+function chatRecords() {
+  const list = S.records.map(lite);
+  if (S.draft && !S.editingId) { const d = lite(S.draft); d.under_review = true; if (!d.id) d.id = 'open_document'; list.push(d); }
+  return list;
+}
+function askContextHTML() {
+  const p = S.patient || {}, n = S.records.length;
+  let h = '<p class="muted small ask-ctx">' + esc(n ? t('ask_ctx', { name: p.name || t('you'), n: n }) : t('ask_ctx_none'));
+  if (S.draft && !S.editingId) h += '<br><strong>' + esc(t('ask_ctx_draft', { title: S.draft.title || typeLabel(S.draft.doc_type) })) + '</strong>';
+  return h + '</p>';
+}
+function docMsgHTML(m) {
+  const d = m.doc, ex = d.ex || {}, li = a => '<ul class="doc-ul">' + a.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+  let h = '<strong>' + esc(d.title) + '</strong>' + (d.date ? ' <span class="muted small">' + esc(fmtDate(d.date)) + '</span>' : '');
+  if (d.patient) h += '<br><span class="muted small">' + esc(t('doc_for')) + ': ' + esc(d.patient) + '</span>';
+  if (ex.summary) h += '<p style="margin:8px 0">' + esc(ex.summary) + '</p>';
+  const f = arr(ex.findings).filter(x => x && x.flag !== 'normal');
+  if (f.length) h += '<div class="muted small">' + esc(t('doc_found')) + '</div>' + li(f.map(x => '<b>' + esc(x.name) + '</b> ' + badge(x.flag) + '<br>' + esc(x.meaning || '')));
+  if (d.meds.length) h += '<div class="muted small">' + esc(t('doc_meds')) + '</div>' + li(d.meds.map(x => '<b>' + esc(x.name) + '</b>' + (x.purpose ? ': ' + esc(x.purpose) : '')));
+  const w = d.warnings.slice();
+  if (d.unread) w.push(t('doc_unread', { n: d.unread }));
+  if (w.length) h += '<div class="muted small">' + esc(t('doc_check')) + '</div>' + li(w.map(esc));
+  return h + '<p class="muted small" style="margin:8px 0">' + esc(t('doc_ask')) + '</p>' +
+    (S.draft && S.draft.id === d.id ? '<button type="button" class="btn small" data-act="nav" data-view="add">' + esc(t('doc_save')) + '</button>' : '');
+}
+async function chatFile(file) {
+  if (!file || S.asking) return;
+  const mime = file.type || guessMime(file.name), isImg = mime.indexOf('image/') === 0;
+  if (!(isImg || mime === 'application/pdf' || mime === 'text/plain')) return showError(t('err_type'));
+  if (!isImg && file.size > 3 * 1024 * 1024) return showError(t('err_size'));
+  clearError();
+  S.chat.push({ role: 'me', text: t('ask_doc_me', { name: file.name || 'upload' }) });
+  S.asking = true; S.reading = true; render(); scrollChat();
+  try {
+    const dataUrl = isImg ? await downscale(file) : await readAsDataURL(file), outMime = isImg ? 'image/jpeg' : mime;
+    let res;
+    try {
+      res = await api('/api/extract', { filename: file.name || 'upload', mime: outMime, data: String(dataUrl).split(',')[1] || '', lang });
+    } catch (e) { if (e.code === 'vision_unavailable') throw new Error(t('err_busy')); throw e; }
+    const rec = normalizeRecord(res.record);
+    S.draft = rec; S.pendingFile = { mime: outMime, dataUrl }; S.previewFile = null;
+    S.dirty = false; S.reflag = false; S.stage = 'review'; S.editingId = null;
+    let ex = {};
+    try { ex = (await api('/api/explain', { record: lite(rec), lang })).explanation || {}; S.draft.explanation = ex; } catch (e) { /* the facts below still show */ }
+    const purpose = {};
+    arr(ex.medicines).forEach(x => { if (x && x.name) purpose[x.name] = x.purpose; });
+    S.chat.push({ role: 'bot', label: 'review', doc: {
+      id: rec.id, title: rec.title || typeLabel(rec.doc_type), date: rec.date, patient: (rec.patient || {}).name || '', ex,
+      meds: arr(rec.medicines).map(x => ({ name: [x.name, x.strength].filter(Boolean).join(' '), purpose: purpose[x.name] || '' })),
+      warnings: arr(rec.warnings), unread: arr(rec.unread).length
+    } });
+  } catch (e) {
+    S.chat.push({ role: 'bot', text: e.message || t('err_generic'), label: 'general' });
+  }
+  S.asking = false; S.reading = false; render(); scrollChat();
+}
 function viewAsk() {
   const head = '<div class="page-head"><h1>' + esc(t('ask_title')) + '</h1><p>' + esc(t('ask_sub')) + '</p></div>';
-  if (!S.records.length) return head + '<div class="card empty"><p>' + esc(t('ask_empty')) + '</p><button type="button" class="btn" data-act="nav" data-view="add">' + esc(t('go_add')) + '</button></div>';
-  const qs = ['q1', 'q2', 'q3'].map(k => '<button type="button" class="chip" data-act="askq" data-q="' + k + '">' + esc(t(k)) + '</button>').join('');
+  const qs = !S.records.length ? '' : ['q1', 'q2', 'q3'].map(k => '<button type="button" class="chip" data-act="askq" data-q="' + k + '">' + esc(t(k)) + '</button>').join('');
   const msgs = S.chat.map(m => {
     if (m.role === 'me') return '<div class="msg me"><div class="who">' + esc(t('you')) + '</div>' + esc(m.text) + '</div>';
+    if (m.doc) return '<div class="msg"><div class="who">' + esc(t('assistant')) + '<span class="lbl lbl-doctor">' + esc(t('label_review')) + '</span></div>' + docMsgHTML(m) + '</div>';
     const src = srcChips(m.sources);
     const kinds = ['records', 'general', 'doctor', 'emergency', 'signin'];
     const lbl = kinds.indexOf(m.label) >= 0 ? '<span class="lbl lbl-' + m.label + '">' + esc(t('label_' + m.label)) + '</span>' : '';
     return '<div class="msg' + (m.label === 'emergency' ? ' urgent' : '') + '"><div class="who">' + esc(t('assistant')) + lbl + '</div>' + esc(m.label === 'signin' ? t('signin_msg') : m.text) + signinBtns(m) + msgListen(m) + (src ? '<div class="srcs"><div class="muted small" style="margin-bottom:4px">' + esc(t('sources')) + '</div><div class="chips">' + src + '</div></div>' : '') + '</div>';
   }).join('');
-  return head + '<div class="chips">' + qs + '</div>' +
-    '<div class="chat" id="chat">' + msgs + (S.asking ? '<div class="msg muted">' + esc(t('thinking')) + '</div>' : '') + '</div>' +
-    '<form class="askform" id="askForm"><input type="text" id="askInput" placeholder="' + esc(t('ask_ph')) + '" aria-label="' + esc(t('ask_ph')) + '" autocomplete="off"><button type="submit" class="btn"' + (S.asking ? ' disabled' : '') + '>' + esc(t('ask_send')) + '</button></form>';
+  return head + askContextHTML() + '<div class="chips">' + qs + '</div>' +
+    '<div class="chat" id="chat">' + msgs + (S.asking ? '<div class="msg muted">' + esc(t(S.reading ? 'ask_reading' : 'thinking')) + '</div>' : '') + '</div>' +
+    '<form class="askform" id="askForm"><button type="button" class="btn secondary" data-act="askfile"' + (S.asking ? ' disabled' : '') + '>' + esc(t('ask_attach')) + '</button><input type="text" id="askInput" placeholder="' + esc(t('ask_ph')) + '" aria-label="' + esc(t('ask_ph')) + '" autocomplete="off"><button type="submit" class="btn"' + (S.asking ? ' disabled' : '') + '>' + esc(t('ask_send')) + '</button></form>';
 }
 async function ask(q) {
   q = String(q || '').trim();
@@ -1495,7 +1564,7 @@ async function ask(q) {
   }
   S.asking = true; clearError(); render(); scrollChat();
   try {
-    const res = await api('/api/ask', { question: q, records: S.records.map(lite), lang });
+    const res = await api('/api/ask', { question: q, records: chatRecords(), lang });
     S.chat.push({ role: 'bot', text: res.answer || '', sources: arr(res.sources), label: res.label || null });
   } catch (e) {
     showError(e.message, () => ask(q));
@@ -2240,7 +2309,8 @@ document.addEventListener('click', e => {
       if (S.error) { S.error = null; S.retry = null; }
       render(); break;
     case 'nav': go(el.dataset.view); break;
-    case 'choose': $('#fileInput').click(); break;
+    case 'choose': S.chatUpload = false; $('#fileInput').click(); break;
+    case 'askfile': S.chatUpload = true; $('#fileInput').click(); break;
     case 'photo': $('#camInput').click(); break;
     case 'sample': runSample(el.dataset.id); break;
     case 'demo': loadDemo(); break;
@@ -2300,7 +2370,7 @@ document.addEventListener('submit', e => {
   $('#' + id).addEventListener('change', e => {
     const f = e.target.files && e.target.files[0];
     e.target.value = '';
-    handleFile(f);
+    if (S.chatUpload && S.view === 'ask') { S.chatUpload = false; chatFile(f); } else handleFile(f);
   });
 });
 

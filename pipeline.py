@@ -10,6 +10,7 @@ import difflib
 import json
 import os
 import re
+import time
 import uuid
 
 import llm
@@ -123,6 +124,12 @@ First decide which kind of answer this is:
 - "general": the question is about what a test, term or medicine generally is, and the records are not needed. Give a short general explanation and say it is general information, not about them.
 - "doctor": the question asks what treatment to take, whether to start, stop or change anything, for a diagnosis, or for a prognosis. Do not answer it. Say this needs their doctor and, if useful, which values from the records to show the doctor.
 
+Context rules:
+- A record with a "status" of OPEN DOCUMENT is the one the patient has just uploaded and is looking at. "This document", "the open prescription", "what I just uploaded" all mean that record. Say that it is still under review and not saved yet.
+- Each record may name its "patient". If the records are for different people, say whose record you are answering from and never mix them.
+- "uncertain_items" were read with low confidence (often handwriting) and "lines_not_read" could not be read at all. Never state an uncertain item as a fact: say it was read with low confidence and should be checked against the original. If asked what was unclear, list both.
+- Write in {language}, in that language's own script (Hindi in Devanagari, never in Latin letters), whatever script the question uses. Keep test names, medicine names and units as written.
+
 Rules: compare two results of the same test only when their units match; if the units differ, say they cannot be compared directly. Never diagnose. Never advise starting, stopping or changing a medicine or dose. Never write a number that is not in the records. Plain text only, no markdown (no asterisks, no headings); short lines.
 
 Return ONE JSON object: {{"kind": "records" | "general" | "doctor", "answer": str, "sources": [ids of the records you used, empty unless kind is "records"]}}
@@ -130,7 +137,9 @@ Return ONE JSON object: {{"kind": "records" | "general" | "doctor", "answer": st
 RECORDS:
 {records}
 
-QUESTION: {question}"""
+QUESTION: {question}
+
+Write the "answer" in {language}, in its own script, even if the question above is typed in Latin letters."""
 
 
 # Languages the app can write in: (code, English name for the model, native name, right-to-left).
@@ -379,6 +388,29 @@ def extract(filename, mime, data_b64, source="upload", ocr=None):
     return rec
 
 
+def _caution(rec):
+    """Whose record it is, whether it is saved, and everything that was not read with certainty.
+    Without this the writing model would state a doubtful medicine as a fact."""
+    out = {}
+    name = (rec.get("patient") or {}).get("name")
+    if name:
+        out["patient"] = name
+    if rec.get("under_review"):
+        out["status"] = "OPEN DOCUMENT: uploaded just now, still under review, NOT saved yet"
+    if rec.get("handwritten"):
+        out["handwritten"] = True
+    doubtful = [m.get("name") for m in rec.get("medicines") or []
+                if isinstance(m.get("confidence"), (int, float)) and m["confidence"] < 0.7]
+    doubtful += [d.get("name") for d in rec.get("diagnoses") or []
+                 if isinstance(d, dict) and isinstance(d.get("confidence"), (int, float)) and d["confidence"] < 0.7]
+    if doubtful:
+        out["uncertain_items"] = [x for x in doubtful if x]
+    unread = [u.get("text") for u in rec.get("unread") or [] if isinstance(u, dict) and u.get("text")]
+    if unread:
+        out["lines_not_read"] = unread[:8]
+    return out
+
+
 def _compact(rec):
     """What the writing model sees: facts and flags, no confidence noise."""
     return {
@@ -391,6 +423,7 @@ def _compact(rec):
                       for m in rec.get("medicines") or []],
         "diagnoses": [d.get("name") for d in rec.get("diagnoses") or []],
         "advice": rec.get("advice") or [], "follow_up": rec.get("follow_up"),
+        **_caution(rec),
     }
 
 
@@ -516,6 +549,54 @@ def overview(patient, records, lang="en"):
             "disclaimer": _disclaimer(lang)}
 
 
+# ---- straight lookups: "what is my latest HbA1c" needs no model ----
+
+_NEEDS_MODEL = re.compile(r"why|explain|mean|chang|trend|compar|differ|should|cause|normal for|kyu|kyon|matlab|"
+                          r"क्यों|मतलब|बदल|तुलना|समझा", re.I)
+_SIDE_EN = {"normal": "within", "low": "below", "high": "above", "critical": "far outside"}
+_SIDE_HI = {"normal": "के अंदर", "low": "से कम", "high": "से अधिक", "critical": "से बहुत बाहर"}
+
+
+def _direct(question, records, lang):
+    """Answer a plain "what is my X" from the saved records by code. Returns None when the
+    question needs explaining, names no test, or names more than one."""
+    if lang not in ("en", "hi") or _NEEDS_MODEL.search(question):
+        return None
+    q = " " + re.sub(r"[^a-z0-9\u0900-\u097f]+", " ", question.lower()) + " "
+    hits = {}
+    for r in _sorted(records):
+        if r.get("under_review"):
+            continue
+        for t in r.get("tests") or []:
+            name = _s(t.get("name"), 80)
+            if not name or t.get("value") in (None, ""):
+                continue
+            entry = ranges.lookup(name)
+            canon = entry[0] if isinstance(entry, (tuple, list)) and entry else name
+            keys = {re.sub(r"[^a-z0-9]+", " ", n.lower()).strip() for n in (name, str(canon))}
+            if any(len(k) > 2 and f" {k} " in q for k in keys):
+                hits[str(canon).lower()] = (t, r)  # later records overwrite: the latest wins
+    if len(hits) != 1:
+        return None
+    t, r = next(iter(hits.values()))
+    value = f"{t.get('value')} {t.get('unit') or ''}".strip()
+    title, date, rng, flag = r.get("title") or "a saved record", r.get("date") or "", t.get("ref_text"), t.get("flag")
+    if lang == "hi":
+        text = f"आपके रिकॉर्ड में सबसे नया {t.get('name')} {value} है। यह {title} ({date}) से है।"
+        if rng and flag in _SIDE_HI:
+            text += f" रिपोर्ट पर छपी सीमा {rng} है; यह मान सीमा {_SIDE_HI[flag]} है।"
+    else:
+        text = f"Your latest {t.get('name')} is {value}, from {title} dated {date}."
+        if rng and flag in _SIDE_EN:
+            text += f" The range printed on the report is {rng}; this value is {_SIDE_EN[flag]} that range."
+    return {"answer": text, "sources": [r.get("id")], "label": "records", "direct": True}
+
+
+def _mostly_devanagari(text):
+    letters = [c for c in str(text or "") if c.isalpha()]
+    return not letters or sum("ऀ" <= c <= "ॿ" for c in letters) / len(letters) > 0.5
+
+
 def ask(question, records, lang="en"):
     lang = _lang(lang)
     question = _s(question, 600)
@@ -524,12 +605,23 @@ def ask(question, records, lang="en"):
     gated = safety.gate(question, lang)  # emergency, then medication change: no model call
     if gated:
         return dict(gated, disclaimer=_disclaimer(lang))
+    direct = _direct(question, records or [], lang)
+    if direct:
+        return dict(direct, disclaimer=_disclaimer(lang))
     if not records:
         return {"answer": "Add a record first, then ask about it." if lang != "hi"
                 else "पहले कोई रिकॉर्ड जोड़ें, फिर उसके बारे में पूछें।", "sources": [], "label": "general"}
-    out, _ = llm.write_json(ASK_PROMPT.format(
+    prompt = ASK_PROMPT.format(
         language=_lang_name(lang), question=question,
-        records=json.dumps([_compact(r) for r in _sorted(records)[-25:]], ensure_ascii=False)))
+        records=json.dumps([_compact(r) for r in _sorted(records)[-25:]], ensure_ascii=False))
+    started = time.time()
+    out, _ = llm.write_json(prompt)
+    if lang == "hi" and not _mostly_devanagari(out.get("answer")) and time.time() - started < 15:
+        # the model mirrored a Hinglish question: ask once more, in the right script
+        try:
+            out, _ = llm.write_json(prompt + " Your last answer used Latin letters. Write it again in Devanagari (हिंदी).")
+        except llm.LLMError:
+            pass
     ids = {r.get("id") for r in records if isinstance(r, dict)}
     sources = [x for x in (out.get("sources") or []) if x in ids]
     # "From your records" is only shown when the answer really cites a saved record
