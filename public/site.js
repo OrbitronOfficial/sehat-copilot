@@ -407,6 +407,63 @@
     });
   }
 
+  /* ---------- language wheel and ECG timeline (landing) ---------- */
+  var WHEEL = ["Understand your own health records", "अपने स्वास्थ्य रिकॉर्ड को समझें", "নিজের স্বাস্থ্য রিপোর্ট বুঝুন", "మీ ఆరోగ్య రికార్డులను అర్థం చేసుకోండి", "तुमचे आरोग्य रेकॉर्ड समजून घ्या", "உங்கள் உடல்நலப் பதிவுகளைப் புரிந்துகொள்ளுங்கள்", "તમારા આરોગ્ય રેકોર્ડ સમજો", "ನಿಮ್ಮ ಆರೋಗ್ಯ ದಾಖಲೆಗಳನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಿ", "നിങ്ങളുടെ ആരോഗ്യ രേഖകൾ മനസ്സിലാക്കൂ", "ਆਪਣੇ ਸਿਹਤ ਰਿਕਾਰਡ ਸਮਝੋ"];
+  var WHEEL_L = ["en", "hi", "bn", "te", "mr", "ta", "gu", "kn", "ml", "pa"];
+  function initWheel() {
+    var w = document.getElementById("wheel");
+    if (!w) return;
+    var idx = 0, tok = 0, paused = false;
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function set(n) { idx = n; w.textContent = WHEEL[n]; w.lang = WHEEL_L[n]; }
+    function show(n) {
+      var my = ++tok;
+      w.classList.add("out");
+      setTimeout(function () {
+        if (my !== tok) return;
+        set(n);
+        w.style.transition = "none"; w.style.transform = "translateY(14px)";
+        void w.offsetHeight;
+        w.style.transition = ""; w.style.transform = "";
+        w.classList.remove("out");
+      }, 380);
+    }
+    var chips = document.querySelectorAll(".langs button[data-lang]");
+    if (reduce) {
+      var sync = function () { set(Math.max(0, WHEEL_L.indexOf(SehatSite.getLang()))); };
+      setTimeout(sync, 0);
+      chips.forEach(function (b) { b.addEventListener("click", function () { setTimeout(sync, 0); }); });
+      return;
+    }
+    function tick() { if (!paused && !document.hidden) show((idx + 1) % WHEEL.length); setTimeout(tick, 2600); }
+    setTimeout(tick, 2200);
+    chips.forEach(function (b) {
+      var on = function () { paused = true; var n = WHEEL_L.indexOf(b.dataset.lang); if (n >= 0 && n !== idx) show(n); };
+      var off = function () { paused = false; };
+      b.addEventListener("mouseenter", on); b.addEventListener("focus", on);
+      b.addEventListener("mouseleave", off); b.addEventListener("blur", off);
+    });
+  }
+  function initEcg() {
+    var box = document.getElementById("ecgBox");
+    if (!box) return;
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function go() { box.classList.add("in"); }
+    if (reduce || !("IntersectionObserver" in window)) { go(); return; }
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (x) { if (x.isIntersecting) { go(); io.disconnect(); } });
+    }, { threshold: 0.4 });
+    io.observe(box);
+    // Safety net: if the observer stalls, still draw once the box is well on screen.
+    function sweep() {
+      if (box.classList.contains("in")) return;
+      var r = box.getBoundingClientRect(), h = window.innerHeight || 800;
+      if (r.top < h * 0.7 && r.bottom > 0) go();
+    }
+    setTimeout(sweep, 400);
+    window.addEventListener("scroll", sweep, { passive: true });
+  }
+
   /* ---------- boot ---------- */
   document.addEventListener("DOMContentLoaded", function () {
     renderNav();
@@ -415,6 +472,8 @@
     initReveal();
     initStory();
     initPreview();
+    initWheel();
+    initEcg();
     initWaitlist();
     var nav = document.getElementById("nav");
     if (nav) {

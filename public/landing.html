@@ -170,10 +170,44 @@
     </div>
   </section>
 
+  <section class="section" id="timeline" style="padding-top:40px">
+    <div class="wrap">
+      <h2 class="section-title rv">Three reports. One line.</h2>
+      <p class="section-sub rv">Every new report joins the same timeline, so a change is easy to see.</p>
+      <div class="ecg-box rv" id="ecgBox">
+        <span class="demo-label">Demo data</span>
+        <div class="ecg-plot">
+          <svg class="ecg" viewBox="0 0 900 200" aria-hidden="true">
+            <path class="guide" d="M166 18V200M466 48V200M766 78V200"/>
+            <path class="ecg-line" id="ecgLine" pathLength="1" d="M0 70H128L136 62L144 70H152L158 84L166 18L174 92L180 70H198L210 58L222 70H300L300 100H428L436 92L444 100H452L458 114L466 48L474 122L480 100H498L510 88L522 100H600L600 130H728L736 122L744 130H752L758 144L766 78L774 152L780 130H798L810 118L822 130H900"/>
+          </svg>
+          <div class="pt" style="left:18.444%;top:9%"><button type="button" class="dot" aria-label="HbA1c 8.4 %, lab report, 12 Mar 2026"></button><span class="tip"><span>Lab report</span> <span data-noi18n>12 Mar 2026</span></span></div>
+          <div class="pt" style="left:51.778%;top:24%"><button type="button" class="dot" aria-label="HbA1c 7.6 %, lab report, 18 Jun 2026"></button><span class="tip"><span>Lab report</span> <span data-noi18n>18 Jun 2026</span></span></div>
+          <div class="pt" style="left:85.111%;top:39%"><button type="button" class="dot" aria-label="HbA1c 6.9 %, lab report, 22 Sep 2026"></button><span class="tip"><span>Lab report</span> <span data-noi18n>22 Sep 2026</span></span></div>
+        </div>
+        <div class="ecg-caps" aria-hidden="true">
+          <div style="left:18.444%"><b data-noi18n>HbA1c 8.4 %</b><span data-noi18n>12 Mar 2026</span></div>
+          <div style="left:51.778%"><b data-noi18n>HbA1c 7.6 %</b><span data-noi18n>18 Jun 2026</span></div>
+          <div style="left:85.111%"><b data-noi18n>HbA1c 6.9 %</b><span data-noi18n>22 Sep 2026</span></div>
+        </div>
+        <ul class="ecg-list">
+          <li><b data-noi18n>HbA1c 8.4 %</b><span data-noi18n>12 Mar 2026</span></li>
+          <li><b data-noi18n>HbA1c 7.6 %</b><span data-noi18n>18 Jun 2026</span></li>
+          <li><b data-noi18n>HbA1c 6.9 %</b><span data-noi18n>22 Sep 2026</span></li>
+        </ul>
+      </div>
+      <p class="ecg-note rv">Down from 8.4 to 6.9 over six months, and still above the range printed on the report.</p>
+    </div>
+  </section>
+
   <section class="section alt" id="languages">
     <div class="wrap">
       <h2 class="section-title rv">In the language you think in.</h2>
       <p class="section-sub rv">Pick one and this page switches with you.</p>
+      <div class="wheel-box">
+        <span class="sr">Understand your own health records</span>
+        <div class="wheel" id="wheel" aria-hidden="true" data-noi18n lang="en">Understand your own health records</div>
+      </div>
       <div class="langs">
         <button type="button" data-lang="en" data-noi18n aria-pressed="true">English</button><button type="button" data-lang="hi" lang="hi" data-noi18n aria-pressed="false">हिंदी</button><button type="button" data-lang="bn" lang="bn" data-noi18n aria-pressed="false">বাংলা</button><button type="button" data-lang="te" lang="te" data-noi18n aria-pressed="false">తెలుగు</button><button type="button" data-lang="mr" lang="mr" data-noi18n aria-pressed="false">मराठी</button><button type="button" data-lang="ta" lang="ta" data-noi18n aria-pressed="false">தமிழ்</button><button type="button" data-lang="gu" lang="gu" data-noi18n aria-pressed="false">ગુજરાતી</button><button type="button" data-lang="kn" lang="kn" data-noi18n aria-pressed="false">ಕನ್ನಡ</button><button type="button" data-lang="ml" lang="ml" data-noi18n aria-pressed="false">മലയാളം</button><button type="button" data-lang="pa" lang="pa" data-noi18n aria-pressed="false">ਪੰਜਾਬੀ</button>
       </div>
