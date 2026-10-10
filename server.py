@@ -56,6 +56,10 @@ def _json_file(name, default):
         return default
 
 
+HI_TYPES = {"lab_report": "DiagnosticReport", "diagnostic_report": "DiagnosticReport",
+            "prescription": "Prescription", "discharge_summary": "DischargeSummary"}
+
+
 def mock_abha(number):
     """Simulated ABDM sandbox: validates the format and returns canned records."""
     digits = re.sub(r"\D", "", str(number or ""))
@@ -64,7 +68,12 @@ def mock_abha(number):
     data = _json_file("abha_mock.json", {"name": "Demo User", "records": []})
     records = [pipeline.check(dict(r, source="abha")) for r in data.get("records", [])]
     name = data.get("name") or "Demo User"
-    return {"linked": True, "mock": True,
+    # ABDM calls each visit or report a hospital holds a "care context"; consent is given per
+    # record type ("health information type") and date range, then chosen contexts are fetched.
+    contexts = [{"reference": r.get("id"), "display": r.get("title") or "Record", "date": r.get("date"),
+                 "facility": re.sub(r"\s*\(via ABDM\)", "", r.get("facility") or "") or "Health facility",
+                 "hi_type": HI_TYPES.get(r.get("doc_type"), "HealthDocumentRecord")} for r in records]
+    return {"linked": True, "mock": True, "care_contexts": contexts,
             "abha_number": f"{digits[:2]}-{digits[2:6]}-{digits[6:10]}-{digits[10:]}",
             "abha_address": re.sub(r"[^a-z]", "", name.lower())[:12] + digits[-4:] + "@abdm",
             "name": name, "records": records}

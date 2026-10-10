@@ -163,6 +163,15 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertIn("14 digits", out["error"])
 
+    def test_abha_lists_care_contexts_for_every_record(self):
+        status, out = self.post("/api/abha", {"abha": "12-3456-7890-1234"})
+        self.assertEqual(status, 200)
+        self.assertTrue(out["mock"])
+        self.assertEqual({c["reference"] for c in out["care_contexts"]}, {r["id"] for r in out["records"]})
+        for c in out["care_contexts"]:
+            self.assertIn(c["hi_type"], ("DiagnosticReport", "Prescription", "DischargeSummary", "HealthDocumentRecord"))
+            self.assertNotIn("via ABDM", c["facility"])
+
     def test_abha_good_number(self):
         status, out = self.post("/api/abha", {"abha": "12-3456-7890-1234"})
         self.assertEqual(status, 200)

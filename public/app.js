@@ -77,6 +77,16 @@ const STR = {
     abha_link: 'Link ABHA (mock)', abha_label: 'ABHA number', abha_linked: 'Linked: {n}', abha_addr: 'ABHA address',
     abha_import: 'Import records from ABHA (mock)', abha_imported: 'Imported {n} new records from ABHA.',
     abha_bad: 'Enter a 14-digit ABHA number.',
+    ab_s1: 'ABHA number', ab_s2: 'OTP', ab_s3: 'Consent', ab_s4: 'Choose records',
+    ab_send: 'Send OTP (mock)', ab_otp_label: 'One-time password', ab_otp_hint: 'Mock step: no SMS is sent. Enter any 6 digits.',
+    ab_otp_bad: 'Enter 6 digits.', ab_verify: 'Verify (mock)', ab_cancel: 'Cancel',
+    ab_consent_title: 'Consent request', ab_consent_who: 'Sehat Copilot is asking to read your records through ABDM.',
+    ab_purpose: 'Purpose', ab_purpose_v: 'Self-requested: to show you your own records', ab_types: 'Record types',
+    ab_range: 'Date range', ab_expiry: 'Access ends', ab_expiry_v: 'After this import. Nothing is fetched again without asking you.',
+    ab_grant: 'Grant consent (mock)', ab_need_type: 'Choose at least one record type.',
+    ab_pick_title: 'Records found', ab_pick_none: 'No records of the chosen types were found.', ab_import_sel: 'Import selected',
+    ab_real: 'In the real ABDM flow the OTP goes to the phone linked to your ABHA, and consent is approved in your health locker app. Here every step is simulated.',
+    hi_DiagnosticReport: 'Diagnostic reports', hi_Prescription: 'Prescriptions', hi_DischargeSummary: 'Discharge summaries', hi_HealthDocumentRecord: 'Other health documents',
     fhir_title: 'Export for ABDM / FHIR', fhir_note: 'Creates a FHIR R4 bundle of your profile and records.',
     fhir_btn: 'Export FHIR bundle', fhir_prev: 'Preview bundle', fhir_counts: 'Resources in the bundle',
     src_from: 'Read from', src_box: 'Source line', src_hint: 'Click a value to see the line it was read from.',
@@ -226,6 +236,16 @@ const STR = {
     abha_link: 'आभा जोड़ें (डेमो)', abha_label: 'आभा नंबर', abha_linked: 'जुड़ा हुआ: {n}', abha_addr: 'आभा पता',
     abha_import: 'आभा से रिकॉर्ड लाएँ (डेमो)', abha_imported: 'आभा से {n} नए रिकॉर्ड लाए गए।',
     abha_bad: '14 अंकों का आभा नंबर डालें।',
+    ab_s1: 'आभा नंबर', ab_s2: 'ओटीपी', ab_s3: 'सहमति', ab_s4: 'रिकॉर्ड चुनें',
+    ab_send: 'ओटीपी भेजें (डेमो)', ab_otp_label: 'वन-टाइम पासवर्ड', ab_otp_hint: 'डेमो चरण: कोई SMS नहीं भेजा जाता। कोई भी 6 अंक डालें।',
+    ab_otp_bad: '6 अंक डालें।', ab_verify: 'जाँचें (डेमो)', ab_cancel: 'रद्द करें',
+    ab_consent_title: 'सहमति का अनुरोध', ab_consent_who: 'सेहत कोपायलट ABDM के ज़रिए आपके रिकॉर्ड पढ़ने की अनुमति माँग रहा है।',
+    ab_purpose: 'उद्देश्य', ab_purpose_v: 'स्वयं का अनुरोध: आपको आपके अपने रिकॉर्ड दिखाने के लिए', ab_types: 'रिकॉर्ड के प्रकार',
+    ab_range: 'तारीख़ की सीमा', ab_expiry: 'अनुमति कब तक', ab_expiry_v: 'इस बार रिकॉर्ड लाने तक। आपसे पूछे बिना दोबारा कुछ नहीं लाया जाएगा।',
+    ab_grant: 'सहमति दें (डेमो)', ab_need_type: 'कम से कम एक प्रकार चुनें।',
+    ab_pick_title: 'मिले हुए रिकॉर्ड', ab_pick_none: 'चुने गए प्रकार का कोई रिकॉर्ड नहीं मिला।', ab_import_sel: 'चुने हुए लाएँ',
+    ab_real: 'असली ABDM प्रक्रिया में ओटीपी आपके आभा से जुड़े फ़ोन पर आता है और सहमति आपके हेल्थ लॉकर ऐप में दी जाती है। यहाँ हर चरण डेमो है।',
+    hi_DiagnosticReport: 'जाँच रिपोर्ट', hi_Prescription: 'पर्चे', hi_DischargeSummary: 'डिस्चार्ज सारांश', hi_HealthDocumentRecord: 'अन्य स्वास्थ्य दस्तावेज़',
     fhir_title: 'ABDM / FHIR के लिए एक्सपोर्ट', fhir_note: 'आपकी प्रोफ़ाइल और रिकॉर्ड का FHIR R4 बंडल बनाता है।',
     fhir_btn: 'FHIR बंडल एक्सपोर्ट करें', fhir_prev: 'बंडल का पूर्वावलोकन', fhir_counts: 'बंडल में संसाधन',
     src_from: 'यहाँ से पढ़ा', src_box: 'स्रोत पंक्ति', src_hint: 'किसी मान पर क्लिक करें, जिस पंक्ति से वह पढ़ा गया वह दिखेगी।',
@@ -1466,11 +1486,12 @@ function viewAbha() {
   return '<div class="page-head"><h1>' + esc(t('abha_title')) + '</h1></div><div class="stack">' +
     '<div class="card"><p>' + esc(t('abha_about1')) + '</p><p class="muted" style="margin:0">' + esc(t('abha_about2')) + '</p></div>' +
     '<div class="card"><div class="notice info" style="margin-bottom:12px">' + esc(t('abha_demo')) + '</div>' +
-    (linked ? '<p><strong>' + esc(t('abha_linked', { n: '' })) + '</strong><span class="mono">' + esc(linked) + '</span>' + (addr ? '<br><span class="muted small">' + esc(t('abha_addr')) + ': <span class="mono">' + esc(addr) + '</span></span>' : '') + '</p>' +
+    (S.abhaFlow ? abhaFlowHTML() + '<p class="muted small" style="margin:12px 0 0">' + esc(t('ab_real')) + '</p></div>' : (linked ? '<p><strong>' + esc(t('abha_linked', { n: '' })) + '</strong><span class="mono">' + esc(linked) + '</span>' + (addr ? '<br><span class="muted small">' + esc(t('abha_addr')) + ': <span class="mono">' + esc(addr) + '</span></span>' : '') + '</p>' +
       '<button type="button" class="btn" data-act="abhaimport"' + (S.busy.abha ? ' disabled' : '') + '>' + esc(S.busy.abha ? t('working') : t('abha_import')) + '</button>' : '') +
     '<form class="abha-form" id="abhaForm" style="' + (linked ? 'margin-top:14px' : '') + '"><label class="fld"><span>' + esc(t('abha_label')) + '</span><input type="text" id="abhaInput" class="mono" inputmode="numeric" placeholder="12-3456-7890-1234" maxlength="17" autocomplete="off"></label>' +
-    '<button type="submit" class="btn' + (linked ? ' secondary' : '') + '"' + (S.busy.abha ? ' disabled' : '') + '>' + esc(S.busy.abha ? t('working') : t('abha_link')) + '</button></form>' +
-    (S.notice ? '<p class="small" style="margin-top:10px;color:var(--ok)">' + esc(S.notice) + '</p>' : '') + '</div>' +
+    '<button type="submit" class="btn' + (linked ? ' secondary' : '') + '"' + (S.busy.abha ? ' disabled' : '') + '>' + esc(S.busy.abha ? t('working') : t('ab_send')) + '</button></form>' +
+    (S.notice ? '<p class="small" style="margin-top:10px;color:var(--ok)">' + esc(S.notice) + '</p>' : '') +
+    '<p class="muted small" style="margin:12px 0 0">' + esc(t('ab_real')) + '</p></div>') +
     '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('fhir_title')) + '</h2><p class="muted">' + esc(t('fhir_note')) + '</p>' +
     '<button type="button" class="btn" data-act="fhir"' + (S.busy.fhir || !S.records.length ? ' disabled' : '') + '>' + esc(S.busy.fhir ? t('working') : t('fhir_btn')) + '</button>' +
     (S.fhir ? '<div style="margin-top:14px"><div class="muted small">' + esc(t('fhir_counts')) + '</div><div class="counts-list">' +
@@ -1478,6 +1499,86 @@ function viewAbha() {
       '<details class="preview"><summary>' + esc(t('fhir_prev')) + '</summary><pre>' + esc(JSON.stringify(S.fhir, null, 2)) + '</pre></details></div>' : '') + '</div>' +
     backupCard() +
     '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('data_title')) + '</h2><p class="muted">' + esc(t('consent')) + '</p><p class="muted small">' + esc(t('privacy')) + '</p><p class="muted">' + esc(t('wipe_hint')) + '</p><button type="button" class="btn danger" data-act="wipe">' + esc(t('wipe_btn')) + '</button></div></div>';
+}
+/* Mock ABDM flow: number -> OTP -> consent -> choose care contexts -> import. Every step is simulated. */
+function abhaSteps(cur) {
+  return '<ol class="ab-steps">' + ['ab_s1', 'ab_s2', 'ab_s3', 'ab_s4'].map((k, i) =>
+    '<li class="' + (i + 1 === cur ? 'on' : (i + 1 < cur ? 'done' : '')) + '"><span>' + (i + 1) + '</span>' + esc(t(k)) + '</li>').join('') + '</ol>';
+}
+function abhaFlowHTML() {
+  const f = S.abhaFlow, cancel = '<button type="button" class="btn secondary" data-act="abhacancel">' + esc(t('ab_cancel')) + '</button>';
+  const cc = arr(f.res && f.res.care_contexts);
+  if (f.step === 2) {
+    return abhaSteps(2) + '<form class="abha-form" id="abhaOtpForm"><label class="fld"><span>' + esc(t('ab_otp_label')) + '</span>' +
+      '<input type="text" id="abhaOtp" class="mono" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"></label>' +
+      '<button type="submit" class="btn">' + esc(t('ab_verify')) + '</button>' + cancel + '</form>' +
+      '<p class="muted small" style="margin:10px 0 0">' + esc(t('ab_otp_hint')) + '</p>';
+  }
+  if (f.step === 3) {
+    const types = Array.from(new Set(cc.map(c => c.hi_type)));
+    const dates = cc.map(c => c.date).filter(Boolean).sort();
+    const range = dates.length ? fmtDate(dates[0]) + ' – ' + fmtDate(new Date().toISOString().slice(0, 10)) : '-';
+    return abhaSteps(3) + '<form id="abhaConsentForm"><h3 style="margin:0 0 4px">' + esc(t('ab_consent_title')) + '</h3><p class="muted">' + esc(t('ab_consent_who')) + '</p>' +
+      '<dl class="kv"><dt>' + esc(t('ab_purpose')) + '</dt><dd>' + esc(t('ab_purpose_v')) + '</dd>' +
+      '<dt>' + esc(t('ab_types')) + '</dt><dd>' + types.map(h => '<label class="chk"><input type="checkbox" name="hi" value="' + esc(h) + '" checked> ' + esc(t('hi_' + h)) + '</label>').join('') + '</dd>' +
+      '<dt>' + esc(t('ab_range')) + '</dt><dd>' + esc(range) + '</dd>' +
+      '<dt>' + esc(t('ab_expiry')) + '</dt><dd>' + esc(t('ab_expiry_v')) + '</dd></dl>' +
+      '<div class="abha-form"><button type="submit" class="btn">' + esc(t('ab_grant')) + '</button>' + cancel + '</div></form>';
+  }
+  const list = cc.filter(c => f.types.indexOf(c.hi_type) >= 0);
+  return abhaSteps(4) + '<form id="abhaPickForm"><h3 style="margin:0 0 8px">' + esc(t('ab_pick_title')) + '</h3>' +
+    (list.length ? list.map(c => '<label class="chk row"><input type="checkbox" name="cc" value="' + esc(c.reference) + '" checked> <span><b>' + esc(c.display) + '</b><br><span class="muted small">' +
+      esc([c.facility, fmtDate(c.date), t('hi_' + c.hi_type)].filter(Boolean).join(' · ')) + '</span></span></label>').join('') : '<p class="muted">' + esc(t('ab_pick_none')) + '</p>') +
+    '<div class="abha-form" style="margin-top:12px">' + (list.length ? '<button type="submit" class="btn"' + (S.busy.abha ? ' disabled' : '') + '>' + esc(S.busy.abha ? t('working') : t('ab_import_sel')) + '</button>' : '') + cancel + '</div></form>';
+}
+async function abhaStart(digits, linkedAlready) {
+  if (S.busy.abha) return;
+  S.busy.abha = true; S.notice = null; clearError(); render();
+  try {
+    const res = await api('/api/abha', { abha: digits });
+    if (!res.linked) throw new Error(t('err_generic'));
+    S.abhaFlow = { step: linkedAlready ? 3 : 2, digits, res, types: [] };
+  } catch (e) { showError(e.message, () => abhaStart(digits, linkedAlready)); }
+  S.busy.abha = false; render();
+}
+async function abhaVerify() {
+  const f = S.abhaFlow, otp = (($('#abhaOtp') || {}).value || '').replace(/\D/g, '');
+  if (!f) return;
+  if (otp.length !== 6) return showError(t('ab_otp_bad'));
+  clearError();
+  const old = S.patient || {}, res = f.res;
+  S.patient = {
+    name: old.name || res.name || null, age: old.age == null ? null : old.age, sex: old.sex || null,
+    abha: { number: res.abha_number || fmtAbha(f.digits), address: res.abha_address || '', name: res.name || '' }
+  };
+  await dbPut('meta', S.patient, 'patient');
+  f.step = 3; render();
+}
+function abhaGrant(form) {
+  const f = S.abhaFlow;
+  if (!f) return;
+  f.types = Array.from(form.querySelectorAll('input[name="hi"]:checked')).map(x => x.value);
+  if (!f.types.length) return showError(t('ab_need_type'));
+  clearError(); f.step = 4; render();
+}
+async function abhaImport(form) {
+  const f = S.abhaFlow;
+  if (!f || S.busy.abha) return;
+  const picked = Array.from(form.querySelectorAll('input[name="cc"]:checked')).map(x => x.value);
+  S.busy.abha = true; render();
+  let n = 0;
+  try {
+    for (const raw of arr(f.res.records)) {
+      if (picked.indexOf(raw.id) < 0 || getRec(raw.id)) continue;
+      const r = normalizeRecord(raw);
+      r.source = 'abha';
+      await saveRecordLocal(r); n++;
+    }
+    S.notice = t('abha_imported', { n: n });
+    if (n) S.overview = {};
+    S.abhaFlow = null;
+  } catch (e) { showError(e.message); }
+  S.busy.abha = false; render();
 }
 async function linkAbha(digits, importOnly) {
   if (S.busy.abha) return;
@@ -2121,7 +2222,8 @@ document.addEventListener('click', e => {
     case 'retryexpl': { const r = getRec(S.detailId); if (r) { clearError(); loadExpl(r); } break; }
     case 'overview': genOverview(); break;
     case 'askq': ask(t(el.dataset.q)); break;
-    case 'abhaimport': { const d = abhaNumber(S.patient).replace(/\D/g, ''); if (d.length === 14) linkAbha(d, true); break; }
+    case 'abhaimport': { const d = abhaNumber(S.patient).replace(/\D/g, ''); if (d.length === 14) abhaStart(d, true); break; }
+    case 'abhacancel': S.abhaFlow = null; clearError(); render(); break;
     case 'fhir': exportFhir(); break;
     case 'wipe': wipeAll(); break;
     case 'dismiss': clearError(); break;
@@ -2150,7 +2252,13 @@ document.addEventListener('submit', e => {
     e.preventDefault();
     const d = ($('#abhaInput').value || '').replace(/\D/g, '');
     if (d.length !== 14) return showError(t('abha_bad'));
-    linkAbha(d, false);
+    abhaStart(d, false);
+  } else if (f.id === 'abhaOtpForm') {
+    e.preventDefault(); abhaVerify();
+  } else if (f.id === 'abhaConsentForm') {
+    e.preventDefault(); abhaGrant(f);
+  } else if (f.id === 'abhaPickForm') {
+    e.preventDefault(); abhaImport(f);
   }
 });
 
