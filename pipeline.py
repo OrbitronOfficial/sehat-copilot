@@ -493,7 +493,7 @@ def explain(rec, lang="en"):
     questions = [q for q in (_s(q, 300) for q in out.get("questions") or [])
                  if q and not safety.unverified(q, allowed)][:5]
     return {"summary": summary, "findings": findings, "medicines": medicines, "questions": questions,
-            "disclaimer": _disclaimer(lang), "guard_replaced": replaced, "model": model}
+            "disclaimer": _disclaimer(lang), "guard_replaced": replaced, "model": model, "skipped": list(llm.LAST_SKIPPED)}
 
 
 def _sorted(records):

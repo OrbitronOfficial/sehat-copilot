@@ -151,6 +151,9 @@ def _compat(provider, prompt, file, deadline):
     return _chain(env, models, call, deadline, provider, per_call=50 if slow else None)
 
 
+LAST_SKIPPED = []
+
+
 def _first(order, prompt, file):
     """Try providers in order. Returns (json, "provider/model")."""
     deadline = time.time() + BUDGET
@@ -161,6 +164,7 @@ def _first(order, prompt, file):
                 out, model = _gemini(prompt, file, deadline)
             else:
                 out, model = _compat(provider, prompt, file, deadline)
+            LAST_SKIPPED[:] = [e[:220] for e in errors]  # why earlier providers were passed over
             return out, model if provider == "gemini" else f"{provider}: {model}"
         except LLMError as e:
             errors.append(f"{provider}: {e}")
