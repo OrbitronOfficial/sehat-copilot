@@ -14,6 +14,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PUBLIC = os.path.join(ROOT, "public")
 MAX_BODY = 6 * 1024 * 1024
+# clean URLs: the site is the front door, the app lives at /app
+PAGES = {"/": "landing.html", "/app": "index.html", "/login": "login.html", "/pricing": "pricing.html"}
 
 
 def _load_env():
@@ -92,7 +94,7 @@ class Handler(BaseHTTPRequestHandler):
         return data
 
     def _static(self, path):
-        rel = "index.html" if path in ("", "/") else path.lstrip("/")
+        rel = PAGES.get(path.rstrip("/") or "/") or path.lstrip("/")
         full = os.path.normpath(os.path.join(PUBLIC, rel))
         if not full.startswith(PUBLIC) or not os.path.isfile(full):
             return self._send(404, {"error": "Not found"})

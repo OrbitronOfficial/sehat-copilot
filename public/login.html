@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="only light">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · Sehat Copilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site.css">
+  <script src="/site.js" defer></script>
+</head>
+<body class="login">
+  <aside class="side">
+    <a class="brand" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M16 25s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.800-8 11-8 11z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M11.500 16h2.500l1.500-3 2 6 1.500-3h1.500" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/></svg>Sehat Copilot</a>
+    <div>
+      <h2>Your records, in plain language.</h2>
+      <p>Keep prescriptions and lab reports in one place and understand what they say.</p>
+      <ul>
+        <li>Every value explained, and traceable to the line it came from</li>
+        <li>One timeline with trends across all your reports</li>
+        <li>Records stay on your device</li>
+      </ul>
+    </div>
+    <small>Student prototype. A guide to your records, not a doctor.</small>
+  </aside>
+  <main class="formside">
+    <div class="formbox">
+      <h1 id="title">Sign in</h1>
+      <p class="sub" id="sub">Welcome back. Pick up where you left off.</p>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" id="t-in" aria-selected="true">Sign in</button>
+        <button type="button" role="tab" id="t-up" aria-selected="false">Create account</button>
+      </div>
+      <form id="f" novalidate autocomplete="on">
+        <div id="nameRow" hidden><label for="name">Name</label><input id="name" autocomplete="name"><div class="msg" id="e-name"></div></div>
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" placeholder="you@example.com"><div class="msg" id="e-email"></div>
+        <label for="pw">Password</label>
+        <input id="pw" type="password" autocomplete="current-password" placeholder="At least 6 characters"><div class="msg" id="e-pw"></div>
+        <div class="msg" id="e-form" role="alert"></div>
+        <button class="btn primary lg block" type="submit" id="submit">Sign in</button>
+      </form>
+      <div class="or">or</div>
+      <button class="btn lg block demo-btn" type="button" id="demo">Continue with demo account</button>
+      <a class="guest" href="/app" id="guest">Continue as guest</a>
+      <div class="proto" role="note">Prototype: your account is stored only in this browser on this device. It is not sent to any server. Do not reuse a real password.</div>
+      <a class="back" href="/">&larr; Back to Sehat Copilot</a>
+    </div>
+  </main>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var signup = false;
+      function setMode(up) {
+        signup = up;
+        $("nameRow").hidden = !up;
+        $("t-in").setAttribute("aria-selected", String(!up));
+        $("t-up").setAttribute("aria-selected", String(up));
+        $("title").textContent = up ? "Create your account" : "Sign in";
+        $("sub").textContent = up ? "Free, and stored only on this device." : "Welcome back. Pick up where you left off.";
+        $("submit").textContent = up ? "Create account" : "Sign in";
+        $("pw").autocomplete = up ? "new-password" : "current-password";
+        clearErrors();
+      }
+      function clearErrors() {
+        ["e-name", "e-email", "e-pw", "e-form"].forEach(function (i) { $(i).textContent = ""; });
+        ["name", "email", "pw"].forEach(function (i) { $(i).removeAttribute("aria-invalid"); });
+      }
+      function bad(field, errId, text) { $(errId).textContent = text; $(field).setAttribute("aria-invalid", "true"); return false; }
+      $("t-in").addEventListener("click", function () { setMode(false); });
+      $("t-up").addEventListener("click", function () { setMode(true); });
+
+      $("f").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        clearErrors();
+        var name = $("name").value.trim(), email = $("email").value.trim(), pw = $("pw").value;
+        var ok = true;
+        if (signup && !name) ok = bad("name", "e-name", "Please enter your name.");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ok = bad("email", "e-email", "Enter a valid email address.");
+        if (pw.length < 6) ok = bad("pw", "e-pw", "Password must be at least 6 characters.");
+        if (!ok) return;
+        $("submit").disabled = true;
+        try {
+          if (signup) await SehatAuth.signUp(name, email, pw); else await SehatAuth.signIn(email, pw);
+          location.assign("/app");
+        } catch (err) {
+          $("e-form").textContent = err.message || "Something went wrong.";
+          $("submit").disabled = false;
+        }
+      });
+      $("demo").addEventListener("click", function () { SehatAuth.demo(); location.assign("/app?demo=1"); });
+      $("guest").addEventListener("click", function () { SehatAuth.guest(); });
+    })();
+  </script>
+</body>
+</html>

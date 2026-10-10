@@ -9,16 +9,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <header class="topbar">
-  <div class="brand">
+  <a class="brand" href="/" aria-label="Sehat Copilot home">
     <span class="brand-mark" aria-hidden="true"></span>
     <span class="brand-name" id="brandName">Sehat Copilot</span>
-  </div>
+  </a>
   <div class="top-right">
     <span class="local-note" id="localNote">Stored on this device</span>
+    <span class="userchip" id="userChip"></span>
     <div class="lang" role="group" aria-label="Language">
       <select id="langSel" aria-label="Language">
         <option value="en">English</option>
@@ -49,6 +50,6 @@
 
 <input type="file" id="fileInput" accept="image/*,application/pdf,text/plain" hidden>
 <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
-<script src="app.js"></script>
+<script src="/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="only light">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pricing · Sehat Copilot</title>
+  <meta name="description" content="Illustrative pricing for a student prototype. Nothing is charged.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site.css">
+  <script src="/site.js" defer></script>
+</head>
+<body>
+  <nav class="top" id="nav"><div class="wrap">
+    <a class="brand" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M16 25s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.800-8 11-8 11z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M11.500 16h2.500l1.500-3 2 6 1.500-3h1.500" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/></svg>Sehat Copilot</a>
+    <div class="links"><a href="/#features">Features</a><a href="/#how">How it works</a><a href="/pricing" aria-current="page">Pricing</a></div>
+    <div class="auth" data-auth="nav"><a class="btn" href="/login">Sign in</a><a class="btn primary" href="/app">Open the app</a></div>
+  </div></nav>
+
+  <main>
+  <section class="page-head"><div class="wrap">
+    <div class="kicker">Pricing</div>
+    <h1 style="font-size:clamp(32px,4.5vw,48px);margin:10px 0 0">Simple plans, for a prototype.</h1>
+    <div class="notice" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></svg><span>Illustrative pricing for a student prototype. Nothing is charged, and the Family and Clinic features are planned, not built.</span></div>
+
+    <div class="plans">
+      <div class="plan">
+        <h3>Free</h3>
+        <div class="price">₹0</div>
+        <ul>
+          <li>Unlimited records on one device</li>
+          <li>Plain-language summaries</li>
+          <li>Timeline and trends</li>
+          <li>10 languages</li>
+          <li>FHIR export</li>
+        </ul>
+        <a class="btn primary block" href="/login">Get started free</a>
+      </div>
+      <div class="plan hot">
+        <h3>Family <span class="badge">Planned</span></h3>
+        <div class="price">₹149 <small>/ month</small></div>
+        <ul>
+          <li>Everything in Free</li>
+          <li>Up to 5 family profiles</li>
+          <li>Medicine reminders</li>
+          <li>Sync across devices</li>
+          <li>Doctor-visit summary PDF</li>
+        </ul>
+        <button class="btn primary block" type="button" data-wait="family">Join the waitlist</button>
+        <p class="thanks" aria-live="polite"></p>
+      </div>
+      <div class="plan">
+        <h3>Clinic <span class="badge">Planned</span></h3>
+        <div class="price">₹1,999 <small>/ month</small></div>
+        <ul>
+          <li>Patient-shared records view</li>
+          <li>ABDM sandbox integration</li>
+          <li>Priority document reading</li>
+          <li>Onboarding support</li>
+        </ul>
+        <button class="btn block" type="button" data-wait="clinic">Join the waitlist</button>
+        <p class="thanks" aria-live="polite"></p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="block"><div class="wrap">
+    <div class="kicker">Questions</div>
+    <h2>Before you upload anything.</h2>
+    <div class="faq">
+      <details><summary>Is my data uploaded?</summary><p>Documents are sent to third-party AI services only so they can be read. Our server stores nothing. Your records stay on your device.</p></details>
+      <details><summary>Is this medical advice?</summary><p>No. Sehat Copilot explains what is written in your records. It is not a diagnosis, and it is not a substitute for your doctor.</p></details>
+      <details><summary>Which documents work?</summary><p>Photos, PDFs and text. Printed documents work best. Handwritten ones are read too, but are marked for you to check.</p></details>
+      <details><summary>Can I delete my data?</summary><p>Yes. From the app you can delete any single record, or everything at once.</p></details>
+    </div>
+  </div></section>
+  </main>
+
+  <footer><div class="wrap">
+    <p>Sehat Copilot explains your records. It is not a diagnosis. Always confirm with your doctor.</p>
+    <p>Built by team ANTIJAREX for HacXLerate 2026 (Altrix Labs challenge). Student prototype. <a href="https://github.com/OrbitronOfficial/sehat-copilot" rel="noopener">GitHub</a></p>
+  </div></footer>
+
+  <script>
+    (function () {
+      var KEY = "sehat_waitlist";
+      function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+      var flags = load();
+      document.querySelectorAll("[data-wait]").forEach(function (b) {
+        var msg = b.parentNode.querySelector(".thanks");
+        function show() { b.hidden = true; msg.textContent = "Thanks, noted on this device."; }
+        if (flags[b.dataset.wait]) show();
+        b.addEventListener("click", function () {
+          flags[b.dataset.wait] = true;
+          try { localStorage.setItem(KEY, JSON.stringify(flags)); } catch (e) {}
+          show();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

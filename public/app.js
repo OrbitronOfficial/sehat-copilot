@@ -63,6 +63,7 @@ const STR = {
     pet_tip_abha: 'Link a mock ABHA number here, or export all records as a FHIR bundle.',
     pet_q1: 'What changed since my last report?', pet_q2: 'Which values are outside the range?', pet_q3: 'Which medicines am I on?',
     pet_go_ask: 'Open full chat',
+    sign_in: 'Sign in', sign_out: 'Sign out', guest: 'Guest', demo_user: 'Demo account',
     stat_records: 'Records saved', stat_out: 'Values outside range', stat_meds: 'Current medicines', stat_cond: 'Conditions noted',
     how_1: 'Upload', how_1s: 'A photo or PDF of any prescription or report', how_2: 'Check', how_2s: 'Compare what was read with the original', how_3: 'Understand', how_3s: 'Plain-language summary, timeline and trends',
     q1: 'What changed since my last report?', q2: 'Which medicines am I on and why?', q3: 'Which values should I discuss with my doctor?',
@@ -154,6 +155,7 @@ const STR = {
     pet_tip_abha: 'यहाँ नकली (डेमो) ABHA नंबर जोड़ें, या सारे रिकॉर्ड FHIR बंडल के रूप में निर्यात करें।',
     pet_q1: 'पिछली रिपोर्ट के बाद क्या बदला?', pet_q2: 'कौन से मान सीमा से बाहर हैं?', pet_q3: 'मैं कौन सी दवाएँ ले रहा हूँ?',
     pet_go_ask: 'पूरी चैट खोलें',
+    sign_in: 'साइन इन', sign_out: 'साइन आउट', guest: 'अतिथि', demo_user: 'डेमो खाता',
     stat_records: 'सहेजे रिकॉर्ड', stat_out: 'सीमा से बाहर मान', stat_meds: 'चालू दवाएँ', stat_cond: 'दर्ज बीमारियाँ',
     how_1: 'अपलोड करें', how_1s: 'किसी भी पर्ची या रिपोर्ट की फ़ोटो या PDF', how_2: 'जाँचें', how_2s: 'पढ़े गए मानों को मूल दस्तावेज़ से मिलाएँ', how_3: 'समझें', how_3s: 'सरल भाषा में सार, टाइमलाइन और रुझान',
     q1: 'पिछली रिपोर्ट के बाद क्या बदला?', q2: 'मैं कौन सी दवाइयाँ ले रहा हूँ और क्यों?', q3: 'किन मानों पर मुझे डॉक्टर से बात करनी चाहिए?',
@@ -1277,6 +1279,7 @@ window.addEventListener('resize', syncDiscHeight);
     S.records = arr(await dbGetAll('records')).map(normalizeRecord);
     S.patient = await dbGet('meta', 'patient');
   } catch (e) { S.records = []; }
+  S.ready = true;
   render();
   loadSamples();
 })();
@@ -1380,3 +1383,34 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && PET.open) { PET.open = false; renderPet(); } });
 renderPet();
+
+/* ================= Account chip =================
+   Accounts are a convenience kept in this browser only (see site.js); the app works for
+   a guest too, so automated checks and first-time visitors are never blocked by a login. */
+function currentUser() {
+  try { const u = JSON.parse(localStorage.getItem('sehat_user') || 'null'); return u && u.name ? u : null; } catch (e) { return null; }
+}
+function renderUser() {
+  const el = document.getElementById('userChip');
+  if (!el) return;
+  const u = currentUser();
+  el.textContent = '';
+  const who = document.createElement('span');
+  who.className = 'who';
+  who.textContent = u ? (u.demo ? t('demo_user') : String(u.name).split(' ')[0]) : t('guest');
+  const link = document.createElement('a');
+  link.href = '/login';
+  link.textContent = u ? t('sign_out') : t('sign_in');
+  if (u) link.addEventListener('click', () => { try { localStorage.removeItem('sehat_user'); } catch (e) { /* ignore */ } });
+  el.appendChild(who); el.appendChild(link);
+}
+const renderWithPet = render;
+render = function () { renderWithPet(); renderUser(); };
+renderUser();
+/* /app?demo=1 (the landing page's "Try the live demo") loads the demo profile once. */
+(async function demoFromLink() {
+  if (!/[?&]demo=1\b/.test(location.search)) return;
+  for (let i = 0; i < 40 && !S.ready; i++) await new Promise(r => setTimeout(r, 100));
+  if (!S.records.length) await loadDemo();
+  try { history.replaceState(null, '', '/app'); } catch (e) { /* ignore */ }
+})();
