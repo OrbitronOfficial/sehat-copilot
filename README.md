@@ -116,4 +116,4 @@ Then open http://localhost:8820. Needs a `.env` with `GEMINI_API_KEY` and `GROQ_
 
 ## Prior work
 
-`data/medicines.json` (135 medicine names, classes, uses and interaction notes) comes from our own earlier project, CarePath. The landing, sign-in and pricing pages follow the visual style of CarePath's landing page (layout rhythm, spacing, button and card treatment); their markup and copy were written for this project. Everything else in this repository was written during the hackathon, with AI coding assistance as the rules allow.
+`data/medicines.json` (135 medicine names, classes, uses and interaction notes) comes from our own earlier project, CarePath. The 3D figure used for the guide (`public/models/doctor.glb`, "Doctor" by jeremy, CC-BY 3.0, credited in `public/models/CREDITS.md`) and the vendored Three.js files were also carried over from CarePath. The landing, sign-in and pricing pages follow the visual style of CarePath's landing page (layout rhythm, spacing, button and card treatment); their markup and copy were written for this project. Everything else in this repository was written during the hackathon, with AI coding assistance as the rules allow.

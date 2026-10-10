@@ -14,6 +14,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PUBLIC = os.path.join(ROOT, "public")
 MAX_BODY = 6 * 1024 * 1024
+# module scripts need a JavaScript type; Windows can report .js as text/plain
+TYPES = {".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8",
+         ".svg": "image/svg+xml", ".glb": "model/gltf-binary", ".css": "text/css; charset=utf-8"}
 # clean URLs: the site is the front door, the app lives at /app
 PAGES = {"/": "landing.html", "/app": "index.html", "/login": "login.html", "/pricing": "pricing.html",
          "/1": "v1.html", "/2": "v2.html", "/3": "v3.html"}  # /1 to /3: design options to compare
@@ -103,7 +106,8 @@ class Handler(BaseHTTPRequestHandler):
         with open(full, "rb") as f:
             body = f.read()
         self.send_response(200)
-        self.send_header("Content-Type", mimetypes.guess_type(full)[0] or "application/octet-stream")
+        ext = os.path.splitext(full)[1].lower()
+        self.send_header("Content-Type", TYPES.get(ext) or mimetypes.guess_type(full)[0] or "application/octet-stream")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()

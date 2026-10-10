@@ -368,6 +368,45 @@
     });
   }
 
+  /* ---------- dashboard preview (landing) ---------- */
+  function initPreview() {
+    var win = document.getElementById("demoWin");
+    if (!win) return;
+    var tabs = Array.prototype.slice.call(win.querySelectorAll('[role="tab"]'));
+    var chart = document.getElementById("demoChart");
+    function go(tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute("aria-controls")).classList.toggle("cur", on);
+      });
+      if (focus) tab.focus();
+      if (chart) {
+        chart.classList.remove("draw");
+        if (tab.id === "dt-tim") { void chart.getBoundingClientRect(); chart.classList.add("draw"); }
+      }
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { go(t, false); });
+      t.addEventListener("keydown", function (e) {
+        var n = null;
+        if (e.key === "ArrowRight") n = tabs[(i + 1) % tabs.length];
+        else if (e.key === "ArrowLeft") n = tabs[(i + tabs.length - 1) % tabs.length];
+        else if (e.key === "Home") n = tabs[0];
+        else if (e.key === "End") n = tabs[tabs.length - 1];
+        if (n) { e.preventDefault(); go(n, true); }
+      });
+    });
+    var rows = win.querySelectorAll("[data-pick]"), expls = win.querySelectorAll(".expl");
+    rows.forEach(function (r) {
+      r.addEventListener("click", function () {
+        rows.forEach(function (x) { x.setAttribute("aria-pressed", String(x === r)); });
+        expls.forEach(function (x) { x.hidden = x.getAttribute("data-for") !== r.getAttribute("data-pick"); });
+      });
+    });
+  }
+
   /* ---------- boot ---------- */
   document.addEventListener("DOMContentLoaded", function () {
     renderNav();
@@ -375,6 +414,7 @@
     buildSaathi();
     initReveal();
     initStory();
+    initPreview();
     initWaitlist();
     var nav = document.getElementById("nav");
     if (nav) {
@@ -409,4 +449,10 @@
     }).observe(document.body, { childList: true, subtree: true });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch();
+})();
+
+/* Saathi's 3D figure (saathi3d.js) is fetched after the page is idle; the flat icon stays if it cannot load. */
+(function () {
+  function load() { var m = document.createElement("script"); m.type = "module"; m.src = "/saathi3d.js"; document.head.appendChild(m); }
+  if (document.readyState === "complete") setTimeout(load, 1500); else window.addEventListener("load", function () { setTimeout(load, 1500); });
 })();

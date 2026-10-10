@@ -2193,3 +2193,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom();
 /* load the full language list (43) and the guide's translations for the current language */
 loadLangList();
 loadSiteMap(lang);
+
+/* ================= Saathi in 3D =================
+   The guide's figure is a small Three.js scene (saathi3d.js). It is fetched after the page is
+   idle so it never delays the app, and the flat icon stays if it cannot load. */
+(function () {
+  const load = () => { const m = document.createElement('script'); m.type = 'module'; m.src = '/saathi3d.js'; document.head.appendChild(m); };
+  if (document.readyState === 'complete') setTimeout(load, 900); else window.addEventListener('load', () => setTimeout(load, 900));
+})();

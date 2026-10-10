@@ -126,7 +126,7 @@ def main():
     en = english()
     print(f"{len(en)} English strings", flush=True)
     force = "--force" in sys.argv
-    for code in pipeline.LANGS:
+    for code in pipeline.BUNDLED:  # the site pages offer the ten bundled languages
         if code == "en":
             continue
         path = os.path.join(OUT, f"site-{code}.json")

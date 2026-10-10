@@ -48,6 +48,71 @@
     </div>
   </section>
 
+  <section class="section alt" id="preview">
+    <div class="wrap">
+      <h2 class="section-title rv">See it before you sign up.</h2>
+      <p class="section-sub rv">Click through a sample report, a timeline and a medicine schedule, all with demo data.</p>
+      <div class="demo-win rv" id="demoWin">
+        <div class="demo-bar">
+          <i class="dots" aria-hidden="true"></i>
+          <div class="demo-tabs" role="tablist" aria-label="Preview">
+            <button type="button" role="tab" id="dt-rep" aria-selected="true" aria-controls="dp-rep" tabindex="0">Report</button>
+            <button type="button" role="tab" id="dt-tim" aria-selected="false" aria-controls="dp-tim" tabindex="-1">Timeline</button>
+            <button type="button" role="tab" id="dt-med" aria-selected="false" aria-controls="dp-med" tabindex="-1">Medicines</button>
+          </div>
+          <span class="demo-label">Demo data</span>
+        </div>
+
+        <div class="pane two cur" id="dp-rep" role="tabpanel" aria-labelledby="dt-rep">
+          <div>
+            <div class="vlist">
+              <button type="button" class="vrow" data-pick="a1c" aria-pressed="true"><span class="n" data-noi18n>HbA1c</span><span class="v" data-noi18n>7.6 <small>%</small></span><span class="pill hi">High</span></button>
+              <button type="button" class="vrow" data-pick="ldl" aria-pressed="false"><span class="n" data-noi18n>LDL cholesterol</span><span class="v" data-noi18n>118 <small>mg/dL</small></span><span class="pill hi">High</span></button>
+              <button type="button" class="vrow" data-pick="hb" aria-pressed="false"><span class="n" data-noi18n>Hemoglobin</span><span class="v" data-noi18n>14.1 <small>g/dL</small></span><span class="pill ok">Normal</span></button>
+              <button type="button" class="vrow" data-pick="vd" aria-pressed="false"><span class="n" data-noi18n>Vitamin D</span><span class="v" data-noi18n>26 <small>ng/mL</small></span><span class="pill lo">Low</span></button>
+            </div>
+            <p class="fine demo-hint">Select a value to see what it means and the line it was read from.</p>
+          </div>
+          <aside class="side" aria-live="polite">
+            <div class="expl" data-for="a1c"><b class="en" data-noi18n>HbA1c</b><h4>In plain words</h4><p>HbA1c reflects your average blood sugar over about three months. This value is above the usual range printed on the report.</p><h4>Read from</h4><p class="srcline" data-noi18n>HbA1c (Glycosylated Hb)  7.6 %   Ref 4.0 - 5.6   H</p></div>
+            <div class="expl" data-for="ldl" hidden><b class="en" data-noi18n>LDL cholesterol</b><h4>In plain words</h4><p>LDL is one of the cholesterol measures in a blood test. This value is above the usual range printed on the report.</p><h4>Read from</h4><p class="srcline" data-noi18n>LDL Cholesterol, Direct  118 mg/dL   Ref &lt; 100   H</p></div>
+            <div class="expl" data-for="hb" hidden><b class="en" data-noi18n>Hemoglobin</b><h4>In plain words</h4><p>Hemoglobin carries oxygen in your blood. This value is within the usual range printed on the report.</p><h4>Read from</h4><p class="srcline" data-noi18n>Hemoglobin  14.1 g/dL   Ref 13.0 - 17.0</p></div>
+            <div class="expl" data-for="vd" hidden><b class="en" data-noi18n>Vitamin D</b><h4>In plain words</h4><p>Vitamin D is measured to see how much your body has. This value is below the usual range printed on the report.</p><h4>Read from</h4><p class="srcline" data-noi18n>25-OH Vitamin D  26 ng/mL   Ref 30 - 100   L</p></div>
+          </aside>
+        </div>
+
+        <div class="pane" id="dp-tim" role="tabpanel" aria-labelledby="dt-tim">
+          <h3 class="pane-title">HbA1c across three reports</h3>
+          <svg class="chart" id="demoChart" viewBox="0 0 360 240" role="img" aria-label="Line chart of HbA1c across three reports, falling from 8.4 to 6.9 percent">
+            <g class="gridl"><path d="M36 40H350M36 120H350M36 200H350"/></g>
+            <rect class="band" x="36" y="130.700" width="314" height="42.700"/>
+            <g data-noi18n><text x="30" y="44" text-anchor="end">9</text><text x="30" y="124" text-anchor="end">6</text><text x="30" y="204" text-anchor="end">3</text></g>
+            <text x="346" y="156" text-anchor="end">Reference band 4.0–5.6 %</text>
+            <path class="ln" pathLength="1" d="M80 56L190 77.300L300 96"/>
+            <g data-noi18n>
+              <circle class="dt" cx="80" cy="56" r="5.500"/><text class="vt" x="80" y="40" text-anchor="middle">8.4</text>
+              <circle class="dt d2" cx="190" cy="77.300" r="5.500"/><text class="vt d2" x="190" y="61" text-anchor="middle">7.6</text>
+              <circle class="dt d3" cx="300" cy="96" r="5.500"/><text class="vt d3" x="300" y="80" text-anchor="middle">6.9</text>
+              <text x="80" y="228" text-anchor="middle">12 Mar 2026</text><text x="190" y="228" text-anchor="middle">18 Jun 2026</text><text x="300" y="228" text-anchor="middle">22 Sep 2026</text>
+            </g>
+          </svg>
+          <div class="tl"><span><span>Report</span> <span data-noi18n>· 12 Mar 2026</span></span><b data-noi18n>HbA1c 8.4 %</b></div>
+          <div class="tl"><span><span>Report</span> <span data-noi18n>· 18 Jun 2026</span></span><b data-noi18n>HbA1c 7.6 %</b></div>
+          <div class="tl"><span><span>Report</span> <span data-noi18n>· 22 Sep 2026</span></span><b data-noi18n>HbA1c 6.9 %</b></div>
+        </div>
+
+        <div class="pane" id="dp-med" role="tabpanel" aria-labelledby="dt-med">
+          <h3 class="pane-title">Medicine schedule from the prescription</h3>
+          <label class="med"><input type="checkbox"><b data-noi18n>Glycomet 500 mg</b><em>Morning, after food</em></label>
+          <label class="med"><input type="checkbox"><b data-noi18n>Glycomet 500 mg</b><em>Night, after food</em></label>
+          <label class="med"><input type="checkbox"><b data-noi18n>Atorva 10 mg</b><em>Night</em></label>
+          <p class="fine demo-hint">Tick boxes are for trying it out. Nothing is saved.</p>
+        </div>
+      </div>
+      <div class="demo-cta rv"><a class="btn primary lg" href="/app?demo=1">Open the real thing</a></div>
+    </div>
+  </section>
+
   <section class="section" id="how">
     <div class="wrap">
       <div class="story-head">
