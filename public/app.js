@@ -87,6 +87,7 @@ const STR = {
     data_title: 'Your data', wipe_btn: 'Delete all my data', wipe_hint: 'Removes everything stored on this device.',
     confirm_wipe: 'Delete all records and your profile from this device? This cannot be undone.',
     err_network: 'Could not reach the server. Check your connection and try again.',
+    err_busy: 'The document reader is busy right now. Nothing was lost. Please try again in a minute.',
     err_server: 'The server returned an error ({code}).',
     err_type: 'This file type is not supported. Please use a photo, PDF or text file.',
     err_size: 'This file is larger than 3 MB. Please choose a smaller file.',
@@ -235,6 +236,7 @@ const STR = {
     data_title: 'आपका डेटा', wipe_btn: 'मेरा सारा डेटा हटाएँ', wipe_hint: 'इस डिवाइस पर सहेजी हर चीज़ हट जाएगी।',
     confirm_wipe: 'इस डिवाइस से सभी रिकॉर्ड और आपकी प्रोफ़ाइल हटाएँ? इसे वापस नहीं किया जा सकता।',
     err_network: 'सर्वर से संपर्क नहीं हो सका। कनेक्शन जाँचकर फिर कोशिश करें।',
+    err_busy: 'दस्तावेज़ पढ़ने वाली सेवा अभी व्यस्त है। कुछ खोया नहीं है। कृपया एक मिनट बाद फिर कोशिश करें।',
     err_server: 'सर्वर में त्रुटि हुई ({code})।',
     err_type: 'यह फ़ाइल प्रकार समर्थित नहीं है। कृपया फोटो, PDF या टेक्स्ट फ़ाइल चुनें।',
     err_size: 'यह फ़ाइल 3 MB से बड़ी है। कृपया छोटी फ़ाइल चुनें।',
@@ -505,7 +507,10 @@ const getRec = id => S.records.find(r => r.id === id) || null;
 async function api(path, body) {
   const opt = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
   let r;
-  try { r = await fetch(path, opt); } catch (e) { throw new Error(t('err_network')); }
+  try { r = await fetch(path, opt); } catch (e) {
+    await new Promise(ok => setTimeout(ok, 1200));
+    try { r = await fetch(path, opt); } catch (e2) { throw new Error(t('err_network')); }
+  }
   let j = null;
   try { j = await r.json(); } catch (e) { /* not json */ }
   if (!r.ok) {
@@ -555,14 +560,14 @@ function downscale(file) {
     img.onload = () => {
       let w = img.naturalWidth, h = img.naturalHeight;
       const m = Math.max(w, h);
-      if (m > 1600) { const k = 1600 / m; w = Math.round(w * k); h = Math.round(h * k); }
+      if (m > 2200) { const k = 2200 / m; w = Math.round(w * k); h = Math.round(h * k); }
       const c = document.createElement('canvas');
       c.width = w; c.height = h;
       const x = c.getContext('2d');
       x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
       x.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      resolve(c.toDataURL('image/jpeg', 0.85));
+      resolve(c.toDataURL('image/jpeg', 0.88));
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(t('err_image'))); };
     img.src = url;
@@ -625,7 +630,7 @@ function loadTesseract() {
       const s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
       s.onload = resolve;
-      s.onerror = () => { tesseractLoading = null; reject(new Error(t('err_network'))); };
+      s.onerror = () => { tesseractLoading = null; reject(new Error(t('err_busy'))); };
       document.head.appendChild(s);
     });
   }
@@ -668,7 +673,9 @@ async function handleFile(file, sampleId) {
       res = await api('/api/extract', { filename: name, mime: outMime, data, lang, sample_id: sampleId || null });
     } catch (e) {
       if (e.code !== 'vision_unavailable' || !isImg) throw e;
-      const text = await ocrOnDevice(dataUrl);
+      let text = '';
+      try { text = await ocrOnDevice(dataUrl); } catch (e2) { throw new Error(t('err_busy')); }
+      if (text.replace(/\s/g, '').length < 20) throw new Error(t('err_busy'));
       res = await api('/api/extract', { filename: name, mime: 'text/plain', data: textToBase64(text), lang, ocr: 'tesseract' });
     }
     stopStepper();
