@@ -123,8 +123,8 @@ def main():
 
         mark("login")  # create an account on this device
         go("#t-up")
-        typed("#name", "Rahul Sharma")
-        typed("#email", "rahul@example.com")
+        typed("#name", "Yash Jain")
+        typed("#email", "yash@example.com")
         typed("#pw", "walkthrough-only-1")
         go("#submit", 300)
         page.wait_for_url("**/app*", wait_until="domcontentloaded", timeout=30000)
@@ -164,9 +164,13 @@ def main():
         go('[data-act="save"]', 300)
         page.wait_for_function("S.view === 'detail'", timeout=30000)
 
+        event("gap_a")  # off camera: the explanation being written, so the step opens on the finished page
+        page.wait_for_function(
+            "(() => { const r = getRec(S.detailId), e = r && r.explanation; return !!(e && ((e[lang] && e[lang].summary) || e.summary)); })()", timeout=90000)
+        pause(500)
+        event("gap_b")
+
         mark("detail")  # the explanation in plain words
-        waiting(lambda: page.wait_for_function(
-            "(() => { const r = getRec(S.detailId), e = r && r.explanation; return !!(e && ((e[lang] && e[lang].summary) || e.summary)); })()", timeout=90000))
         pause(1500)
         page.mouse.move(520, 420, steps=24)
         scroll(420, gap=85)
@@ -183,6 +187,13 @@ def main():
           S.records = S.records.filter(r => r.id !== id); S.insights = null; S.overview = {};
         }""", first)
         pause(600)
+        # the profile carries the account holder's name, and the dashboard's 3D model is loaded ahead of its step
+        page.evaluate("(async () => { S.patient = Object.assign({}, S.patient || {}, { name: 'Yash Jain' }); await dbPut('meta', S.patient, 'patient'); PET.tipOff = true; S.view = 'health'; render(); })()")
+        try:
+            page.wait_for_selector("[data-dna] canvas", timeout=20000)
+        except Exception:
+            pass
+        pause(1200)
         page.evaluate("PET.tipOff = true; PET.open = false; S.view = 'detail'; render(); window.scrollTo(0, 0)")
         pause(300)
         event("gap_b")
@@ -193,7 +204,15 @@ def main():
         scroll(560, gap=75)
 
         mark("health")
-        go('[data-act="nav"][data-view="health"]', 1800)
+        go('[data-act="nav"][data-view="health"]', 300)
+        event("gap_a")  # off camera: the moment the 3D model takes to appear
+        try:
+            page.wait_for_selector("[data-dna] canvas", timeout=20000)
+        except Exception:
+            pass
+        pause(900)
+        event("gap_b")
+        pause(1200)
         page.mouse.move(640, 430, steps=18)
         scroll(1500, gap=58)
         pause(600)

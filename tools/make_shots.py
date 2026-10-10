@@ -28,7 +28,7 @@ def main():
         page.goto(BASE + "/app?demo=1", wait_until="load")  # loads the synthetic demo profile
         page.wait_for_timeout(6000)
         # show an ordinary signed-in account in the header (the records are still the synthetic samples)
-        page.evaluate("localStorage.setItem('sehat_user', JSON.stringify({ name: 'Rahul Sharma', email: 'rahul@example.com' })); renderUser()")
+        page.evaluate("localStorage.setItem('sehat_user', JSON.stringify({ name: 'Yash Jain', email: 'yash@example.com' })); renderUser()")
         show("add")
         shot("add")
         show("timeline")
