@@ -407,8 +407,8 @@ def s_end(im, d, t, secs):
     text(d, (cx, 190), "Sehat Copilot", 84, INK, t, 0.0, bold=True, anchor="ma")
     text(d, (cx, 310), "A guide to your records. Not a doctor.", 34, TEAL, t, secs * 0.28, anchor="ma")
     text(d, (cx, 420), "sehat-copilot.vercel.app", 40, INK, t, secs * 0.5, mono=True, anchor="ma")
-    text(d, (cx, 500), "Open it and try one of the sample reports", 26, MUTED, t, secs * 0.6, anchor="ma")
-    text(d, (cx, 630), "Prototype. Sample data is synthetic. ABHA link is a mock.", 20, MUTED, t, secs * 0.7, mono=True, anchor="ma")
+    text(d, (cx, 500), "Open it and upload any prescription or lab report", 26, MUTED, t, secs * 0.6, anchor="ma")
+    text(d, (cx, 630), "43 languages  ·  FHIR export  ·  ABDM consent flow with a mock ABHA", 20, MUTED, t, secs * 0.7, mono=True, anchor="ma")
 
 
 def footage(name, n, start=1.0):
