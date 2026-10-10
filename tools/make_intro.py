@@ -170,6 +170,8 @@ def _framed(name, width):
 
 SHOTS = {s[4]: _framed(s[4], 770) for s in STEPS if s[4]}
 SHOTS["trends"] = _framed("trends", 420)
+for _name in ("login", "health", "timeline"):
+    SHOTS.setdefault(_name, _framed(_name, 770))
 
 
 def _smooth(size, paint, scale=3):
@@ -388,16 +390,61 @@ def s_clip(im, d, t, secs, n, total, title, sub, frame, shot):
     progress(d, n, total, ease(t / 0.6), y=10, x=WIN_X + CLIP_W - total * 52 + 8)
 
 
+def project(w, h, cx, cy, yaw, pitch, scale, f=1500):
+    """Where the corners of a w x h card land when it is turned (yaw), tipped back (pitch) and
+    seen through a simple camera. Positive yaw sends the right edge away from the viewer."""
+    pts = []
+    for x, y in ((-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2)):
+        x, y = x * scale, y * scale
+        z = x * math.sin(yaw) + y * math.sin(pitch)
+        k = f / (f + z)
+        pts.append((cx + x * math.cos(yaw) * k, cy + y * math.cos(pitch) * k))
+    return pts
+
+
+def place(im, src, quad):
+    """Paste a card into an arbitrary four-corner shape, on a soft shadow."""
+    w, h = src.size
+    shadow = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(shadow).polygon([(x + 8, y + 30) for x, y in quad], fill=95)
+    im.paste(Image.new("RGB", (W, H), "#4B6B66"), (0, 0), shadow.filter(ImageFilter.GaussianBlur(26)))
+    warped = src.convert("RGBA").transform((W, H), Image.PERSPECTIVE, _coeffs(quad, [(0, 0), (w, 0), (w, h), (0, h)]), Image.BICUBIC)
+    im.paste(warped, (0, 0), warped)
+    ImageDraw.Draw(im).line(quad + quad[:1], fill="#C9D4D0", width=2)
+
+
+# the opening: (screenshot, final centre x, centre y, yaw, scale, delay)
+STAGE = [("health", 262, 486, 0.52, 0.60, 0.80), ("timeline", 1018, 486, -0.52, 0.60, 0.95), ("login", 640, 478, 0.0, 0.80, 0.45)]
+
+
 def s_title(im, d, t, secs):
-    cx, k = W // 2, ease(t / 0.8)
-    helix(d, 170, 60, 600, 62, t, k)
-    helix(d, W - 170, 60, 600, 62, t + 2, k)
-    d.rounded_rectangle((cx - 46, 150, cx + 46, 242), 22, fill=mix(WHITE, TEAL, k))
-    d.rectangle((cx - 8, 170, cx + 8, 222), fill=WHITE)
-    d.rectangle((cx - 26, 188, cx + 26, 204), fill=WHITE)
-    text(d, (cx, 280), "Sehat Copilot", 92, INK, t, 0.2, bold=True, anchor="ma")
-    text(d, (cx, 410), "Understand your own health records.", 38, TEAL, t, secs * 0.35, anchor="ma")
-    text(d, (cx, 600), "HacXLerate 2026  ·  Team ANTIJAREX", 22, MUTED, t, secs * 0.6, mono=True, anchor="ma")
+    """The product arrives: three real screens fly up from below, turn to face the viewer and
+    settle with the sign-in page in front, while the camera keeps drifting in."""
+    push = 1 + 0.06 * t / secs
+    for name, cx, cy, yaw, scale, delay in STAGE:
+        k = ease((t - delay) / 1.5)
+        if k <= 0:
+            continue
+        src = SHOTS[name][0]
+        sway = 0.035 * math.sin(t * 0.9 + cx)  # never quite still
+        quad = project(src.size[0], src.size[1], cx + (640 - cx) * (1 - k) * 0.5, cy + (1 - k) * 520,
+                       yaw * (0.4 + 0.6 * k) + sway, 1.05 * (1 - k) + 0.10, scale * (0.72 + 0.28 * k) * push)
+        place(im, src, quad)
+    cx = W // 2
+    f = font(64, True)
+    wide = d.textlength("Sehat Copilot", font=f)
+    k = ease(t / 0.7)
+    x0 = cx - (wide + 74) / 2
+    d.rounded_rectangle((x0, 34 + (1 - k) * 14, x0 + 56, 90 + (1 - k) * 14), 14, fill=mix(WHITE, TEAL, k))
+    d.rectangle((x0 + 23, 46 + (1 - k) * 14, x0 + 33, 78 + (1 - k) * 14), fill=WHITE)
+    d.rectangle((x0 + 12, 57 + (1 - k) * 14, x0 + 44, 67 + (1 - k) * 14), fill=WHITE)
+    text(d, (x0 + 74, 22), "Sehat Copilot", 64, INK, t, 0.0, bold=True)
+    words, f2 = "Understand your own health records.".split(), font(30)
+    total = sum(d.textlength(w + " ", font=f2) for w in words)
+    x = cx - total / 2
+    for n, w in enumerate(words):  # the line lands a word at a time
+        text(d, (x, 112), w, 30, TEAL, t, secs * 0.30 + n * 0.16)
+        x += d.textlength(w + " ", font=f2)
 
 
 def s_end(im, d, t, secs):
@@ -541,7 +588,7 @@ def main():
     for (kind, _, title, sub, shot, at), secs in zip(STEPS, lengths):
         n = round(secs * FPS)
         n_step += kind == "step"
-        reel = footage("prescription" if kind == "title" else "pills", n) if kind != "step" else None
+        reel = footage("pills", n) if kind == "end" else None
         moving = clip(shot, n) if kind == "step" and MARKS else None
         for i in range(n):
             t = i / FPS
