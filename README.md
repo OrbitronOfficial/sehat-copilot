@@ -116,7 +116,7 @@ Python 3 standard library server (no framework), vanilla JS frontend, Gemini (do
 - Working prototype: https://sehat-copilot.vercel.app
 - Architecture diagram: above
 - Approach and demo: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md); submission text in [docs/SUBMISSION.md](docs/SUBMISSION.md)
-- Tests: `python -m unittest discover tests` (273 tests). CI runs lint, a security scan and the tests on every push (`.github/workflows/ci.yml`).
+- Tests: `python -m unittest discover tests` (277 tests). CI runs lint, a security scan and the tests on every push (`.github/workflows/ci.yml`).
 
 ## Run locally
 

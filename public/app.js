@@ -51,6 +51,7 @@ const STR = {
     none_yet: 'Nothing here yet. Save a record first.', band_note: 'Shaded band is the reference range.',
     ask_title: 'Ask about your records', ask_sub: 'Answers come only from the records saved on this device.',
     ask_ph: 'Type your question', ask_send: 'Ask',
+    doc_unsure: 'Read with low confidence. Check the name against the original before relying on it.',
     ask_ctx: 'Answering for {name} from {n} saved records.', ask_ctx_none: 'No saved records yet.',
     ask_ctx_draft: 'Open document, not saved yet: {title}', ask_attach: 'Add a document', ask_reading: 'Reading your document...',
     ask_doc_me: 'Document: {name}', label_review: 'Under review, not saved', doc_for: 'For', doc_found: 'What stands out', doc_meds: 'Medicines read',
@@ -219,6 +220,7 @@ const STR = {
     none_yet: 'अभी यहाँ कुछ नहीं है। पहले एक रिकॉर्ड सहेजें।', band_note: 'रंगीन पट्टी सामान्य सीमा दिखाती है।',
     ask_title: 'अपने रिकॉर्ड के बारे में पूछें', ask_sub: 'उत्तर केवल इस डिवाइस पर सहेजे रिकॉर्ड से आते हैं।',
     ask_ph: 'अपना सवाल लिखें', ask_send: 'पूछें',
+    doc_unsure: 'कम भरोसे से पढ़ा गया। इस पर भरोसा करने से पहले नाम को मूल दस्तावेज़ से मिलाएँ।',
     ask_ctx: '{name} के लिए, {n} सहेजे रिकॉर्ड से उत्तर।', ask_ctx_none: 'अभी कोई रिकॉर्ड सहेजा नहीं गया है।',
     ask_ctx_draft: 'खुला दस्तावेज़, अभी सहेजा नहीं: {title}', ask_attach: 'दस्तावेज़ जोड़ें', ask_reading: 'आपका दस्तावेज़ पढ़ा जा रहा है...',
     ask_doc_me: 'दस्तावेज़: {name}', label_review: 'जाँच में, अभी सहेजा नहीं', doc_for: 'किसके लिए', doc_found: 'ध्यान देने वाली बातें', doc_meds: 'पढ़ी गई दवाएँ',
@@ -1475,7 +1477,13 @@ function srcChips(ids) {
 /* A document dropped into the chat is read and explained right there. It stays a draft
    ("under review") until the user checks it against the original and saves it. */
 function chatRecords() {
-  const list = S.records.map(lite);
+  const ended = {}, ok = curGet();
+  curInsights().medicines.forEach(m => { if (m.status === 'course_ended') ended[curKey(m)] = 1; });
+  const list = S.records.map(r => {
+    const c = lite(r);
+    arr(c.medicines).forEach(m => { const k = curKey(m); m.status = ended[k] ? 'course_ended' : (ok[k] ? 'confirmed_current' : 'unconfirmed'); });
+    return c;
+  });
   if (S.draft && !S.editingId) { const d = lite(S.draft); d.under_review = true; if (!d.id) d.id = 'open_document'; list.push(d); }
   return list;
 }
@@ -1492,7 +1500,7 @@ function docMsgHTML(m) {
   if (ex.summary) h += '<p style="margin:8px 0">' + esc(ex.summary) + '</p>';
   const f = arr(ex.findings).filter(x => x && x.flag !== 'normal');
   if (f.length) h += '<div class="muted small">' + esc(t('doc_found')) + '</div>' + li(f.map(x => '<b>' + esc(x.name) + '</b> ' + badge(x.flag) + '<br>' + esc(x.meaning || '')));
-  if (d.meds.length) h += '<div class="muted small">' + esc(t('doc_meds')) + '</div>' + li(d.meds.map(x => '<b>' + esc(x.name) + '</b>' + (x.purpose ? ': ' + esc(x.purpose) : '')));
+  if (d.meds.length) h += '<div class="muted small">' + esc(t('doc_meds')) + '</div>' + li(d.meds.map(x => '<b>' + esc(x.name) + '</b>' + (x.unsure ? ' <span class="flag f-unknown">' + esc(t('flag_unknown')) + '</span><br><span class="small" style="color:var(--warn)">' + esc(t('doc_unsure')) + '</span>' : (x.purpose ? ': ' + esc(x.purpose) : ''))));
   const w = d.warnings.slice();
   if (d.unread) w.push(t('doc_unread', { n: d.unread }));
   if (w.length) h += '<div class="muted small">' + esc(t('doc_check')) + '</div>' + li(w.map(esc));
@@ -1517,12 +1525,12 @@ async function chatFile(file) {
     S.draft = rec; S.pendingFile = { mime: outMime, dataUrl }; S.previewFile = null;
     S.dirty = false; S.reflag = false; S.stage = 'review'; S.editingId = null;
     let ex = {};
-    try { ex = (await api('/api/explain', { record: lite(rec), lang })).explanation || {}; S.draft.explanation = ex; } catch (e) { /* the facts below still show */ }
+    try { ex = (await api('/api/explain', { record: Object.assign(lite(rec), { under_review: true }), lang })).explanation || {}; S.draft.explanation = ex; } catch (e) { /* the facts below still show */ }
     const purpose = {};
     arr(ex.medicines).forEach(x => { if (x && x.name) purpose[x.name] = x.purpose; });
     S.chat.push({ role: 'bot', label: 'review', doc: {
       id: rec.id, title: rec.title || typeLabel(rec.doc_type), date: rec.date, patient: (rec.patient || {}).name || '', ex,
-      meds: arr(rec.medicines).map(x => ({ name: [x.name, x.strength].filter(Boolean).join(' '), purpose: purpose[x.name] || '' })),
+      meds: arr(rec.medicines).map(x => { const unsure = isNum(x.confidence) && x.confidence < 0.7; return { name: [x.name, x.strength].filter(Boolean).join(' '), unsure, purpose: unsure ? '' : (purpose[x.name] || '') }; }),
       warnings: arr(rec.warnings), unread: arr(rec.unread).length
     } });
   } catch (e) {

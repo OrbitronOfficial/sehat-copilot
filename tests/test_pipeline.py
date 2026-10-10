@@ -559,5 +559,42 @@ class Caution(unittest.TestCase):
         self.assertNotIn("status", pipeline._compact({"id": "r", "medicines": [{"name": "A", "confidence": 0.98}]}))
 
 
+class ReviewRound3(unittest.TestCase):
+    def test_uncertain_medicine_gets_no_purpose_while_under_review(self):
+        rec = {"id": "d1", "under_review": True, "tests": [],
+               "medicines": [{"name": "Tab. Domperidone", "confidence": 0.6}, {"name": "Tab. Paracetamol", "confidence": 0.95}]}
+        reply = {"summary": "A prescription.", "findings": [], "questions": [],
+                 "medicines": [{"name": "Tab. Domperidone", "purpose": "For nausea."}, {"name": "Tab. Paracetamol", "purpose": "For fever."}]}
+        with mock.patch.object(llm, "write_json", return_value=(reply, "stub")):
+            meds = {m["name"]: m for m in pipeline.explain(rec, "en")["medicines"]}
+        self.assertIsNone(meds["Tab. Domperidone"]["purpose"])
+        self.assertTrue(meds["Tab. Domperidone"]["uncertain"])
+        self.assertEqual(meds["Tab. Paracetamol"]["purpose"], "For fever.")
+
+    def test_a_saved_record_keeps_its_purposes(self):
+        rec = {"id": "r1", "tests": [], "medicines": [{"name": "Tab. Domperidone", "confidence": 0.6}]}
+        reply = {"summary": "A prescription.", "findings": [], "questions": [], "medicines": [{"name": "Tab. Domperidone", "purpose": "For nausea."}]}
+        with mock.patch.object(llm, "write_json", return_value=(reply, "stub")):
+            self.assertEqual(pipeline.explain(rec, "en")["medicines"][0]["purpose"], "For nausea.")
+
+    def test_medicine_status_reaches_the_writer(self):
+        c = pipeline._compact({"id": "r", "medicines": [{"name": "A", "status": "confirmed_current"}, {"name": "B", "status": "course_ended"},
+                                                        {"name": "C", "status": "anything else"}, {"name": "D"}]})
+        self.assertIn("confirmed", c["medicines"][0]["status"])
+        self.assertIn("ended", c["medicines"][1]["status"])
+        self.assertNotIn("status", c["medicines"][2])
+        self.assertNotIn("status", c["medicines"][3])
+
+    def test_explicit_language_request_wins(self):
+        self.assertEqual(pipeline._asked_language("Explain my HbA1c in Hindi"), "hi")
+        self.assertEqual(pipeline._asked_language("is report ko tamil mein samjhao"), "ta")
+        self.assertEqual(pipeline._asked_language("please answer in Bengali."), "bn")
+        self.assertIsNone(pipeline._asked_language("What is my latest HbA1c?"))
+        recs = [{"id": "r2", "title": "Panel", "date": "2026-09-22",
+                 "tests": [{"name": "HbA1c", "value": 6.9, "unit": "%", "ref_text": "4.0 - 5.6", "flag": "high"}]}]
+        out = pipeline.ask("What is my latest HbA1c? Answer in Hindi", recs, "en")
+        self.assertTrue(any("\u0900" <= ch <= "\u097f" for ch in out["answer"]))
+
+
 if __name__ == "__main__":
     unittest.main()

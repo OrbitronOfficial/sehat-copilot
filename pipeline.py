@@ -128,6 +128,8 @@ Context rules:
 - A record with a "status" of OPEN DOCUMENT is the one the patient has just uploaded and is looking at. "This document", "the open prescription", "what I just uploaded" all mean that record. Say that it is still under review and not saved yet.
 - Each record may name its "patient". If the records are for different people, say whose record you are answering from and never mix them.
 - "uncertain_items" were read with low confidence (often handwriting) and "lines_not_read" could not be read at all. Never state an uncertain item as a fact: say it was read with low confidence and should be checked against the original. If asked what was unclear, list both.
+- Never say what an uncertain medicine is for, or what it treats: its name is not verified.
+- A medicine may carry a "status". Say the patient "takes" a medicine only when the status says they confirmed it. If the course has ended, say so. Otherwise say it "is written in" the record and is not confirmed as still being taken.
 - Write in {language}, in that language's own script (Hindi in Devanagari, never in Latin letters), whatever script the question uses. Keep test names, medicine names and units as written.
 
 Rules: compare two results of the same test only when their units match; if the units differ, say they cannot be compared directly. Never diagnose. Never advise starting, stopping or changing a medicine or dose. Never write a number that is not in the records. Plain text only, no markdown (no asterisks, no headings); short lines.
@@ -388,6 +390,11 @@ def extract(filename, mime, data_b64, source="upload", ocr=None):
     return rec
 
 
+_MED_STATUS = {"confirmed_current": "the patient confirmed they take this now",
+               "course_ended": "the prescribed course has ended",
+               "unconfirmed": "written in the record; not confirmed as still being taken"}
+
+
 def _caution(rec):
     """Whose record it is, whether it is saved, and everything that was not read with certainty.
     Without this the writing model would state a doubtful medicine as a fact."""
@@ -418,8 +425,9 @@ def _compact(rec):
         "date": rec.get("date"), "facility": rec.get("facility"),
         "tests": [{"name": t.get("name"), "value": t.get("value"), "unit": t.get("unit"),
                    "range": t.get("ref_text"), "flag": t.get("flag")} for t in rec.get("tests") or []],
-        "medicines": [{k: m.get(k) for k in ("name", "generic", "strength", "dose", "frequency",
-                                              "timing", "duration") if m.get(k)}
+        "medicines": [dict({k: m.get(k) for k in ("name", "generic", "strength", "dose", "frequency",
+                                                   "timing", "duration") if m.get(k)},
+                           **({"status": _MED_STATUS[m["status"]]} if m.get("status") in _MED_STATUS else {}))
                       for m in rec.get("medicines") or []],
         "diagnoses": [d.get("name") for d in rec.get("diagnoses") or []],
         "advice": rec.get("advice") or [], "follow_up": rec.get("follow_up"),
@@ -482,6 +490,14 @@ def _verified_numbers(rec):
     return allowed
 
 
+def _doubtful_medicines(rec):
+    """Names read with low confidence in a document the user has not checked and saved yet."""
+    if not rec.get("under_review"):
+        return set()
+    return {_s(m.get("name"), 100) for m in rec.get("medicines") or []
+            if isinstance(m.get("confidence"), (int, float)) and m["confidence"] < 0.7}
+
+
 def explain(rec, lang="en"):
     lang = _lang(lang)
     by_name = {t.get("name"): t for t in rec.get("tests") or []}
@@ -517,6 +533,7 @@ def explain(rec, lang="en"):
         summary = _plain_summary(rec, lang)
 
     medicines = []
+    doubtful = _doubtful_medicines(rec)
     for m in out.get("medicines") or []:
         if not (isinstance(m, dict) and _s(m.get("name"))):
             continue
@@ -524,7 +541,11 @@ def explain(rec, lang="en"):
         if purpose and safety.unverified(purpose, allowed):
             replaced += 1
             purpose = None
-        medicines.append({"name": _s(m["name"], 100), "purpose": purpose})
+        name = _s(m["name"], 100)
+        if name in doubtful:  # the name itself is not verified yet, so saying what it is for would be a guess
+            medicines.append({"name": name, "purpose": None, "uncertain": True})
+        else:
+            medicines.append({"name": name, "purpose": purpose})
 
     questions = [q for q in (_s(q, 300) for q in out.get("questions") or [])
                  if q and not safety.unverified(q, allowed)][:5]
@@ -592,6 +613,17 @@ def _direct(question, records, lang):
     return {"answer": text, "sources": [r.get("id")], "label": "records", "direct": True}
 
 
+def _asked_language(question):
+    """The language the question explicitly asks to be answered in, if any."""
+    q = " " + question.lower() + " "
+    for code, english, native, _ in LANGUAGES:
+        name = english.split(" (")[0].lower()
+        if (f" in {name} " in q or f" in {name}." in q or f" in {name}?" in q or f" {name} mein " in q
+                or f" {name} me " in q or f" {name} main " in q or f"{native.lower()} में" in q or f"{native.lower()} मध्ये" in q):
+            return code
+    return None
+
+
 def _mostly_devanagari(text):
     letters = [c for c in str(text or "") if c.isalpha()]
     return not letters or sum("ऀ" <= c <= "ॿ" for c in letters) / len(letters) > 0.5
@@ -602,6 +634,7 @@ def ask(question, records, lang="en"):
     question = _s(question, 600)
     if not question:
         raise ValueError("Type a question first.")
+    lang = _asked_language(question) or lang  # "answer in Hindi" beats the interface language
     gated = safety.gate(question, lang)  # emergency, then medication change: no model call
     if gated:
         return dict(gated, disclaimer=_disclaimer(lang))
