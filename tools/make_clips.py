@@ -182,17 +182,17 @@ def main():
         scroll(1500, gap=58)
         pause(600)
 
-        mark("ask")
-        go('[data-act="nav"][data-view="ask"]', 900)
-        typed("#askInput", "What is my latest HbA1c?", delay=58)
-        go('#askForm button[type="submit"]', 1400)
-        chip = page.locator(".srcs .chip").first
-        if chip.count():
-            box = chip.bounding_box()
-            page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, steps=24)
-        pause(1500)
+        mark("ask")  # Saathi, the guide that floats on every screen
+        page.evaluate("window.scrollTo({ top: 0, behavior: 'smooth' })")
+        pause(700)
+        go(".pet-btn", 900)
+        typed("#petInput", "Hi", delay=110)
+        go('#petForm button[type="submit"]', 1700)
+        typed("#petInput", "What is my latest HbA1c?", delay=55)
+        go('#petForm button[type="submit"]', 3200)
 
         mark("abha")
+        go('[data-pet="close"]', 400)
         go('[data-act="nav"][data-view="abha"]', 900)
         typed("#abhaInput", "12345678901234", delay=55)
         go('#abhaForm button[type="submit"]', 300)

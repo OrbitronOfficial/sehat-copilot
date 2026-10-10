@@ -9,7 +9,9 @@
   var REPORT = /\b(my|mine|meri|mera|mere)\b.*\b(report|result|value|level|test|medicine|tablet|prescription|sugar|hba1c|cholesterol|thyroid|bp|dose)|\b(hba1c|hemoglobin|haemoglobin|cholesterol|creatinine|tsh|vitamin|platelet|ldl|hdl|triglyceride|sgpt|sgot|bilirubin)\b|\b(report|prescription|lab|discharge|result)s?\b.*\b(mean|say|show|normal|high|low|explain)|\bis (it|this|that) (normal|high|low|serious|dangerous)|\bshould i (take|stop|start|worry)|रिपोर्ट|दवा|नतीज/i;
 
   var FAQ = [
-    { re: /\b(what|who)\b.*\b(is|are|does)\b.*\b(this|sehat|site|website|app|it|you)\b|what.*(do|does).*(do|for)|tell me about|about (this|sehat)|^(hi|hello|hey|namaste)\b|kya (hai|karta)|क्या है/i,
+    { re: /^\s*(hi+|hello+|hey+|hiya|namaste|namaskar|good (morning|afternoon|evening)|नमस्ते|नमस्कार|हेलो|हाय)[\s!.,]*$/i,
+      text: "Hi, I'm Saathi. I'm here to help you on your health journey. I can explain your reports and medicines in plain words, show what has changed over time, and help you prepare questions for your doctor. Add a document or ask me about your records. I'm a guide, not a doctor." },
+    { re: /\b(what|who)\b.*\b(is|are|does)\b.*\b(this|sehat|site|website|app|it|you)\b|what.*(do|does).*(do|for)|tell me about|about (this|sehat)|kya (hai|karta)|क्या है/i,
       text: "Sehat Copilot reads your prescriptions, lab reports and discharge summaries, explains them in plain language, and keeps them in one timeline. It is a guide to your records, not a doctor." },
     { re: /how.*(work|use|start|begin|upload)|steps|get started|kaise/i,
       text: "Three steps. Upload a photo or PDF of a report or prescription. Check what was read against the original, on the same screen. Then read the plain-language summary and see it added to your timeline." },

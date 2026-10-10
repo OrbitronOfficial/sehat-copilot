@@ -35,14 +35,14 @@ STEPS = [
      "Add a record", "Photo, PDF or text. Printed or handwritten.", "add", (0.535, 0.435, 0.078, 0.052)),
     ("step", "Check what was read, side by side with the original, and fix anything before it is saved.",
      "Check it against\nthe original", "Unreadable lines are listed, never guessed.", "review", (0.84, 0.76, 0.118, 0.048)),
-    ("step", "Then read it in plain words. Code, not the A.I., decides what is high or low.",
+    ("step", "Then read it in plain words. Every high or low is checked against the range printed on your own report.",
      "Read it in\nplain words", "High and low come from the printed range.", "detail", (0.43, 0.555, 0.39, 0.125)),
     ("step", "Every record you save joins one timeline.",
      "One timeline", "Every visit and report, in order.", "timeline", (0.59, 0.395, 0.68, 0.205)),
     ("step", "Your dashboard shows what needs attention, how your values changed, and questions for your doctor.",
      "Your health\nat a glance", "Trends, home readings, doctor questions.", "health", (0.445, 0.395, 0.425, 0.36)),
-    ("step", "Ask a question, and the answer names the report it came from.",
-     "Ask about\nyour records", "Answers cite their source, or say to ask your doctor.", "ask", (0.50, 0.48, 0.54, 0.225)),
+    ("step", "Meet Saathi, your guide on every screen. Say hi, ask about your records, and every answer names the report it came from.",
+     "Meet Saathi,\nyour guide", "Ask anything. Answers name the report they came from.", "ask", (0.50, 0.48, 0.54, 0.225)),
     ("step", "Export everything in the fire format, with a mock Aabha link. All of it in forty-three languages.",
      "Take it with you", "FHIR export and a mock ABHA link. 43 languages.", "abha", (0.31, 0.67, 0.13, 0.052)),
     ("end", "Sehat Copilot. A guide to your records. Not a doctor.", None, None, None, None),
@@ -284,8 +284,8 @@ def _marks():
 MARKS = _marks()
 # where the camera leans in during each step: (centre x, centre y, zoom), as shares of the recording
 ZOOM = {"login": (0.50, 0.46, 1.28), "add": (0.56, 0.52, 1.15), "review": (0.58, 0.50, 1.12), "detail": (0.50, 0.50, 1.12),
-        "timeline": (0.56, 0.50, 1.10), "health": (0.56, 0.50, 1.10), "ask": (0.58, 0.56, 1.14), "abha": (0.56, 0.48, 1.20)}
-CLIP_W, CLIP_H, BAR = 960, 600, 26
+        "timeline": (0.56, 0.50, 1.10), "health": (0.56, 0.50, 1.10), "ask": (0.80, 0.60, 1.55), "abha": (0.56, 0.48, 1.20)}
+CLIP_W, CLIP_H, BAR, RADIUS = 1008, 630, 26, 14
 
 
 def clip(name, n):
@@ -338,7 +338,20 @@ def _window():
 
 
 WINDOW = _window()
-WIN_X, WIN_Y = (W - CLIP_W) // 2, 72
+WIN_X, WIN_Y = (W - CLIP_W) // 2, 60
+
+
+def _rounded(size, radius, blur=0, grow=0, alpha=255):
+    """A rounded-rectangle mask, optionally grown and blurred into a soft shadow."""
+    pad = blur * 3 + grow
+    m = Image.new("L", (size[0] + pad * 2, size[1] + pad * 2), 0)
+    ImageDraw.Draw(m).rounded_rectangle((pad - grow, pad - grow, pad + size[0] + grow, pad + size[1] + grow), radius + grow, fill=alpha)
+    return m.filter(ImageFilter.GaussianBlur(blur)) if blur else m
+
+
+WIN_MASK = _rounded((CLIP_W, CLIP_H + BAR), RADIUS)
+WIN_SHADOW = _rounded((CLIP_W, CLIP_H + BAR), RADIUS, blur=22, grow=2, alpha=120)
+SHADOW_INK = Image.new("RGB", WIN_SHADOW.size, "#2F4F4A")
 
 
 def s_clip(im, d, t, secs, n, total, title, sub, frame, shot):
@@ -354,11 +367,13 @@ def s_clip(im, d, t, secs, n, total, title, sub, frame, shot):
     win = WINDOW.copy()
     win.paste(view, (0, BAR))
     rise = round((1 - ease(t / 0.6)) * 26)
-    card3d(im, win, WIN_X, WIN_Y + rise, 0.0)
-    text(d, (WIN_X, 12), f"STEP {n} OF {total}", 17, TEAL, t, 0.0, mono=True)
-    text(d, (WIN_X, 32), title.replace("\n", " "), 28, INK, t, 0.1, bold=True)
-    text(d, (WIN_X + CLIP_W, 40), sub, 19, MUTED, t, secs * 0.25, anchor="ra")
-    progress(d, n, total, ease(t / 0.6), y=706, x=WIN_X)
+    off = (WIN_SHADOW.size[0] - CLIP_W) // 2
+    im.paste(SHADOW_INK, (WIN_X - off, WIN_Y + rise - off + 16), WIN_SHADOW)  # soft shadow, then the rounded window
+    im.paste(win, (WIN_X, WIN_Y + rise), WIN_MASK)
+    text(d, (WIN_X, 5), f"STEP {n} OF {total}", 15, TEAL, t, 0.0, mono=True)
+    text(d, (WIN_X, 22), title.replace("\n", " "), 27, INK, t, 0.1, bold=True)
+    text(d, (WIN_X + CLIP_W, 34), sub, 18, MUTED, t, secs * 0.25, anchor="ra")
+    progress(d, n, total, ease(t / 0.6), y=10, x=WIN_X + CLIP_W - total * 52 + 8)
 
 
 def s_title(im, d, t, secs):
