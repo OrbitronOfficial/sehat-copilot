@@ -68,6 +68,9 @@ Rules:
 - Expand prescription shorthand into plain words in "frequency": OD = once a day, BD/BID = twice a day, TDS/TID = three times a day, QID = four times a day, HS = at bedtime, SOS = only when needed, 1-0-1 = morning and night, 1-1-1 = morning, afternoon and night, 0-0-1 = night only. AC = before food, PC = after food. When a line has both a schedule and SOS (for example "1-1-1 SOS"), keep both: "up to three times a day, only when needed". Never drop SOS.
 - Handwritten prescriptions: read slowly, line by line, top to bottom, including lines squeezed into margins and corners. Use the standard written forms doctors use: Tab = tablet, Cap = capsule, Syp = syrup, Inj = injection, amp = ampoule, i/m = into the muscle, i/v = into the vein, stat = one dose given now, x 5d = for 5 days, c/o = complains of, PCM = paracetamol, ORS = oral rehydration salts. An injection given once in the clinic ("stat") is still a medicine: list it with frequency "one dose, given at the clinic". A drug name counts as read only when the letters on the page spell it; if you can read the strength or schedule but not the name, the line goes to "unread", not "medicines".
 - Tests the doctor asks for ("Adv: CBC, LFT, TSH", ticked or circled investigations) are requests, not results: put them in "advice" as one string starting "Tests advised:". Never put a test in "tests" without a written result. A printed checklist of investigations down the side of a form is not a list of results; ignore the unticked ones.
+- A question mark before a diagnosis ("? Fatty liver") means the doctor only suspects it: write the name as "Suspected: Fatty liver". K/C/O means a known case of that condition: write "Known: Hypertension" (HTN = hypertension, DM = diabetes).
+- BBF = before breakfast, BF = before food, AF = after food, HS = at bedtime: put these in "timing".
+- Readings taken at the visit and written in the margin (BP, SpO2, pulse, temperature, weight) go in "advice" as one string starting "Recorded at the visit:". They are not lab tests.
 - Complaints the doctor noted ("c/o vomiting, loose motions x 2 days") go in "advice" as one string starting "Complaints noted:".
 - Translate Hindi instructions into English in the fields, keeping the meaning exact.
 - A lab report's "ref_low"/"ref_high" come ONLY from the range printed beside that test. "< 200" means ref_high 200; "> 40" means ref_low 40.
@@ -338,6 +341,8 @@ def check(rec):
                         "document, a digit was probably misread. Please check it.")
     if rec.get("handwritten"):
         warnings.append("This document is handwritten. Please check every medicine name and dose against the original.")
+        if rec.get("date"):
+            warnings.append(f"The date was read as {rec['date']}. Handwritten dates are easy to misread; please confirm it.")
     if rec.get("unread"):
         warnings.append(f"{len(rec['unread'])} line(s) could not be read reliably and were left out. "
                         "They are listed under \"Lines not used\"; add them by hand if they matter.")
@@ -357,6 +362,16 @@ class VisionUnavailable(Exception):
     """No vision model could read the file. The page falls back to on-device OCR."""
 
 
+def _date_hint():
+    """Handwritten two-digit years are the commonest misread ("26" taken for "24"). Knowing
+    today's date lets the reader weigh a doubtful digit; the user still confirms the date."""
+    today = dt.date.today()
+    return (f" Today's date is {today.isoformat()}. Dates on Indian documents are written day/month/year, and a "
+            f"two-digit year means 20YY (\"26/6/26\" is 26 June 2026). Read the date digit by digit. Most documents "
+            f"are recent: if a handwritten year digit could be read two ways, and one reading gives a date within the "
+            f"last year while the other is older or in the future, choose the recent one. Never return a date after today.")
+
+
 def extract(filename, mime, data_b64, source="upload", ocr=None):
     """ocr: name of the on-device OCR engine when `data_b64` is its text output."""
     mime = (mime or "").split(";")[0].strip().lower()
@@ -373,7 +388,7 @@ def extract(filename, mime, data_b64, source="upload", ocr=None):
         raw, provider = llm.write_json(EXTRACT_PROMPT + note + "\n\nDOCUMENT TEXT:\n" + text)
     else:
         try:
-            raw, provider = llm.read_document(EXTRACT_PROMPT, {"mime": mime, "data": data_b64})
+            raw, provider = llm.read_document(EXTRACT_PROMPT + _date_hint(), {"mime": mime, "data": data_b64})
         except llm.LLMError as e:
             raise VisionUnavailable(str(e)) from e
     rec = normalise(raw, source)
