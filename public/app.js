@@ -93,7 +93,32 @@ const STR = {
     err_image: 'Could not read this image. Try a different photo.',
     err_generic: 'Something went wrong. Please try again.',
     dismiss: 'Dismiss', working: 'Working...',
-    sex_male: 'Male', sex_female: 'Female'
+    sex_male: 'Male', sex_female: 'Female',
+    label_signin: 'Sign in needed',
+    signin_msg: 'To ask about your reports, please sign in first. It takes one click with the demo account.',
+    use_demo_acct: 'Use demo account',
+    mt_title: 'Medicines today', mt_empty: 'No medicines found in your prescriptions yet.',
+    slot_morning: 'Morning', slot_afternoon: 'Afternoon', slot_night: 'Night', slot_prn: 'When needed', slot_weekly: 'Weekly', slot_asis: 'As prescribed',
+    mt_count: '{x} of {y} taken today', mt_taken: 'taken',
+    mt_remind: 'Remind me while this app is open', mt_remind_note: 'Reminders only work while this tab is open.',
+    mt_remind_denied: 'Notifications are blocked in this browser, so reminders cannot be shown.',
+    mt_note: 'This is the schedule written on your prescriptions. Do not change a medicine without asking your doctor.',
+    mt_notif_title: 'Sehat Copilot reminder', mt_notif_body: '{slot}: {n} dose(s) from your prescriptions not ticked yet.',
+    ph_title: 'Things to ask your pharmacist', ph_loading: 'Checking your medicines against a small reference list...',
+    ph_fail: 'Could not check right now', ph_dup: 'Same ingredient twice: {ingredient} is in {names}',
+    ph_none: 'Nothing to flag from our small reference list. That is not a guarantee.',
+    sev_major: 'Major', sev_moderate: 'Moderate', sev_minor: 'Minor',
+    visit_btn: 'Doctor visit summary', visit_title: 'Summary for my doctor', visit_generated: 'Generated on {d}',
+    visit_cond: 'Conditions noted in my records', visit_meds: 'Current medicines', visit_abn: 'Latest values outside the reference range',
+    visit_changes: 'Changes over time', visit_q: 'Questions I want to ask', visit_notes: 'My own notes',
+    visit_how: 'How taken', visit_since: 'Since', visit_none: 'Nothing to list.',
+    visit_noq: 'Open a record to see suggested questions here, or write your own below.',
+    visit_footer: 'Prepared from the patient\'s own records by Sehat Copilot. Not a clinical document.',
+    visit_print: 'Print or save as PDF', visit_back: 'Back',
+    bk_title: 'Backup', bk_download: 'Download backup', bk_restore: 'Restore from backup',
+    bk_note: 'Your records live only on this device. A backup file is how you move them to another device.',
+    bk_done: 'Restored {n} records from the backup.', bk_saved: 'Backup downloaded.',
+    bk_big: 'This file is larger than 40 MB, so it cannot be restored here.', bk_bad: 'This does not look like a Sehat Copilot backup file.'
   },
   hi: {
     app_name: 'सेहत कोपायलट',
@@ -186,24 +211,100 @@ const STR = {
     err_image: 'यह तस्वीर पढ़ी नहीं जा सकी। कोई दूसरी फोटो आज़माएँ।',
     err_generic: 'कुछ गड़बड़ हो गई। कृपया फिर कोशिश करें।',
     dismiss: 'बंद करें', working: 'काम हो रहा है...',
-    sex_male: 'पुरुष', sex_female: 'महिला'
+    sex_male: 'पुरुष', sex_female: 'महिला',
+    label_signin: 'साइन इन ज़रूरी',
+    signin_msg: 'अपनी रिपोर्ट के बारे में पूछने के लिए पहले साइन इन करें। डेमो खाते से बस एक क्लिक में हो जाता है।',
+    use_demo_acct: 'डेमो खाता इस्तेमाल करें',
+    mt_title: 'आज की दवाइयाँ', mt_empty: 'आपके पर्चों में अभी कोई दवा नहीं मिली।',
+    slot_morning: 'सुबह', slot_afternoon: 'दोपहर', slot_night: 'रात', slot_prn: 'ज़रूरत पड़ने पर', slot_weekly: 'साप्ताहिक', slot_asis: 'पर्चे के अनुसार',
+    mt_count: 'आज {y} में से {x} ली गईं', mt_taken: 'ली',
+    mt_remind: 'ऐप खुला रहने तक मुझे याद दिलाएँ', mt_remind_note: 'याद दिलाना तभी काम करता है जब यह टैब खुला हो।',
+    mt_remind_denied: 'इस ब्राउज़र में सूचनाएँ बंद हैं, इसलिए याद दिलाना नहीं दिखाया जा सकता।',
+    mt_note: 'यह वही समय-सारणी है जो आपके पर्चों में लिखी है। डॉक्टर से पूछे बिना कोई दवा न बदलें।',
+    mt_notif_title: 'सेहत कोपायलट अनुस्मारक', mt_notif_body: '{slot}: आपके पर्चों की {n} खुराक पर अभी निशान नहीं लगा।',
+    ph_title: 'फ़ार्मासिस्ट से पूछने की बातें', ph_loading: 'आपकी दवाओं को एक छोटी संदर्भ सूची से मिलाया जा रहा है...',
+    ph_fail: 'अभी जाँच नहीं हो सकी', ph_dup: 'एक ही सामग्री दो बार: {ingredient} इनमें है: {names}',
+    ph_none: 'हमारी छोटी संदर्भ सूची में बताने लायक कुछ नहीं मिला। यह कोई गारंटी नहीं है।',
+    sev_major: 'गंभीर', sev_moderate: 'मध्यम', sev_minor: 'हल्का',
+    visit_btn: 'डॉक्टर मुलाकात का सारांश', visit_title: 'मेरे डॉक्टर के लिए सारांश', visit_generated: '{d} को तैयार किया गया',
+    visit_cond: 'मेरे रिकॉर्ड में दर्ज स्थितियाँ', visit_meds: 'वर्तमान दवाइयाँ', visit_abn: 'सामान्य सीमा से बाहर नवीनतम मान',
+    visit_changes: 'समय के साथ बदलाव', visit_q: 'जो सवाल मैं पूछना चाहता/चाहती हूँ', visit_notes: 'मेरे अपने नोट्स',
+    visit_how: 'कैसे ली जाती है', visit_since: 'कब से', visit_none: 'सूची में कुछ नहीं।',
+    visit_noq: 'सुझाए गए सवाल देखने के लिए कोई रिकॉर्ड खोलें, या नीचे अपने सवाल लिखें।',
+    visit_footer: 'यह सारांश सेहत कोपायलट ने मरीज़ के अपने रिकॉर्ड से तैयार किया है। यह कोई चिकित्सकीय दस्तावेज़ नहीं है।',
+    visit_print: 'प्रिंट करें या PDF सहेजें', visit_back: 'वापस',
+    bk_title: 'बैकअप', bk_download: 'बैकअप डाउनलोड करें', bk_restore: 'बैकअप से वापस लाएँ',
+    bk_note: 'आपके रिकॉर्ड सिर्फ़ इसी डिवाइस पर रहते हैं। बैकअप फ़ाइल से आप उन्हें दूसरे डिवाइस पर ले जा सकते हैं।',
+    bk_done: 'बैकअप से {n} रिकॉर्ड वापस लाए गए।', bk_saved: 'बैकअप डाउनलोड हो गया।',
+    bk_big: 'यह फ़ाइल 40 MB से बड़ी है, इसलिए यहाँ वापस नहीं लाई जा सकती।', bk_bad: 'यह सेहत कोपायलट की बैकअप फ़ाइल जैसी नहीं लगती।'
   }
 };
 
 let lang = 'en';
-const LANG_CODES = ['en', 'hi', 'bn', 'te', 'mr', 'ta', 'gu', 'kn', 'ml', 'pa'];
-try { const l = localStorage.getItem('sehat_lang'); if (LANG_CODES.indexOf(l) >= 0) lang = l; } catch (e) { /* ignore */ }
+const BUNDLED = ['en', 'hi', 'bn', 'te', 'mr', 'ta', 'gu', 'kn', 'ml', 'pa'];
+let LANG_CODES = BUNDLED.slice();
+const LANG_RTL = {};
+const SITE_MAPS = {};
+try { const l = localStorage.getItem('sehat_lang'); if (/^[a-z]{2,3}$/.test(l || '')) lang = l; } catch (e) { /* ignore */ }
+/* The guide's fixed answers (faq.js) are English; their translations live with the site pages. */
+function siteText(text) { const m = SITE_MAPS[lang]; return (m && m[text]) || text; }
+async function loadSiteMap(code) {
+  if (code === 'en' || SITE_MAPS[code] || BUNDLED.indexOf(code) < 0) return;
+  try { const r = await fetch('/i18n/site-' + code + '.json'); SITE_MAPS[code] = r.ok ? await r.json() : {}; } catch (e) { SITE_MAPS[code] = {}; }
+}
+/* Languages beyond the ten bundled ones: labels are machine-translated in small batches the
+   first time the language is chosen, shown as they arrive, and cached in this browser. */
+const filling = {};
+async function fillLang(code) {
+  if (BUNDLED.indexOf(code) >= 0 || filling[code]) return;
+  filling[code] = true;
+  const keys = Object.keys(STR.en).filter(k => !(k in STR[code]));
+  for (let i = 0; i < keys.length; i += 35) {
+    const texts = {};
+    keys.slice(i, i + 35).forEach(k => { texts[k] = STR.en[k]; });
+    try {
+      const r = await api('/api/translate', { lang: code, texts });
+      Object.assign(STR[code], r.translations || {});
+      try { localStorage.setItem('sehat_i18n_' + code, JSON.stringify(STR[code])); } catch (x) { /* ignore */ }
+      if (lang === code) render();
+    } catch (e) { break; }  // rate limited or offline: keep English for the rest, retry next visit
+  }
+  filling[code] = false;
+}
+async function loadLangList() {
+  try {
+    const r = await api('/api/langs');
+    const list = arr(r.languages);
+    if (!list.length) return;
+    LANG_CODES = list.map(l => l.code);
+    list.forEach(l => { LANG_RTL[l.code] = !!l.rtl; });
+    const sel = document.getElementById('langSel');
+    if (sel) {
+      const group = (label, items) => '<optgroup label="' + esc(label) + '">' + items.map(l => '<option value="' + esc(l.code) + '">' + esc(l.native) + (l.native === l.name ? '' : ' · ' + esc(l.name)) + '</option>').join('') + '</optgroup>';
+      sel.innerHTML = group('Ready', list.filter(l => l.bundled)) + group('Translated on demand', list.filter(l => !l.bundled));
+      sel.value = lang;
+    }
+    if (LANG_CODES.indexOf(lang) < 0) { lang = 'en'; render(); }
+    else if (BUNDLED.indexOf(lang) < 0) { await loadLang(lang); render(); fillLang(lang); }
+  } catch (e) { /* keep the ten bundled languages */ }
+}
 /* English and Hindi labels are written by hand below. The other languages load a
    machine-translated label file on demand; any missing label falls back to English. */
 async function loadLang(code) {
   if (STR[code]) return;
+  if (BUNDLED.indexOf(code) < 0) {
+    try { STR[code] = JSON.parse(localStorage.getItem('sehat_i18n_' + code) || '{}') || {}; } catch (e) { STR[code] = {}; }
+    return;
+  }
   try { const r = await fetch('/i18n/' + code + '.json'); STR[code] = r.ok ? await r.json() : {}; }
   catch (e) { STR[code] = {}; }
 }
 async function setLang(code) {
   if (LANG_CODES.indexOf(code) < 0) code = 'en';
   await loadLang(code);
+  loadSiteMap(code);
   lang = code;
+  fillLang(code);
   try { localStorage.setItem('sehat_lang', lang); } catch (x) { /* ignore */ }
   if (S.error) { S.error = null; S.retry = null; }
   render();
@@ -997,7 +1098,9 @@ function viewHealth() {
   const tile = (n, label, cls) => '<div class="stat ' + cls + '"><div class="stat-n">' + esc(n) + '</div><div class="stat-l">' + esc(label) + '</div></div>';
   const tiles = '<div class="stats">' + tile(S.records.length, t('stat_records'), 's-teal') + tile(out, t('stat_out'), out ? 's-amber' : 's-green') +
     tile(P.meds.length, t('stat_meds'), 's-blue') + tile(P.cond.length, t('stat_cond'), 's-plain') + '</div>';
-  return head + tiles + '<div class="health-grid">' +
+  const headV = '<div class="page-head row between"><div><h1>' + esc(t('health_title')) + '</h1><p>' + esc(t('health_sub')) + '</p></div>' +
+    '<button type="button" class="btn secondary" data-act="visit">' + esc(t('visit_btn')) + '</button></div>';
+  return headV + tiles + '<div class="stack" style="margin-bottom:14px">' + medsTodayCard(P) + pharmacistCard(P) + '</div><div class="health-grid">' +
     '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab || t('not_linked')) + '</dd></dl></div>' +
     '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_conditions')) + '</h2>' +
     (P.cond.length ? '<ul class="list">' + P.cond.map(c => '<li><span class="l">' + esc(c.name) + '</span><span class="r muted small">' + esc(t('first_seen', { d: fmtDate(c.date) })) + '</span></li>').join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>' +
@@ -1039,9 +1142,9 @@ function viewAsk() {
   const msgs = S.chat.map(m => {
     if (m.role === 'me') return '<div class="msg me"><div class="who">' + esc(t('you')) + '</div>' + esc(m.text) + '</div>';
     const src = srcChips(m.sources);
-    const kinds = ['records', 'general', 'doctor', 'emergency'];
+    const kinds = ['records', 'general', 'doctor', 'emergency', 'signin'];
     const lbl = kinds.indexOf(m.label) >= 0 ? '<span class="lbl lbl-' + m.label + '">' + esc(t('label_' + m.label)) + '</span>' : '';
-    return '<div class="msg' + (m.label === 'emergency' ? ' urgent' : '') + '"><div class="who">' + esc(t('assistant')) + lbl + '</div>' + esc(m.text) + (src ? '<div class="srcs"><div class="muted small" style="margin-bottom:4px">' + esc(t('sources')) + '</div><div class="chips">' + src + '</div></div>' : '') + '</div>';
+    return '<div class="msg' + (m.label === 'emergency' ? ' urgent' : '') + '"><div class="who">' + esc(t('assistant')) + lbl + '</div>' + esc(m.label === 'signin' ? t('signin_msg') : m.text) + signinBtns(m) + (src ? '<div class="srcs"><div class="muted small" style="margin-bottom:4px">' + esc(t('sources')) + '</div><div class="chips">' + src + '</div></div>' : '') + '</div>';
   }).join('');
   return head + '<div class="chips">' + qs + '</div>' +
     '<div class="chat" id="chat">' + msgs + (S.asking ? '<div class="msg muted">' + esc(t('thinking')) + '</div>' : '') + '</div>' +
@@ -1051,6 +1154,19 @@ async function ask(q) {
   q = String(q || '').trim();
   if (!q || S.asking) return;
   S.chat.push({ role: 'me', text: q });
+  const known = window.SehatFAQ ? SehatFAQ.answer(q) : null;
+  if (known && (known.kind === 'faq' || (known.kind === 'emergency' && !currentUser()))) {
+    // what the product is, how it works, pricing, privacy: fixed answers, no model, no sign-in
+    S.chat.push({ role: 'bot', text: siteText(known.text), label: known.kind === 'emergency' ? 'emergency' : 'general' });
+    render(); scrollChat();
+    return;
+  }
+  if (!currentUser()) {
+    // guests: questions about reports need sign-in; nothing is sent to the API
+    S.chat.push({ role: 'bot', text: '', label: 'signin', q: q });
+    render(); scrollChat();
+    return;
+  }
   S.asking = true; clearError(); render(); scrollChat();
   try {
     const res = await api('/api/ask', { question: q, records: S.records.map(lite), lang });
@@ -1087,6 +1203,7 @@ function viewAbha() {
     (S.fhir ? '<div style="margin-top:14px"><div class="muted small">' + esc(t('fhir_counts')) + '</div><div class="counts-list">' +
       Object.keys(counts).map(k => '<span class="badge"><span class="mono">' + esc(k) + '</span>&nbsp;' + counts[k] + '</span>').join('') + '</div>' +
       '<details class="preview"><summary>' + esc(t('fhir_prev')) + '</summary><pre>' + esc(JSON.stringify(S.fhir, null, 2)) + '</pre></details></div>' : '') + '</div>' +
+    backupCard() +
     '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('data_title')) + '</h2><p class="muted">' + esc(t('consent')) + '</p><p class="muted small">' + esc(t('privacy')) + '</p><p class="muted">' + esc(t('wipe_hint')) + '</p><button type="button" class="btn danger" data-act="wipe">' + esc(t('wipe_btn')) + '</button></div></div>';
 }
 async function linkAbha(digits, importOnly) {
@@ -1137,6 +1254,289 @@ async function wipeAll() {
   render();
 }
 
+/* ================= Sign-in gate for questions ================= */
+function signinBtns(m) {
+  if (!m || m.label !== 'signin') return '';
+  return '<div class="signin-acts"><a class="btn small" href="/login">' + esc(t('sign_in')) + '</a>' +
+    '<button type="button" class="btn small secondary" data-act="demoacct" data-i="' + S.chat.indexOf(m) + '">' + esc(t('use_demo_acct')) + '</button></div>';
+}
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-act="demoacct"]') : null;
+  if (!el) return;
+  try { localStorage.setItem('sehat_user', JSON.stringify({ name: 'Rahul Sharma', email: 'demo@sehat.local', demo: true })); } catch (x) { /* ignore */ }
+  const i = Number(el.dataset.i), m = S.chat[i];
+  const q = m && m.q;
+  if (m) { if (i > 0 && S.chat[i - 1].role === 'me') S.chat.splice(i - 1, 2); else S.chat.splice(i, 1); }
+  render();
+  if (q) ask(q);
+});
+
+/* ================= Medicines today ================= */
+const SLOT_ORDER = ['morning', 'afternoon', 'night', 'asis', 'prn', 'weekly'];
+const TAKEN_MEM = {};
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+/* Reads the written frequency and timing of a medicine and returns the slots it falls in. */
+function medSlots(m) {
+  const all = (String(m.frequency || '') + ' ' + String(m.timing || '')).toLowerCase();
+  if (/when needed|if needed|as needed|only when|\bsos\b|\bprn\b/.test(all)) return ['prn'];
+  if (/once a week|once weekly|weekly|per week|a week|every week/.test(all)) return ['weekly'];
+  if (/four times|4 times|\bqid\b|\bqds\b/.test(all)) return ['morning', 'afternoon', 'night', 'night'];
+  if (/three times|3 times|thrice|\btid\b|\btds\b/.test(all)) return ['morning', 'afternoon', 'night'];
+  if (/twice|two times|2 times|\bbd\b|\bbid\b/.test(all)) return ['morning', 'night'];
+  const pat = all.match(/\b([01])\s*-\s*([01])\s*-\s*([01])\b/);
+  if (pat) {
+    const o = [];
+    if (pat[1] === '1') o.push('morning');
+    if (pat[2] === '1') o.push('afternoon');
+    if (pat[3] === '1') o.push('night');
+    if (o.length) return o;
+  }
+  const hits = [];
+  if (/morning|breakfast/.test(all)) hits.push('morning');
+  if (/afternoon|lunch/.test(all)) hits.push('afternoon');
+  if (/evening|night|bedtime|bed time|dinner/.test(all)) hits.push('night');
+  if (/once|daily|\bod\b|every day|one time|1 time/.test(all)) return [hits[0] || 'asis'];
+  return hits.length ? hits : ['asis'];
+}
+function buildDoses(P) {
+  const out = [];
+  P.meds.forEach(o => medSlots(o.m).forEach((slot, i) => {
+    out.push({ key: String(o.m.name || '').trim().toLowerCase() + '|' + slot + '|' + i, slot, m: o.m, date: o.date });
+  }));
+  return out;
+}
+const isTickable = slot => slot === 'morning' || slot === 'afternoon' || slot === 'night' || slot === 'asis';
+function takenGet() {
+  const k = todayKey();
+  if (!TAKEN_MEM[k]) { try { TAKEN_MEM[k] = JSON.parse(localStorage.getItem('sehat_taken_' + k) || '{}') || {}; } catch (e) { TAKEN_MEM[k] = {}; } }
+  return TAKEN_MEM[k];
+}
+function takenSave() { const k = todayKey(); try { localStorage.setItem('sehat_taken_' + k, JSON.stringify(TAKEN_MEM[k] || {})); } catch (e) { /* ignore */ } }
+function remindOn() {
+  try { return localStorage.getItem('sehat_remind') === '1' && typeof Notification !== 'undefined' && Notification.permission === 'granted'; } catch (e) { return false; }
+}
+function takenCountText(doses) {
+  const tk = takenGet(), list = doses.filter(d => isTickable(d.slot));
+  return t('mt_count', { x: list.filter(d => tk[d.key]).length, y: list.length });
+}
+function medsTodayCard(P) {
+  const doses = buildDoses(P), tk = takenGet();
+  let h = '<div class="card medday"><h2 style="margin-bottom:10px">' + esc(t('mt_title')) + '</h2>';
+  if (!doses.length) return h + '<p class="muted">' + esc(t('mt_empty')) + '</p></div>';
+  h += '<p class="small" style="margin:0 0 8px"><strong id="takenCount">' + esc(takenCountText(doses)) + '</strong></p>';
+  SLOT_ORDER.forEach(slot => {
+    const list = doses.filter(d => d.slot === slot);
+    if (!list.length) return;
+    h += '<div class="slot"><h3>' + esc(t('slot_' + slot)) + '</h3><ul class="list">' + list.map(d => {
+      const m = d.m;
+      const detail = [(slot === 'asis' || slot === 'prn' || slot === 'weekly') ? m.frequency : '', m.timing].filter(Boolean).join(', ');
+      const body = '<span class="l"><strong>' + esc(m.name) + '</strong>' + (m.strength ? ' <span class="mono">' + esc(m.strength) + '</span>' : '') +
+        (detail ? '<br><span class="muted small">' + esc(detail) + '</span>' : '') + '</span>';
+      if (!isTickable(slot)) return '<li>' + body + '</li>';
+      return '<li><label class="dose"><input type="checkbox" data-dose="' + esc(d.key) + '"' + (tk[d.key] ? ' checked' : '') + '>' + body +
+        '<span class="muted small dose-lbl">' + esc(t('mt_taken')) + '</span></label></li>';
+    }).join('') + '</ul></div>';
+  });
+  const supported = typeof Notification !== 'undefined';
+  h += '<div class="remind"><label class="dose"><input type="checkbox" data-remind="1"' + (remindOn() ? ' checked' : '') + (supported ? '' : ' disabled') + '><span class="l">' + esc(t('mt_remind')) + '</span></label>' +
+    '<p class="muted small" style="margin:4px 0 0">' + esc(t('mt_remind_note')) + '</p>' +
+    '<p class="small remind-denied" id="remindDenied" hidden>' + esc(t('mt_remind_denied')) + '</p></div>' +
+    '<p class="muted small" style="margin:12px 0 0">' + esc(t('mt_note')) + '</p></div>';
+  return h;
+}
+document.addEventListener('change', async e => {
+  const el = e.target;
+  if (!el || !el.hasAttribute) return;
+  if (el.hasAttribute('data-dose')) {
+    const tk = takenGet(), key = el.getAttribute('data-dose');
+    if (el.checked) tk[key] = 1; else delete tk[key];
+    takenSave();
+    const c = document.getElementById('takenCount');
+    if (c) c.textContent = takenCountText(buildDoses(profile()));
+  } else if (el.hasAttribute('data-remind')) {
+    const den = document.getElementById('remindDenied');
+    if (den) den.hidden = true;
+    if (el.checked) {
+      let perm = 'denied';
+      try { perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission(); } catch (x) { /* ignore */ }
+      if (perm !== 'granted') {
+        el.checked = false;
+        if (den) den.hidden = false;
+        try { localStorage.setItem('sehat_remind', '0'); } catch (x) { /* ignore */ }
+        return;
+      }
+    }
+    try { localStorage.setItem('sehat_remind', el.checked ? '1' : '0'); } catch (x) { /* ignore */ }
+  }
+});
+/* While the tab is open: one notification per slot per day, at 08:00, 14:00 and 21:00, only if doses are still unticked. */
+const REMIND_AT = [['morning', 8], ['afternoon', 14], ['night', 21]];
+const REMINDED = {};
+function checkReminders() {
+  if (!remindOn() || !S.records.length) return;
+  const now = new Date(), mins = now.getHours() * 60 + now.getMinutes(), day = todayKey();
+  REMIND_AT.forEach(r => {
+    const slot = r[0], diff = mins - r[1] * 60, mk = day + slot;
+    if (diff < 0 || diff > 2 || REMINDED[mk]) return;
+    let sent = {};
+    try { sent = JSON.parse(localStorage.getItem('sehat_notified_' + day) || '{}') || {}; } catch (x) { /* ignore */ }
+    if (sent[slot]) { REMINDED[mk] = 1; return; }
+    REMINDED[mk] = 1; sent[slot] = 1;
+    try { localStorage.setItem('sehat_notified_' + day, JSON.stringify(sent)); } catch (x) { /* ignore */ }
+    const tk = takenGet();
+    const left = buildDoses(profile()).filter(d => d.slot === slot && !tk[d.key]).length;
+    if (left) { try { new Notification(t('mt_notif_title'), { body: t('mt_notif_body', { slot: t('slot_' + slot), n: left }) }); } catch (x) { /* ignore */ } }
+  });
+}
+setInterval(checkReminders, 60000);
+
+/* ================= Things to ask your pharmacist ================= */
+async function runMedcheck(key, meds) {
+  let res = null;
+  try { res = await api('/api/medcheck', { medicines: meds, lang }); } catch (e) { /* fail silently */ }
+  if (S.medcheck && S.medcheck.key === key) {
+    S.medcheck.state = res && typeof res === 'object' ? 'ok' : 'fail';
+    S.medcheck.data = res;
+    if (S.view === 'health') render();
+  }
+}
+function pharmacistCard(P) {
+  if (!P.meds.length) return '';
+  const meds = P.meds.map(o => ({ name: o.m.name, generic: o.m.generic, strength: o.m.strength }));
+  const key = lang + '|' + JSON.stringify(meds);
+  if (!S.medcheck || S.medcheck.key !== key) { S.medcheck = { key, state: 'loading', data: null }; runMedcheck(key, meds); }
+  const mc = S.medcheck;
+  let h = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('ph_title')) + '</h2>';
+  if (mc.state === 'loading') return h + '<p class="muted">' + esc(t('ph_loading')) + '</p></div>';
+  if (mc.state === 'fail') return h + '<p class="muted">' + esc(t('ph_fail')) + '</p></div>';
+  const d = mc.data || {}, dups = arr(d.duplicates), ints = arr(d.interactions);
+  if (!dups.length && !ints.length) h += '<p>' + esc(t('ph_none')) + '</p>';
+  else {
+    h += '<ul class="list pharm">' +
+      dups.map(x => '<li><span class="l">' + esc(t('ph_dup', { ingredient: x.ingredient, names: arr(x.names).join(', ') })) + '</span></li>').join('') +
+      ints.map(x => {
+        const nm = arr(x.names), sev = ['major', 'moderate', 'minor'].indexOf(x.severity) >= 0 ? x.severity : 'minor';
+        return '<li><span class="l">' + esc((nm[0] || x.a) + ' + ' + (nm[1] || x.b) + ': ' + x.note) + '</span><span class="r"><span class="sev sev-' + sev + '">' + esc(t('sev_' + sev)) + '</span></span></li>';
+      }).join('') + '</ul>';
+  }
+  if (d.disclaimer) h += '<p class="muted small" style="margin:10px 0 0">' + esc(d.disclaimer) + '</p>';
+  return h + '</div>';
+}
+
+/* ================= Doctor visit summary ================= */
+function viewVisit() {
+  if (!S.records.length) { S.view = 'health'; return viewHealth(); }
+  const P = profile(), p = S.patient || {}, ab = abhaNumber(p);
+  const sx = String(p.sex || '').toLowerCase();
+  const sexTxt = sx === 'male' || sx === 'm' ? t('sex_male') : (sx === 'female' || sx === 'f' ? t('sex_female') : (p.sex || ''));
+  const line = [p.name, p.age ? t('h_age') + ' ' + p.age : '', sexTxt, ab ? t('h_abha') + ' ' + ab : ''].filter(Boolean).join('  |  ');
+  const seen = new Set(), qs = [];
+  sortedRecords().forEach(r => {
+    const ex = r.explanation && r.explanation[lang];
+    arr(ex && ex.questions).forEach(q => {
+      const s = String(q || '').trim(), k = s.toLowerCase();
+      if (s && !seen.has(k) && qs.length < 6) { seen.add(k); qs.push(s); }
+    });
+  });
+  const abn = P.latest.filter(o => isAbn(normFlag(o.x.flag)));
+  const th = a => '<thead><tr>' + a.map(x => '<th>' + esc(x) + '</th>').join('') + '</tr></thead>';
+  const none = '<p class="muted">' + esc(t('visit_none')) + '</p>';
+  const sec = (title, body) => '<section class="visit-sec"><h2>' + esc(title) + '</h2>' + body + '</section>';
+  const notes = S.visitNotes || '';
+  return '<div class="visit">' +
+    '<div class="visit-head"><h1>' + esc(t('visit_title')) + '</h1>' +
+    '<p class="visit-pt">' + esc(line || '-') + '</p><p class="muted small">' + esc(t('visit_generated', { d: fmtDate(todayKey()) })) + '</p></div>' +
+    sec(t('visit_cond'), P.cond.length ? '<ul class="qlist">' + P.cond.map(c => '<li>' + esc(c.name) + ' <span class="muted small">(' + esc(t('first_seen', { d: fmtDate(c.date) })) + ')</span></li>').join('') + '</ul>' : none) +
+    sec(t('visit_meds'), P.meds.length ? '<div class="tablewrap"><table class="data">' + th([t('m_name'), t('m_strength'), t('visit_how'), t('visit_since')]) + '<tbody>' +
+      P.meds.map(o => '<tr><td><strong>' + esc(o.m.name) + '</strong></td><td>' + esc(o.m.strength || '') + '</td><td>' + esc([o.m.dose, o.m.frequency, o.m.timing].filter(Boolean).join(', ')) + '</td><td>' + esc(fmtDate(o.date)) + '</td></tr>').join('') + '</tbody></table></div>' : none) +
+    sec(t('visit_abn'), abn.length ? '<div class="tablewrap"><table class="data">' + th([t('t_name'), t('t_value'), t('t_range'), t('f_date'), t('t_flag')]) + '<tbody>' +
+      abn.map(o => '<tr><td>' + esc(o.x.name) + '</td><td class="mono">' + esc(o.x.value) + ' ' + esc(o.x.unit || '') + '</td><td class="mono">' + esc(refText(o.x)) + '</td><td>' + esc(fmtDate(o.date)) + '</td><td><strong>' + esc(t('flag_' + normFlag(o.x.flag))) + '</strong></td></tr>').join('') + '</tbody></table></div>' : none) +
+    sec(t('visit_changes'), P.trends.length ? '<ul class="qlist">' + P.trends.slice(0, 8).map(s => {
+      const a = s.pts[0], b = s.pts[s.pts.length - 1], u = s.unit ? ' ' + s.unit : '';
+      return '<li><strong>' + esc(s.name) + ':</strong> ' + esc(fmtNum(a.v) + u + ' (' + fmtDate(a.date) + ')  →  ' + fmtNum(b.v) + u + ' (' + fmtDate(b.date) + ')') + '</li>';
+    }).join('') + '</ul>' : none) +
+    sec(t('visit_q'), (qs.length ? '<ul class="qlist">' + qs.map(q => '<li>' + esc(q) + '</li>').join('') + '</ul>' : '<p class="muted noprint">' + esc(t('visit_noq')) + '</p>') +
+      '<h3 style="margin:12px 0 6px">' + esc(t('visit_notes')) + '</h3><textarea id="visitNotes" class="visit-notes" rows="5" aria-label="' + esc(t('visit_notes')) + '">' + esc(notes) + '</textarea>' +
+      '<div class="print-notes" id="visitNotesPrint">' + esc(notes) + '</div>') +
+    '<p class="muted small visit-foot">' + esc(t('visit_footer')) + '</p>' +
+    '<div class="row noprint" style="margin-top:16px"><button type="button" class="btn" data-act="print">' + esc(t('visit_print')) + '</button>' +
+    '<button type="button" class="btn secondary" data-act="nav" data-view="health">' + esc(t('visit_back')) + '</button></div></div>';
+}
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!el) return;
+  const a = el.dataset.act;
+  if (a === 'visit') go('visit');
+  else if (a === 'print') window.print();
+  else if (a === 'bkdownload') backupDownload();
+  else if (a === 'bkrestore') { const i = document.getElementById('restoreInput'); if (i) i.click(); }
+});
+document.addEventListener('click', e => {
+  if (e.target && e.target.closest && e.target.closest('[data-act="nav"]')) S.backupMsg = null;
+}, true);
+document.addEventListener('input', e => {
+  if (!e.target || e.target.id !== 'visitNotes') return;
+  S.visitNotes = e.target.value;
+  const m = document.getElementById('visitNotesPrint');
+  if (m) m.textContent = S.visitNotes;
+});
+
+/* ================= Backup and restore ================= */
+function backupCard() {
+  const m = S.backupMsg;
+  return '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('bk_title')) + '</h2><p class="muted">' + esc(t('bk_note')) + '</p>' +
+    '<div class="row"><button type="button" class="btn" data-act="bkdownload">' + esc(t('bk_download')) + '</button>' +
+    '<button type="button" class="btn secondary" data-act="bkrestore">' + esc(t('bk_restore')) + '</button></div>' +
+    '<input type="file" id="restoreInput" accept="application/json,.json" hidden>' +
+    (m ? '<p class="small" role="status" style="margin:10px 0 0;color:var(' + (m.ok ? '--ok' : '--crit') + ')">' + esc(m.text) + '</p>' : '') + '</div>';
+}
+async function backupDownload() {
+  try {
+    const files = arr(await dbGetAll('files'));
+    const payload = { version: 1, exportedAt: new Date().toISOString(), patient: S.patient || null, records: S.records, files };
+    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'sehat-backup-' + todayKey() + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    S.backupMsg = { ok: true, text: t('bk_saved') };
+  } catch (e) { S.backupMsg = { ok: false, text: t('err_generic') }; }
+  render();
+}
+async function backupRestore(file) {
+  if (!file) return;
+  try {
+    if (file.size > 40 * 1024 * 1024) throw new Error(t('bk_big'));
+    let j = null;
+    try { j = JSON.parse(await file.text()); } catch (x) { throw new Error(t('bk_bad')); }
+    const good = j && typeof j === 'object' && j.version === 1 && Array.isArray(j.records) &&
+      (j.files === undefined || Array.isArray(j.files)) && (j.patient == null || typeof j.patient === 'object') &&
+      j.records.every(r => r && typeof r === 'object' && typeof r.id === 'string' && r.id) &&
+      arr(j.files).every(f => f && typeof f === 'object' && typeof f.id === 'string' && f.id && typeof f.dataUrl === 'string' && f.dataUrl.indexOf('data:') === 0);
+    if (!good) throw new Error(t('bk_bad'));
+    if (j.patient) {
+      S.patient = { name: j.patient.name || null, age: j.patient.age == null ? null : j.patient.age, sex: j.patient.sex || null, abha: j.patient.abha || null };
+      await dbPut('meta', S.patient, 'patient');
+    }
+    for (const raw of j.records) await saveRecordLocal(normalizeRecord(raw));
+    for (const f of arr(j.files)) await dbPut('files', { id: f.id, mime: String(f.mime || ''), dataUrl: f.dataUrl });
+    S.overview = {};
+    S.backupMsg = { ok: true, text: t('bk_done', { n: j.records.length }) };
+  } catch (e) {
+    S.backupMsg = { ok: false, text: (e && (e.message === t('bk_big') || e.message === t('bk_bad'))) ? e.message : t('err_generic') };
+  }
+  render();
+}
+document.addEventListener('change', e => {
+  if (!e.target || e.target.id !== 'restoreInput') return;
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  backupRestore(f);
+});
+
 /* ================= Render ================= */
 const ICONS = {
   add: '<path d="M12 5v14M5 12h14"/>',
@@ -1149,12 +1549,13 @@ const NAV = [['add', 'nav_add'], ['timeline', 'nav_timeline'], ['health', 'nav_h
 
 function applyStatic() {
   document.documentElement.lang = lang;
+  document.documentElement.dir = LANG_RTL[lang] ? 'rtl' : 'ltr';
   document.title = t('app_name');
   $('#brandName').textContent = t('app_name');
   $('#localNote').textContent = t('local_note');
   $('#disclaimer').textContent = t('disclaimer');
   if ($('#langSel')) $('#langSel').value = lang;
-  const cur = S.view === 'detail' ? 'timeline' : S.view;
+  const cur = S.view === 'detail' ? 'timeline' : (S.view === 'visit' ? 'health' : S.view);
   $('#nav').innerHTML = NAV.map(n => '<button type="button" data-act="nav" data-view="' + n[0] + '"' + (cur === n[0] ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[n[0]] + '</svg><span>' + esc(t(n[1])) + '</span></button>').join('');
   syncDiscHeight();
 }
@@ -1171,6 +1572,7 @@ function render() {
     case 'timeline': html = viewTimeline(); break;
     case 'detail': html = viewDetail(); break;
     case 'health': html = viewHealth(); break;
+    case 'visit': html = viewVisit(); break;
     case 'ask': html = viewAsk(); break;
     case 'abha': html = viewAbha(); break;
     default: html = viewAdd();
@@ -1308,7 +1710,7 @@ if (lang !== 'en' && lang !== 'hi') loadLang(lang).then(() => render());
    answers questions through the same safety-gated /api/ask as the Ask page, sharing
    one conversation with it. It is a guide to the records, not a doctor. */
 const PET = { open: false, seen: {}, tipOff: false };
-const PET_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true" class="pet-svg">' +
+const PET_SVG = '<svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true" class="pet-svg">' +
   '<ellipse cx="32" cy="59" rx="15" ry="3" fill="#0F172A" opacity=".10"/>' +
   '<path d="M14 40c0-12 8-20 18-20s18 8 18 20v8c0 5-4 9-9 9H23c-5 0-9-4-9-9z" fill="#fff" stroke="#0F766E" stroke-width="2"/>' +
   '<path d="M27 33l5 7 5-7" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
@@ -1322,14 +1724,14 @@ const PET_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true" class="pet-svg">' +
   '</svg>';
 function petScreen() {
   if (S.view === 'add' && S.stage === 'review') return 'review';
-  return S.view === 'detail' ? 'timeline' : S.view;
+  return S.view === 'detail' ? 'timeline' : (S.view === 'visit' ? 'health' : S.view);
 }
 function petMsgs() {
-  const kinds = ['records', 'general', 'doctor', 'emergency'];
+  const kinds = ['records', 'general', 'doctor', 'emergency', 'signin'];
   const msgs = S.chat.slice(-8).map(m => {
     if (m.role === 'me') return '<div class="pet-msg me">' + esc(m.text) + '</div>';
     const lbl = kinds.indexOf(m.label) >= 0 ? '<span class="lbl lbl-' + m.label + '">' + esc(t('label_' + m.label)) + '</span>' : '';
-    return '<div class="pet-msg' + (m.label === 'emergency' ? ' urgent' : '') + '">' + (lbl ? '<div class="pet-lbl">' + lbl + '</div>' : '') + esc(m.text) + '</div>';
+    return '<div class="pet-msg' + (m.label === 'emergency' ? ' urgent' : '') + '">' + (lbl ? '<div class="pet-lbl">' + lbl + '</div>' : '') + esc(m.label === 'signin' ? t('signin_msg') : m.text) + signinBtns(m) + '</div>';
   }).join('');
   return '<div class="pet-msg">' + esc(t('pet_hello')) + '</div><div class="pet-msg tip">' + esc(t('pet_tip_' + petScreen())) + '</div>' + msgs +
     (S.asking ? '<div class="pet-msg muted">' + esc(t('thinking')) + '</div>' : '');
@@ -1418,6 +1820,10 @@ renderUser();
 (async function demoFromLink() {
   if (!/[?&]demo=1\b/.test(location.search)) return;
   for (let i = 0; i < 40 && !S.ready; i++) await new Promise(r => setTimeout(r, 100));
+  if (!currentUser()) {
+    try { localStorage.setItem('sehat_user', JSON.stringify({ name: 'Rahul Sharma', email: 'demo@sehat.local', demo: true })); } catch (e) { /* ignore */ }
+    renderUser();
+  }
   if (!S.records.length) await loadDemo();
   try { history.replaceState(null, '', '/app'); } catch (e) { /* ignore */ }
 })();
@@ -1455,3 +1861,7 @@ document.addEventListener('click', e => {
   else if (a === 'toggle') el.classList.toggle('big');
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeZoom(); });
+
+/* load the full language list (43) and the guide's translations for the current language */
+loadLangList();
+loadSiteMap(lang);

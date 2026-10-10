@@ -103,7 +103,8 @@ def reply(kind, lang):
     """Text shown to the user: the full template, or a short native line plus full English."""
     if lang in TEMPLATES[kind]:
         return TEMPLATES[kind][lang]
-    return SHORT[kind][lang] + "\n\n" + TEMPLATES[kind]["en"]
+    short = SHORT[kind].get(lang)
+    return (short + "\n\n" if short else "") + TEMPLATES[kind]["en"]
 
 
 def template(kind, lang):

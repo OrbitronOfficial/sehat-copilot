@@ -181,5 +181,36 @@ class PlausibilityTests(unittest.TestCase):
         self.assertNotIn("implausible", rec["tests"][0])
 
 
+class MedicineCheckTests(unittest.TestCase):
+    def test_same_ingredient_under_two_brand_names(self):
+        out = pipeline.medcheck([{"name": "Tab. Dolo 650"}, {"name": "Crocin"}, {"name": "Glycomet", "generic": "Metformin"}])
+        self.assertEqual(len(out["duplicates"]), 1)
+        self.assertEqual(out["duplicates"][0]["ingredient"], "Paracetamol")
+        self.assertEqual(len(out["duplicates"][0]["names"]), 2)
+
+    def test_known_interaction_pair_is_flagged_once(self):
+        out = pipeline.medcheck([{"name": "Ibuprofen"}, {"name": "Warfarin"}])
+        self.assertEqual(len(out["interactions"]), 1)
+        self.assertEqual(out["interactions"][0]["severity"], "major")
+        self.assertIn("pharmacist", out["disclaimer"])
+
+    def test_unknown_medicines_are_reported_not_guessed(self):
+        out = pipeline.medcheck([{"name": "Zzyqlor Forte"}])
+        self.assertEqual(out["items"][0]["known"], False)
+        self.assertEqual(out["duplicates"] + out["interactions"], [])
+
+
+class LanguageTests(unittest.TestCase):
+    def test_every_language_has_safety_text_and_a_disclaimer(self):
+        for code in pipeline.LANGS:
+            self.assertIn("112", safety.reply("emergency", code))
+            self.assertTrue(safety.reply("medication", code))
+            self.assertTrue(pipeline._disclaimer(code))
+
+    def test_unknown_language_falls_back_to_english(self):
+        self.assertEqual(pipeline._lang("xx"), "en")
+        self.assertEqual(pipeline._lang("fr"), "fr")
+
+
 if __name__ == "__main__":
     unittest.main()

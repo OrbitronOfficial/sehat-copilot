@@ -85,7 +85,7 @@
         box.appendChild(out);
       } else {
         box.appendChild(el("a", "btn ghost", "Sign in", { href: "/login" }));
-        box.appendChild(el("a", "btn primary", "Open the app", { href: "/app" }));
+        box.appendChild(el("a", "btn primary", "Try the demo", { href: "/app?demo=1" }));
       }
     });
   }
@@ -216,11 +216,11 @@
   }
 
   /* ---------- Saathi guide ---------- */
-  var MASCOT = '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="59" rx="15" ry="3" fill="#0F172A" opacity=".10"/><path d="M14 40c0-12 8-20 18-20s18 8 18 20v8c0 5-4 9-9 9H23c-5 0-9-4-9-9z" fill="#fff" stroke="#0F766E" stroke-width="2"/><path d="M27 33l5 7 5-7" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="20" r="14" fill="#F3D9C4" stroke="#0F766E" stroke-width="2"/><path d="M18.5 18c1-8 7-12.5 13.5-12.5S44.5 10 45.5 18c-4-3-8-4.5-13.5-4.5S22.5 15 18.5 18z" fill="#0F766E"/><circle cx="27" cy="21" r="1.8" fill="#0F172A"/><circle cx="37" cy="21" r="1.8" fill="#0F172A"/><path d="M28 26.5c2.5 2 5.5 2 8 0" fill="none" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/><path d="M22 34c-3 6-2 13 4 14.5" fill="none" stroke="#334155" stroke-width="1.8" stroke-linecap="round"/><circle cx="28" cy="49" r="3" fill="#fff" stroke="#334155" stroke-width="1.8"/><rect x="38" y="42" width="8" height="8" rx="1.5" fill="#0F766E"/><path d="M42 43.8v4.4M39.8 46h4.4" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  var MASCOT = '<svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><ellipse cx="32" cy="59" rx="15" ry="3" fill="#0F172A" opacity=".10"/><path d="M14 40c0-12 8-20 18-20s18 8 18 20v8c0 5-4 9-9 9H23c-5 0-9-4-9-9z" fill="#fff" stroke="#0F766E" stroke-width="2"/><path d="M27 33l5 7 5-7" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="20" r="14" fill="#F3D9C4" stroke="#0F766E" stroke-width="2"/><path d="M18.5 18c1-8 7-12.5 13.5-12.5S44.5 10 45.5 18c-4-3-8-4.5-13.5-4.5S22.5 15 18.5 18z" fill="#0F766E"/><circle cx="27" cy="21" r="1.8" fill="#0F172A"/><circle cx="37" cy="21" r="1.8" fill="#0F172A"/><path d="M28 26.5c2.5 2 5.5 2 8 0" fill="none" stroke="#0F172A" stroke-width="1.6" stroke-linecap="round"/><path d="M22 34c-3 6-2 13 4 14.5" fill="none" stroke="#334155" stroke-width="1.8" stroke-linecap="round"/><circle cx="28" cy="49" r="3" fill="#fff" stroke="#334155" stroke-width="1.8"/><rect x="38" y="42" width="8" height="8" rx="1.5" fill="#0F766E"/><path d="M42 43.8v4.4M39.8 46h4.4" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>';
   var TIPS = {
     landing: "Sehat Copilot explains your prescriptions and lab reports in plain language. Try the live demo to see a sample record.",
     login: "An account is optional. The demo account opens a sample record in one click. Anything you create is kept only in this browser, on this device.",
-    pricing: "Nothing is charged. These plans are illustrative, and the Family and Clinic plans are planned, not built."
+    pricing: "Everything is free while this is a prototype. The Family and Clinic plans are planned, not built."
   };
   var QA = [
     ["What is Sehat Copilot?", "Sehat Copilot reads your prescriptions and lab reports and explains them in plain language. It is a guide to your records, not a doctor."],
@@ -231,6 +231,7 @@
   function buildSaathi() {
     var page = document.body.dataset.page || "landing";
     var box = el("div", "saathi");
+    box.hidden = true; // stays hidden until the stylesheet has applied, so the mascot never flashes unstyled
     var tip = el("div", "saathi-tip", "Need a hand? Ask Saathi.");
     var btn = el("button", "saathi-btn", null, { type: "button", "aria-label": "Open Saathi, your records guide", "aria-expanded": "false" });
     btn.innerHTML = MASCOT;
@@ -260,11 +261,48 @@
       chips.appendChild(c);
     });
     var foot = el("div", "sa-foot");
+    // Typed questions: report questions need the app (and a sign-in), so the guide says so
+    // instead of pretending to answer. Emergency wording always gets the emergency line.
+    var form = el("form", "sa-form");
+    var input = el("input", null, null, { type: "text", placeholder: "Type your question", "aria-label": "Type your question", autocomplete: "off" });
+    form.appendChild(input);
+    form.appendChild(el("button", "btn primary", "Ask", { type: "submit" }));
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var q = input.value.trim();
+      if (!q) return;
+      input.value = "";
+      var me = el("div", "bub me", q); me.setAttribute("data-noi18n", "");
+      body.appendChild(me);
+      var signedIn = !!(window.SehatAuth && SehatAuth.current());
+      // Product questions get a fixed answer. Questions about the person's own reports are
+      // never answered here: guests are asked to sign in, signed-in users are sent to the app.
+      var res = window.SehatFAQ ? SehatFAQ.answer(q) : { kind: "unknown", text: "" };
+      if (res.kind === "report") {
+        body.appendChild(el("div", "bub", signedIn ? SehatFAQ.TEXT.inapp : res.text));
+        var row = el("div", "sa-actions");
+        if (signedIn) {
+          row.appendChild(el("a", "btn primary", "Open the app", { href: "/app" }));
+        } else {
+          row.appendChild(el("a", "btn", "Sign in", { href: "/login" }));
+          var demo = el("button", "btn primary", "Use demo account", { type: "button" });
+          demo.addEventListener("click", function () { SehatAuth.demo(); location.href = "/app?demo=1"; });
+          row.appendChild(demo);
+        }
+        body.appendChild(row);
+      } else {
+        body.appendChild(el("div", "bub", res.text));
+      }
+      translate();
+      body.scrollTop = body.scrollHeight;
+    });
+    foot.appendChild(form);
     foot.appendChild(el("a", "btn primary block", "Open the app", { href: "/app" }));
 
     panel.appendChild(top); panel.appendChild(body); panel.appendChild(chips); panel.appendChild(foot);
     box.appendChild(tip); box.appendChild(panel); box.appendChild(btn);
     document.body.appendChild(box);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { box.hidden = false; }); });
 
     var hideTip = function () { tip.classList.add("gone"); };
     setTimeout(hideTip, 7000 + 1000);
@@ -280,12 +318,47 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) shut(); });
   }
 
+  /* ---------- story highlight (landing) ---------- */
+  function initStory() {
+    var steps = document.querySelectorAll(".step"), win = document.getElementById("stageWin");
+    if (!steps.length) return;
+    var busy = false;
+    function update() {
+      busy = false;
+      var mid = (window.innerHeight || 800) * 0.5, best = null, bd = 1e9;
+      steps.forEach(function (s) {
+        var r = s.getBoundingClientRect(), d = Math.abs(r.top + r.height / 2 - mid);
+        if (d < bd) { bd = d; best = s; }
+      });
+      steps.forEach(function (s) { s.classList.toggle("on", s === best); });
+      if (win && best && window.innerWidth > 980) win.setAttribute("data-step", best.getAttribute("data-step"));
+      else if (win) win.setAttribute("data-step", "4");
+    }
+    function queue() { if (!busy) { busy = true; requestAnimationFrame(update); } }
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    update();
+  }
+
+  /* ---------- waitlist buttons (flag stays on this device) ---------- */
+  function initWaitlist() {
+    var KEY = "sehat_waitlist", flags = read(KEY) || {};
+    document.querySelectorAll("[data-wait]").forEach(function (b) {
+      var msg = b.parentNode.querySelector(".thanks");
+      function show() { b.hidden = true; if (msg) msg.textContent = "Thanks, noted on this device."; translate(); }
+      if (flags[b.dataset.wait]) show();
+      b.addEventListener("click", function () { flags[b.dataset.wait] = true; write(KEY, flags); show(); });
+    });
+  }
+
   /* ---------- boot ---------- */
   document.addEventListener("DOMContentLoaded", function () {
     renderNav();
     buildTools();
     buildSaathi();
     initReveal();
+    initStory();
+    initWaitlist();
     var nav = document.getElementById("nav");
     if (nav) {
       var f = function () { nav.classList.toggle("scrolled", window.scrollY > 10); };

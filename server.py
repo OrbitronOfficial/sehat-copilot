@@ -112,6 +112,8 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/health":
             return self._send(200, {"ok": True, "gemini": bool(os.environ.get("GEMINI_API_KEY")),
                                     "groq": bool(os.environ.get("GROQ_API_KEY"))})
+        if path == "/api/langs":
+            return self._send(200, {"languages": pipeline.language_list()})
         if path == "/api/samples":
             return self._send(200, {"samples": SAMPLES})
         if path == "/api/demo":
@@ -137,6 +139,10 @@ class Handler(BaseHTTPRequestHandler):
                 out = {"overview": pipeline.overview(b.get("patient"), b.get("records") or [], lang)}
             elif path == "/api/ask":
                 out = pipeline.ask(b.get("question"), b.get("records") or [], lang)
+            elif path == "/api/medcheck":
+                out = pipeline.medcheck(b.get("medicines") or [], lang)
+            elif path == "/api/translate":
+                out = {"lang": lang, "translations": pipeline.translate_labels(lang, b.get("texts"))}
             elif path == "/api/abha":
                 out = mock_abha(b.get("abha"))
             elif path == "/api/fhir":

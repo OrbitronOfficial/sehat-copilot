@@ -33,9 +33,13 @@ _MED_NAMES = {}
 for m in _MEDS:
     names = [re.sub(r"\(.*?\)", "", m["generic"] or "")] + m["brands"]
     names += re.findall(r"\((.*?)\)", m["generic"] or "")
-    for n in names:
+    for n in names + [m.get("id") or ""]:
         if n.strip():
             _MED_NAMES[n.strip().lower()] = m
+            # "Dolo 650" must also match a prescription that says "Dolo" with the strength apart
+            bare = " ".join(w for w in n.lower().split() if not w[:1].isdigit())
+            if len(bare) > 3:
+                _MED_NAMES.setdefault(bare, m)
 
 EXTRACT_PROMPT = """You are a medical document reader for Indian healthcare records.
 Read the attached document (it may be a photo, scan or PDF; printed or handwritten; English, Hindi or mixed) and return ONE JSON object. Transcribe only what is written. Never guess or fill in a value that you cannot read: use null and lower the confidence.
@@ -126,13 +130,35 @@ RECORDS:
 QUESTION: {question}"""
 
 
-# Languages the app writes in. English and Hindi have hand-written fixed texts; the rest use
-# model-written explanations and machine-translated interface labels.
-LANGS = {
-    "en": "English", "hi": "Hindi (Devanagari script, everyday spoken Hindi)",
-    "bn": "Bengali", "te": "Telugu", "mr": "Marathi", "ta": "Tamil", "gu": "Gujarati",
-    "kn": "Kannada", "ml": "Malayalam", "pa": "Punjabi (Gurmukhi script)",
-}
+# Languages the app can write in: (code, English name for the model, native name, right-to-left).
+# English and Hindi have hand-written fixed texts. The next eight ship with machine-translated
+# interface labels. Every other language is translated on demand (see translate_labels) and
+# its explanations and chat answers are written directly in that language by the model.
+LANGUAGES = [
+    ("en", "English", "English", False), ("hi", "Hindi (Devanagari script, everyday spoken Hindi)", "हिंदी", False),
+    ("bn", "Bengali", "বাংলা", False), ("te", "Telugu", "తెలుగు", False), ("mr", "Marathi", "मराठी", False),
+    ("ta", "Tamil", "தமிழ்", False), ("gu", "Gujarati", "ગુજરાતી", False), ("kn", "Kannada", "ಕನ್ನಡ", False),
+    ("ml", "Malayalam", "മലയാളം", False), ("pa", "Punjabi (Gurmukhi script)", "ਪੰਜਾਬੀ", False),
+    ("or", "Odia", "ଓଡ଼ିଆ", False), ("as", "Assamese", "অসমীয়া", False), ("ur", "Urdu", "اردو", True),
+    ("ne", "Nepali", "नेपाली", False), ("si", "Sinhala", "සිංහල", False),
+    ("es", "Spanish", "Español", False), ("fr", "French", "Français", False), ("de", "German", "Deutsch", False),
+    ("pt", "Portuguese", "Português", False), ("it", "Italian", "Italiano", False), ("nl", "Dutch", "Nederlands", False),
+    ("ru", "Russian", "Русский", False), ("uk", "Ukrainian", "Українська", False), ("pl", "Polish", "Polski", False),
+    ("tr", "Turkish", "Türkçe", False), ("el", "Greek", "Ελληνικά", False), ("sv", "Swedish", "Svenska", False),
+    ("ro", "Romanian", "Română", False), ("hu", "Hungarian", "Magyar", False), ("cs", "Czech", "Čeština", False),
+    ("ar", "Arabic", "العربية", True), ("fa", "Persian", "فارسی", True), ("he", "Hebrew", "עברית", True),
+    ("zh", "Chinese (Simplified)", "中文", False), ("ja", "Japanese", "日本語", False), ("ko", "Korean", "한국어", False),
+    ("id", "Indonesian", "Bahasa Indonesia", False), ("ms", "Malay", "Bahasa Melayu", False),
+    ("vi", "Vietnamese", "Tiếng Việt", False), ("th", "Thai", "ไทย", False), ("fil", "Filipino", "Filipino", False),
+    ("my", "Burmese", "မြန်မာ", False), ("sw", "Swahili", "Kiswahili", False),
+]
+LANGS = {code: name for code, name, _, _ in LANGUAGES}
+BUNDLED = ("en", "hi", "bn", "te", "mr", "ta", "gu", "kn", "ml", "pa")  # label files shipped with the app
+
+
+def language_list():
+    return [{"code": c, "name": n.split(" (")[0], "native": native, "rtl": rtl, "bundled": c in BUNDLED}
+            for c, n, native, rtl in LANGUAGES]
 
 
 def _lang(code):
@@ -146,7 +172,8 @@ def _lang_name(lang):
 def _disclaimer(lang):
     if lang in DISCLAIMER:
         return DISCLAIMER[lang]
-    return safety.SHORT["medication"][lang] + " " + DISCLAIMER["en"]
+    short = safety.SHORT["medication"].get(lang)
+    return (short + " " if short else "") + DISCLAIMER["en"]
 
 
 def _s(v, limit=300):
@@ -506,3 +533,100 @@ def ask(question, records, lang="en"):
         label = "general"
     return {"answer": (_s(out.get("answer"), 2500) or "").replace("**", ""),
             "sources": sources, "label": label, "disclaimer": _disclaimer(lang)}
+
+
+# ---- interface labels on demand ----
+
+LABELS_PROMPT = """Translate the values of this JSON object from English into {language} for the interface of a health-records app used by ordinary patients.
+
+Rules:
+- Return ONE JSON object with exactly the same keys.
+- Simple everyday words in the native script. Short labels stay short.
+- Keep unchanged: Sehat Copilot, Saathi, ABHA, ABDM, FHIR, PDF, HbA1c, and anything inside curly braces such as {{n}} or {{p}}.
+- No notes or explanations.
+
+{chunk}"""
+
+
+def translate_labels(lang, texts):
+    """Translate up to 40 interface labels. A label whose {placeholders} do not survive is dropped."""
+    if lang not in LANGS or lang == "en":
+        raise ValueError("Unknown language.")
+    if not isinstance(texts, dict) or not texts:
+        raise ValueError("Nothing to translate.")
+    part = {str(k)[:60]: str(v)[:600] for k, v in list(texts.items())[:40] if isinstance(v, str) and v.strip()}
+    out, _ = llm.write_json(LABELS_PROMPT.format(language=LANGS[lang], chunk=json.dumps(part, ensure_ascii=False, indent=0)))
+    holders = lambda x: sorted(re.findall(r"\{[a-z]+\}", x))
+    return {k: out[k].strip() for k, v in part.items()
+            if isinstance(out.get(k), str) and out[k].strip() and holders(out[k]) == holders(v)}
+
+
+# ---- medicine cross-check ----
+
+MEDCHECK_NOTE = {
+    "en": "From a small reference list made for this prototype and not reviewed by a pharmacist. It can miss "
+          "interactions and can flag ones that do not matter for you. Do not change any medicine because of it; "
+          "ask your doctor or pharmacist.",
+    "hi": "यह इस प्रोटोटाइप के लिए बनी एक छोटी संदर्भ सूची से है, जिसे किसी फार्मासिस्ट ने जाँचा नहीं है। इसमें कुछ "
+          "बातें छूट सकती हैं और कुछ ऐसी भी दिख सकती हैं जो आपके लिए मायने नहीं रखतीं। इसके आधार पर कोई दवा न बदलें; "
+          "अपने डॉक्टर या फार्मासिस्ट से पूछें।",
+}
+_SEVERITY = {"major": 3, "moderate": 2, "minor": 1}
+
+
+def _find_medicine(name):
+    words = re.sub(r"\b(tab|tablet|cap|capsule|syp|syrup|inj|injection)\b\.?", " ", (name or "").lower())
+    words = [w for w in re.sub(r"[^a-z0-9 ]+", " ", words).split()
+             if not re.fullmatch(r"\d+(mg|ml|mcg|iu|g|k)?|mg|ml|mcg|iu", w)]
+    for n in (" ".join(words), " ".join(words[:2]), words[0] if words else ""):
+        if n and n in _MED_NAMES:
+            return _MED_NAMES[n]
+    return None
+
+
+def _neutral(note):
+    """Reference notes describe a risk. Any instruction in them ("avoid the combination") is
+    dropped: this app never tells anyone to change a medicine."""
+    note = _s(note, 300) or ""
+    return re.sub(r"[;,.]?\s*(avoid|do not|don't|stop|must not|never)\b[^.;]*", "", note, flags=re.I).strip(" ;,.") + "."
+
+
+def medcheck(medicines, lang="en"):
+    """Duplicate ingredients and known interaction pairs among the user's current medicines.
+    Pure lookup in data/medicines.json: no model is involved."""
+    items, found = [], []
+    for m in (medicines or [])[:40]:
+        if not isinstance(m, dict) or not _s(m.get("name")):
+            continue
+        entry = _find_medicine(m.get("generic")) or _find_medicine(m.get("name"))
+        name = _s(m.get("name"), 100)
+        items.append({"name": name, "ingredient": re.sub(r"\s*\(.*?\)", "", entry["generic"]) if entry else None,
+                      "class": entry.get("class") if entry else None, "known": bool(entry)})
+        if entry:
+            found.append((name, entry))
+
+    by_id = {}
+    for name, entry in found:
+        by_id.setdefault(entry["id"], []).append(name)
+    duplicates = [{"ingredient": re.sub(r"\s*\(.*?\)", "", next(e["generic"] for _, e in found if e["id"] == mid)),
+                   "names": sorted(set(names), key=str.lower)}
+                  for mid, names in by_id.items() if len({n.lower() for n in names}) > 1]
+
+    pairs = {}
+    for name_a, a in found:
+        for name_b, b in found:
+            if a["id"] == b["id"]:
+                continue
+            for inter in a.get("interactions") or []:
+                if inter["with"] == b["id"] or inter["with"] in (b.get("class_tags") or []):
+                    key = tuple(sorted((a["id"], b["id"])))
+                    rank = _SEVERITY.get(inter.get("severity"), 1)
+                    if key not in pairs or rank > pairs[key][0]:
+                        pairs[key] = (rank, {"a": re.sub(r"\s*\(.*?\)", "", a["generic"]),
+                                             "b": re.sub(r"\s*\(.*?\)", "", b["generic"]),
+                                             "names": [name_a, name_b],
+                                             "severity": inter.get("severity") if inter.get("severity") in _SEVERITY else "minor",
+                                             "note": _neutral(inter.get("note"))})
+    interactions = [v for _, v in sorted(pairs.values(), key=lambda x: -x[0])]
+    return {"items": items, "duplicates": duplicates, "interactions": interactions,
+            "disclaimer": MEDCHECK_NOTE.get(lang, MEDCHECK_NOTE["en"])}

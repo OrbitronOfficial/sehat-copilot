@@ -5,34 +5,18 @@
   <meta name="color-scheme" content="light dark">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sign in · Sehat Copilot</title>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("sehat_theme")}catch(e){}if(t!=="dark"&&t!=="light"){t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=t;d.classList.add("js");setTimeout(function(){if(!window.SehatSite)d.classList.remove("js")},3000)})();</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/site.css">
+  <script src="/faq.js"></script>
   <script src="/site.js" defer></script>
 </head>
 <body class="login" data-page="login">
-  <aside class="side">
+  <header class="site-nav" id="nav"><div class="nav-row">
     <a class="brand" href="/" data-noi18n><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M16 25s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.800-8 11-8 11z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M11.500 16h2.500l1.500-3 2 6 1.500-3h1.500" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sehat Copilot</span></a>
-    <div>
-      <h2>Your records, in plain language.</h2>
-      <p>Keep prescriptions and lab reports in one place and understand what they say.</p>
-      <ul>
-        <li>Every value explained, and traceable to the line it came from</li>
-        <li>One timeline with trends across all your reports</li>
-        <li>Records stay on your device</li>
-      </ul>
-    </div>
-    <small>Student prototype. A guide to your records, not a doctor.</small>
-  </aside>
-  <main class="formside">
-    <div class="fields" aria-hidden="true"><i></i><i></i><i></i></div>
-    <div class="logintop">
-      <a class="brand lt-brand" href="/" data-noi18n><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><path d="M16 25s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.800-8 11-8 11z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><path d="M11.500 16h2.500l1.500-3 2 6 1.500-3h1.500" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sehat Copilot</span></a>
-      <div class="tools" data-tools></div>
-    </div>
+    <div class="tools" data-tools></div>
+  </div></header>
+  <main class="login-main">
     <div class="formbox">
       <h1>Welcome</h1>
       <p class="sub">Try the demo in one click, or use an email.</p>

@@ -85,6 +85,8 @@ def english():
     # texts the script builds at run time (the guide's panel, validation messages)
     with open(os.path.join(PUBLIC, "site.js"), encoding="utf-8") as f:
         js = f.read()
+    with open(os.path.join(PUBLIC, "faq.js"), encoding="utf-8") as f:  # the guide's fixed answers
+        js += " " + f.read()
     for page in PAGES:  # and by the small inline scripts in each page
         with open(os.path.join(PUBLIC, page), encoding="utf-8") as f:
             js += " ".join(re.findall(r"<script[^>]*>(.*?)</script>", f.read(), re.S))

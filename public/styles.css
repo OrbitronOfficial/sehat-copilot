@@ -618,3 +618,48 @@ body::before {
   .stat, .how li, .trend, .pet-btn, .btn::after { transition: none; }
   .stat:hover, .how li:hover, .trend:hover, .pet-btn:hover { transform: none; }
 }
+
+/* ===== Sign-in gate, medicines today, pharmacist notes ===== */
+.lbl-signin { color: var(--teal-dark); border-color: var(--teal); background: var(--teal-tint); }
+.signin-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; white-space: normal; }
+.slot + .slot { margin-top: 12px; }
+.slot h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 2px; }
+label.dose { display: flex; align-items: center; gap: 10px; width: 100%; cursor: pointer; }
+label.dose input[type="checkbox"] { width: 20px; height: 20px; flex: none; accent-color: var(--teal); }
+label.dose .l { flex: 1; min-width: 0; }
+.dose-lbl { flex: none; }
+.remind { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.remind-denied { margin: 6px 0 0; color: var(--warn); }
+.sev { display: inline-block; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--line); font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.sev-major { color: var(--crit); background: var(--crit-bg); border-color: var(--crit); }
+.sev-moderate { color: var(--warn); background: var(--warn-bg); border-color: var(--warn); }
+.sev-minor { color: var(--muted); background: transparent; border-color: var(--line); }
+.list.pharm .r { align-self: flex-start; }
+
+/* ===== Doctor visit summary ===== */
+.visit { max-width: 860px; margin: 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+.visit-head { border-bottom: 2px solid var(--teal); padding-bottom: 10px; margin-bottom: 6px; }
+.visit-pt { font-weight: 600; margin: 6px 0 2px; }
+.visit-sec { margin-top: 18px; }
+.visit-sec h2 { font-size: 1.05rem; margin-bottom: 6px; color: var(--teal-dark); }
+.visit-notes { display: block; resize: vertical; }
+.print-notes { display: none; white-space: pre-wrap; word-break: break-word; }
+.visit-foot { margin-top: 22px; }
+@media (max-width: 820px) { .visit { padding: 16px; } }
+
+@media print {
+  @page { margin: 14mm; }
+  body::before, .topbar, .nav, .disclaimer, #pet, #err, .noprint, .zoom { display: none !important; }
+  html, body, :root[data-theme="dark"] body { background: #fff !important; color: #000 !important; padding: 0 !important; }
+  .shell { display: block !important; max-width: none; }
+  .main { padding: 0 !important; }
+  .visit, :root[data-theme="dark"] .visit { background: #fff !important; color: #000 !important; border: 0; box-shadow: none; padding: 0; max-width: none; }
+  .visit *, :root[data-theme="dark"] .visit * { color: #000 !important; background: transparent !important; box-shadow: none !important; text-shadow: none !important; }
+  .visit-head { border-bottom: 2px solid #000; }
+  .visit-sec { break-inside: avoid; }
+  .visit table.data { border-collapse: collapse; }
+  .visit table.data th, .visit table.data td { border: 1px solid #000; padding: 4px 6px; }
+  .visit .muted { color: #333 !important; }
+  .visit-notes { display: none !important; }
+  .print-notes { display: block; min-height: 70px; border: 1px solid #000; padding: 6px; }
+}
