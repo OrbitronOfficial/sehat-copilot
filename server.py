@@ -15,7 +15,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 PUBLIC = os.path.join(ROOT, "public")
 MAX_BODY = 6 * 1024 * 1024
 # clean URLs: the site is the front door, the app lives at /app
-PAGES = {"/": "landing.html", "/app": "index.html", "/login": "login.html", "/pricing": "pricing.html"}
+PAGES = {"/": "landing.html", "/app": "index.html", "/login": "login.html", "/pricing": "pricing.html",
+         "/1": "v1.html", "/2": "v2.html", "/3": "v3.html"}  # /1 to /3: design options to compare
 
 
 def _load_env():
