@@ -2370,7 +2370,7 @@ document.addEventListener('submit', e => {
   $('#' + id).addEventListener('change', e => {
     const f = e.target.files && e.target.files[0];
     e.target.value = '';
-    if (S.chatUpload && S.view === 'ask') { S.chatUpload = false; chatFile(f); } else handleFile(f);
+    if (S.chatUpload && (S.view === 'ask' || PET.open)) { S.chatUpload = false; chatFile(f); } else { S.chatUpload = false; handleFile(f); }
   });
 });
 
@@ -2433,11 +2433,12 @@ function petMsgs() {
   const kinds = ['records', 'general', 'doctor', 'emergency', 'signin'];
   const msgs = S.chat.slice(-8).map(m => {
     if (m.role === 'me') return '<div class="pet-msg me">' + esc(m.text) + '</div>';
+    if (m.doc) return '<div class="pet-msg"><div class="pet-lbl"><span class="lbl lbl-doctor">' + esc(t('label_review')) + '</span></div>' + docMsgHTML(m) + '</div>';
     const lbl = kinds.indexOf(m.label) >= 0 ? '<span class="lbl lbl-' + m.label + '">' + esc(t('label_' + m.label)) + '</span>' : '';
     return '<div class="pet-msg' + (m.label === 'emergency' ? ' urgent' : '') + '">' + (lbl ? '<div class="pet-lbl">' + lbl + '</div>' : '') + esc(m.label === 'signin' ? t('signin_msg') : m.text) + signinBtns(m) + msgListen(m) + '</div>';
   }).join('');
   return '<div class="pet-msg">' + esc(t('pet_hello')) + '</div><div class="pet-msg tip">' + esc(t('pet_tip_' + petScreen())) + '</div>' + msgs +
-    (S.asking ? '<div class="pet-msg muted">' + esc(t('thinking')) + '</div>' : '');
+    (S.asking ? '<div class="pet-msg muted">' + esc(t(S.reading ? 'ask_reading' : 'thinking')) + '</div>' : '');
 }
 function renderPet() {
   const el = document.getElementById('pet');
@@ -2461,7 +2462,7 @@ function renderPet() {
     '<button type="button" class="xbtn" data-pet="close" aria-label="' + esc(t('pet_close')) + '">&times;</button></header>' +
     '<div class="pet-body" id="petBody">' + petMsgs() + '</div>' +
     '<div class="pet-chips">' + ['pet_q1', 'pet_q2', 'pet_q3'].map(k => '<button type="button" class="chip" data-pet="q" data-q="' + esc(t(k)) + '">' + esc(t(k)) + '</button>').join('') + '</div>' +
-    '<form class="pet-form" id="petForm"><input type="text" id="petInput" placeholder="' + esc(t('ask_ph')) + '" aria-label="' + esc(t('ask_ph')) + '" autocomplete="off"><button type="submit" class="btn small"' + (S.asking ? ' disabled' : '') + '>' + esc(t('ask_send')) + '</button></form>' +
+    '<form class="pet-form" id="petForm"><button type="button" class="btn small secondary pet-add" data-pet="file" title="' + esc(t('ask_attach')) + '" aria-label="' + esc(t('ask_attach')) + '"' + (S.asking ? ' disabled' : '') + '><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"/></svg></button><input type="text" id="petInput" placeholder="' + esc(t('ask_ph')) + '" aria-label="' + esc(t('ask_ph')) + '" autocomplete="off"><button type="submit" class="btn small"' + (S.asking ? ' disabled' : '') + '>' + esc(t('ask_send')) + '</button></form>' +
     '<button type="button" class="pet-link" data-pet="goask">' + esc(t('pet_go_ask')) + '</button></section>';
   const input = document.getElementById('petInput');
   if (input && typed) input.value = typed;
@@ -2478,6 +2479,7 @@ document.addEventListener('click', e => {
   else if (a === 'close') PET.open = false;
   else if (a === 'tipoff') PET.tipOff = true;
   else if (a === 'q') { ask(b.getAttribute('data-q')); return; }
+  else if (a === 'file') { S.chatUpload = true; $('#fileInput').click(); return; }
   else if (a === 'goask') { PET.open = false; go('ask'); return; }
   renderPet();
   if (a === 'open') {

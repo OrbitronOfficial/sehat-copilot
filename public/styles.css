@@ -792,3 +792,6 @@ img.pet-svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
 .doc-ul { margin: 4px 0 10px; padding-left: 18px; }
 .doc-ul li { margin: 3px 0; }
 .askform .btn.secondary { flex: none; white-space: nowrap; }
+
+.pet-form .pet-add { flex: none; padding: 0 10px; display: inline-flex; align-items: center; }
+.pet-msg .doc-ul { padding-left: 16px; }
