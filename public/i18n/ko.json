@@ -260,5 +260,21 @@
 "bk_done": "백업에서 {n}개의 기록을 복원했습니다.",
 "bk_saved": "백업이 다운로드되었습니다.",
 "bk_big": "이 파일은 40MB보다 커서 여기에서 복원할 수 없습니다.",
-"bk_bad": "Sehat Copilot 백업 파일이 아닌 것 같습니다."
+"bk_bad": "Sehat Copilot 백업 파일이 아닌 것 같습니다.",
+"dash_attn_many": "주의가 필요한 항목",
+"dash_see": "의미 확인하기",
+"dash_next": "다음 일정",
+"dash_next_none": "기록된 일정이 없습니다.",
+"dash_next_med": "{slot}: {names}",
+"dash_changed": "변경 사항",
+"dash_changed_none": "비교할 결과가 충분하지 않습니다.",
+"dash_doctor": "담당 의사용",
+"dash_doctor_n": "기록 관련 질문 {n}개",
+"qa_ask": "Saathi에게 물어보기",
+"qa_export": "내보내기",
+"kick_today": "오늘",
+"kick_results": "검사 결과",
+"kick_meds": "복용 약",
+"kick_doctor": "담당 의사용",
+"kick_about": "내 정보"
 }
