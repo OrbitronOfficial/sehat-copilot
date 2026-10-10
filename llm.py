@@ -24,6 +24,7 @@ CALL_TIMEOUT = 28   # one model
 BUDGET = 52         # whole request; Vercel cuts the function at 60 s
 
 _resting = {}  # model -> time it may be tried again
+_NO_THINK_REFUSED = set()  # models that do not accept a zero thinking budget
 
 
 class LLMError(Exception):
@@ -143,7 +144,20 @@ def _gemini(prompt, file, deadline):
             "generationConfig": {"temperature": 0, "responseMimeType": "application/json"}}
 
     def call(model, timeout, key):
-        out = _post(GEMINI_URL.format(model=model), {"x-goog-api-key": key}, body, timeout)
+        # Reading a document is transcription, not reasoning: the stronger models spend 20 to 40 s
+        # "thinking" by default, so that is turned off. A model that refuses the setting is asked plainly.
+        url, head = GEMINI_URL.format(model=model), {"x-goog-api-key": key}
+        if model in _NO_THINK_REFUSED:
+            out = _post(url, head, body, timeout)
+        else:
+            quick = dict(body, generationConfig=dict(body["generationConfig"], thinkingConfig={"thinkingBudget": 0}))
+            try:
+                out = _post(url, head, quick, timeout)
+            except _Http as e:
+                if e.code != 400:
+                    raise
+                _NO_THINK_REFUSED.add(model)
+                out = _post(url, head, body, timeout)
         try:
             return _parse(out["candidates"][0]["content"]["parts"][0]["text"])
         except (KeyError, IndexError) as e:
