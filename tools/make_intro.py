@@ -26,22 +26,22 @@ LEAD, TAIL = 0.3, 0.55        # silence before and after each line
 # (kind, spoken line, on-screen title, sub line, screenshot, where the pointer lands on it)
 STEPS = [
     ("title", "Sehat Copilot. Understand your own health records.", None, None, None, None),
-    ("step", "First, sign in. Or open the demo account in one click.",
-     "Sign in", "Or try the demo account. Nothing to set up.", "login", (0.50, 0.30)),
+    ("step", "First, sign in. Your account stays on your own device.",
+     "Sign in", "Your account stays on your device.", "login", (0.50, 0.772, 0.255, 0.052)),
     ("step", "Add a photo or PDF of any prescription or lab report.",
-     "Add a record", "Photo, PDF or text. Printed or handwritten.", "add", (0.535, 0.435)),
+     "Add a record", "Photo, PDF or text. Printed or handwritten.", "add", (0.535, 0.435, 0.078, 0.052)),
     ("step", "Check what was read, side by side with the original, and fix anything before it is saved.",
-     "Check it against\nthe original", "Unreadable lines are listed, never guessed.", "review", (0.84, 0.76)),
+     "Check it against\nthe original", "Unreadable lines are listed, never guessed.", "review", (0.84, 0.76, 0.118, 0.048)),
     ("step", "Then read it in plain words. Code, not the A.I., decides what is high or low.",
-     "Read it in\nplain words", "High and low come from the printed range.", "detail", (0.32, 0.515)),
+     "Read it in\nplain words", "High and low come from the printed range.", "detail", (0.43, 0.555, 0.39, 0.125)),
     ("step", "Every record you save joins one timeline.",
-     "One timeline", "Every visit and report, in order.", "timeline", (0.32, 0.355)),
+     "One timeline", "Every visit and report, in order.", "timeline", (0.59, 0.395, 0.68, 0.205)),
     ("step", "Your dashboard shows what needs attention, how your values changed, and questions for your doctor.",
-     "Your health\nat a glance", "Trends, home readings, doctor questions.", "health", (0.40, 0.49)),
+     "Your health\nat a glance", "Trends, home readings, doctor questions.", "health", (0.445, 0.395, 0.425, 0.36)),
     ("step", "Ask a question, and the answer names the report it came from.",
-     "Ask about\nyour records", "Answers cite their source, or say to ask your doctor.", "ask", (0.33, 0.56)),
+     "Ask about\nyour records", "Answers cite their source, or say to ask your doctor.", "ask", (0.50, 0.48, 0.54, 0.225)),
     ("step", "Export everything in the fire format, with a mock Aabha link. All of it in forty-three languages.",
-     "Take it with you", "FHIR export and a mock ABHA link. 43 languages.", "abha", (0.31, 0.67)),
+     "Take it with you", "FHIR export and a mock ABHA link. 43 languages.", "abha", (0.31, 0.67, 0.13, 0.052)),
     ("end", "Sehat Copilot. A guide to your records. Not a doctor.", None, None, None, None),
 ]
 
@@ -167,18 +167,69 @@ SHOTS = {s[4]: _framed(s[4], 770) for s in STEPS if s[4]}
 SHOTS["trends"] = _framed("trends", 420)
 
 
-def pointer(d, x, y, t, at):
-    """A cursor that glides in and clicks: this is the thing the user does at this step."""
-    k = ease((t - at) / 0.7)
+def _smooth(size, paint, scale=3):
+    """Draw at 3x and scale down, so edges come out smooth."""
+    im = Image.new("RGBA", (size[0] * scale, size[1] * scale), (0, 0, 0, 0))
+    paint(ImageDraw.Draw(im), scale)
+    return im.resize(size, Image.LANCZOS)
+
+
+def _cursor():
+    pts = [(4, 3), (4, 33), (11, 26), (16, 38), (21, 36), (16, 24), (26, 24)]
+
+    def paint(d, k):
+        d.polygon([((x + 2) * k, (y + 3) * k) for x, y in pts], fill=(15, 23, 42, 70))  # shadow
+        d.polygon([(x * k, y * k) for x, y in pts], fill=(255, 255, 255, 255))
+        d.line([(x * k, y * k) for x, y in pts + pts[:1]], fill=(15, 23, 42, 255), width=2 * k, joint="curve")
+    return _smooth((34, 46), paint, 4)
+
+
+CURSOR = _cursor()
+RGB_TEAL = (15, 118, 110)
+
+
+def outline(im, box, k):
+    """The thing being clicked: a soft tinted box that stays once the click lands."""
     if k <= 0:
         return
-    cx, cy = x + (1 - k) * 150, y + (1 - k) * 110
-    if k >= 1:
-        p = ((t - at - 0.7) % 1.6) / 1.6
-        r = 10 + 30 * p
-        d.ellipse((cx - r, cy - r, cx + r, cy + r), outline=mix(WHITE, TEAL, 1 - p), width=4)
-    d.polygon([(cx, cy), (cx, cy + 30), (cx + 8, cy + 23), (cx + 14, cy + 36), (cx + 20, cy + 33), (cx + 14, cy + 20), (cx + 24, cy + 20)],
-              fill=INK, outline=WHITE)
+    x0, y0, x1, y1 = [round(v) for v in box]
+    pad = 8
+    w, h = x1 - x0 + 2 * pad, y1 - y0 + 2 * pad
+
+    def paint(d, s):
+        d.rounded_rectangle((2 * s, 2 * s, (w - 2) * s, (h - 2) * s), 10 * s, fill=RGB_TEAL + (round(26 * k),),
+                            outline=RGB_TEAL + (round(235 * k),), width=3 * s)
+    patch = _smooth((w, h), paint)
+    im.paste(patch, (x0 - pad, y0 - pad), patch)
+
+
+def ripple(im, cx, cy, p):
+    """One soft ring spreading from the click point."""
+    if not 0 < p < 1:
+        return
+    r, size = 10 + 46 * ease(p), 130
+
+    def paint(d, s):
+        c = size * s / 2
+        d.ellipse((c - r * s, c - r * s, c + r * s, c + r * s), fill=RGB_TEAL + (round(70 * (1 - p)),),
+                  outline=RGB_TEAL + (round(200 * (1 - p)),), width=2 * s)
+    patch = _smooth((size, size), paint)
+    im.paste(patch, (round(cx - size / 2), round(cy - size / 2)), patch)
+
+
+def click(im, box, t, at):
+    """The cursor glides to the target, presses once, and the target stays outlined."""
+    move = 0.9
+    if t < at:
+        return
+    cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
+    m = min(1.0, (t - at) / move)
+    k = m * m * (3 - 2 * m)  # ease in and out
+    outline(im, box, ease((t - at - move) / 0.35))
+    ripple(im, cx, cy, (t - at - move) / 0.7)
+    press = 3 if 0 <= t - at - move < 0.14 else 0  # a small dip as it clicks
+    px, py = cx + (1 - k) * 230, cy + (1 - k) * 150
+    im.paste(CURSOR, (round(px - 4 + press), round(py - 3 + press)), CURSOR)
 
 
 def progress(d, n, total, k):
@@ -192,13 +243,8 @@ def progress(d, n, total, k):
 
 def s_step(im, d, t, secs, n, total, title, sub, shot, at):
     src, bar = SHOTS[shot]
-    k = ease(t / 1.1)
-    yaw = math.radians(46 - 37 * k + 1.5 * math.sin(t * 0.8))
-    place = card3d(im, src, 478 + (1 - k) * 150, 118 + 5 * math.sin(t * 0.9), yaw)
-    if shot == "health":  # the dashboard brings its trends along
-        k2 = ease((t - secs * 0.45) / 1.0)
-        if k2 > 0:
-            card3d(im, SHOTS["trends"][0], 820 + (1 - k2) * 120, 400 + 5 * math.sin(t * 0.9 + 1), math.radians(40 - 28 * k2))
+    k = ease(t / 1.0)
+    place = card3d(im, src, 470 + round((1 - k) * 140), 112, math.radians(38 * (1 - k)))
     text(d, (64, 150), f"STEP {n} OF {total}", 22, TEAL, t, 0.0, mono=True)
     lines = title.split("\n")
     for i, line in enumerate(lines):
@@ -213,9 +259,12 @@ def s_step(im, d, t, secs, n, total, title, sub, shot, at):
     rows.append(row)
     for i, r in enumerate(rows):
         text(d, (64, y + i * 34), r, 24, MUTED, t, secs * 0.30)
-    px, py = place(at[0], bar + at[1] * (1 - bar))
-    pointer(d, px, py, t, secs * 0.42)
     progress(d, n, total, ease(t / 0.6))
+    if k >= 1:  # the screen is flat now, so the box maps straight onto it
+        cx, cy, bw, bh = at
+        x0, y0 = place(cx - bw / 2, bar + (cy - bh / 2) * (1 - bar))
+        x1, y1 = place(cx + bw / 2, bar + (cy + bh / 2) * (1 - bar))
+        click(im, (x0, y0, x1, y1), t, max(1.1, secs * 0.36))
 
 
 def s_title(im, d, t, secs):
@@ -237,7 +286,7 @@ def s_end(im, d, t, secs):
     text(d, (cx, 190), "Sehat Copilot", 84, INK, t, 0.0, bold=True, anchor="ma")
     text(d, (cx, 310), "A guide to your records. Not a doctor.", 34, TEAL, t, secs * 0.28, anchor="ma")
     text(d, (cx, 420), "sehat-copilot.vercel.app", 40, INK, t, secs * 0.5, mono=True, anchor="ma")
-    text(d, (cx, 500), "Open it and press  Continue with demo account", 26, MUTED, t, secs * 0.6, anchor="ma")
+    text(d, (cx, 500), "Open it and try one of the sample reports", 26, MUTED, t, secs * 0.6, anchor="ma")
     text(d, (cx, 630), "Prototype. Sample data is synthetic. ABHA link is a mock.", 20, MUTED, t, secs * 0.7, mono=True, anchor="ma")
 
 
@@ -263,14 +312,11 @@ BLANK = Image.new("RGB", (W, H), WHITE)
 
 
 def camera(im, t, secs):
-    """A slow push-in, and a quick fly-through to white into the next step."""
-    z, left, out = 1 + 0.035 * t / secs, secs - t, 0.0
-    if left < 0.35:
-        out = (1 - left / 0.35) ** 2
-        z += 0.16 * out
-    w, h = round(W * z), round(H * z)
-    im = im.resize((w, h), Image.BICUBIC).crop(((w - W) // 2, (h - H) // 2, (w - W) // 2 + W, (h - H) // 2 + H))
-    return Image.blend(im, BLANK, out) if out else im
+    """A quick fade to white into the next step. The picture itself never moves."""
+    left = secs - t
+    if left >= 0.3:
+        return im
+    return Image.blend(im, BLANK, (1 - left / 0.3) ** 2)
 
 
 # ---------------- voice ----------------
