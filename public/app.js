@@ -382,7 +382,9 @@ async function loadSiteMap(code) {
    first time the language is chosen, shown as they arrive, and cached in this browser. */
 const filling = {};
 async function fillLang(code) {
-  if (BUNDLED.indexOf(code) >= 0 || filling[code]) return;
+  // English and Hindi are written by hand and complete. Every other language, the bundled ones
+  // included, has any label it is still missing translated here and remembered on this device.
+  if (code === 'en' || code === 'hi' || filling[code] || !STR[code]) return;
   filling[code] = true;
   const keys = Object.keys(STR.en).filter(k => !(k in STR[code]));
   for (let i = 0; i < keys.length; i += 35) {
@@ -411,7 +413,7 @@ async function loadLangList() {
       sel.value = lang;
     }
     if (LANG_CODES.indexOf(lang) < 0) { lang = 'en'; render(); }
-    else if (BUNDLED.indexOf(lang) < 0) { await loadLang(lang); render(); fillLang(lang); }
+    else { await loadLang(lang); render(); fillLang(lang); }
   } catch (e) { /* keep the ten bundled languages */ }
 }
 /* English and Hindi labels are written by hand below. The other languages load a
@@ -422,8 +424,10 @@ async function loadLang(code) {
     try { STR[code] = JSON.parse(localStorage.getItem('sehat_i18n_' + code) || '{}') || {}; } catch (e) { STR[code] = {}; }
     return;
   }
-  try { const r = await fetch('/i18n/' + code + '.json'); STR[code] = r.ok ? await r.json() : {}; }
-  catch (e) { STR[code] = {}; }
+  let extra = {};
+  try { extra = JSON.parse(localStorage.getItem('sehat_i18n_' + code) || '{}') || {}; } catch (e) { extra = {}; }
+  try { const r = await fetch('/i18n/' + code + '.json'); STR[code] = Object.assign(extra, r.ok ? await r.json() : {}); }
+  catch (e) { STR[code] = extra; }
 }
 async function setLang(code) {
   if (LANG_CODES.indexOf(code) < 0) code = 'en';
