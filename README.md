@@ -44,6 +44,13 @@ Design decisions:
 - **Nothing is guessed.** Lines that look like data but could not be read reliably (smudged, cut off, garbled digits) go to a "Lines not used" list on the review screen and stay out of the record.
 - **Like-for-like trends.** Results are grouped by standard test name and compared only when their units match.
 - **Medicine cross-check without a model.** Current medicines are checked in code against a small reference list for the same ingredient under two brand names and for known interaction pairs. Notes describe the risk only; any instruction is stripped, and the list is marked as not pharmacist-reviewed.
+- **The unified profile is built in code (`insights.py`), not by a model.**
+  - One entry per condition: "(newly detected)" and "(known case)" merge, and every original wording stays attached with its date and source record.
+  - A prescription is evidence that a medicine was prescribed, not that it is still taken. Medicines are listed as "recorded", with the written course marked as passed or the status marked as not confirmed. Nothing is called "current".
+  - Test names are normalised, counts are converted to one unit with the original value kept, and a result dated inside a report line ("Platelet Count (05/08, lowest)") uses that date, so trends read in the right order.
+  - Only the latest result of each test can need attention; earlier abnormal results stay in the history.
+  - Questions for the doctor are built from the record history and cite values, dates and the records they came from.
+  - A short list of well-known medicine and lab combinations (metformin with raised creatinine, NSAIDs with raised creatinine, two clotting medicines, ACE inhibitor or ARB with high potassium) is surfaced as "things to discuss with your doctor". The wording describes; it never instructs. Not clinician-reviewed.
 - **Human in the loop.** Nothing is saved until the user has seen the extraction next to the original. Items read with low confidence, handwritten documents and medicines not in the reference list are marked for checking.
 - **Privacy.** The upload screen says plainly that documents go to third-party AI services for reading and that the server stores nothing; any record, or all data, can be deleted on the device. Designed around the consent and erasure principles of the DPDP Act 2023, not certified against it.
 - **Local-first storage.** Records and original files stay in the browser (IndexedDB). The server is stateless: it reads, checks, explains and converts, and stores nothing.
@@ -77,6 +84,7 @@ Python 3 standard library server (no framework), vanilla JS frontend, Gemini (do
 | `fhir.py` | FHIR R4 bundle builder |
 | `llm.py` | model calls and fallback chains |
 | `safety.py` | emergency and medication gate, numeric guard |
+| `insights.py` | unified profile: conditions, medicines recorded, test series, attention list, grounded questions, cross checks |
 | `tests/` | unit tests for the gate, labels and guard (`python -m unittest discover tests`) |
 | `public/` | landing page (`/`), sign-in (`/login`), pricing (`/pricing`) and the app (`/app`) |
 | `tools/` | sample-document generator, demo builder, interface translators (`build_i18n.py` for the app, `build_site_i18n.py` for the site pages), model check |

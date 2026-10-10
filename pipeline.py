@@ -255,9 +255,10 @@ def normalise(raw, source="upload"):
             continue
         value = t.get("value")
         num = ranges.to_number(value)
+        inequality = isinstance(value, str) and value.strip()[:1] in ("<", ">")
         rec["tests"].append({
             "name": _s(t.get("name"), 100),
-            "value": num if num is not None and not isinstance(value, str) else (_s(value, 60) if num is None else num),
+            "value": _s(value, 60) if (num is None or inequality) else num,
             "unit": _s(t.get("unit"), 30) or "",
             "ref_low": ranges.to_number(t.get("ref_low")),
             "ref_high": ranges.to_number(t.get("ref_high")),
@@ -307,6 +308,11 @@ def check(rec):
         m["known"] = known
         if not known and suggestion and _conf(m.get("confidence")) < 0.85:
             warnings.append(f"\"{m.get('name')}\" was hard to read. Did the document say \"{suggestion}\"? Please check.")
+    for t in rec.get("tests") or []:
+        if t.get("implausible"):
+            t["confidence"] = min(_conf(t.get("confidence")), 0.3)
+            warnings.append(f"{t.get('name')}: {t.get('value')} {t.get('unit') or ''} is not a possible value. "
+                            "A decimal point was probably missed. Please correct it from the original.")
     today = dt.date.today().isoformat()
     if not rec.get("date"):
         warnings.append("No date was found on this document. Please add it so it appears in the right place on your timeline.")
@@ -321,11 +327,6 @@ def check(rec):
               if _conf(x.get("confidence")) < 0.7)
     if low:
         warnings.append(f"{low} item(s) were read with low confidence and are marked below.")
-    for t in rec.get("tests") or []:
-        if t.get("implausible"):
-            t["confidence"] = min(_conf(t.get("confidence")), 0.3)
-            warnings.append(f"{t.get('name')}: {t.get('value')} {t.get('unit') or ''} is not a possible value. "
-                            "A decimal point was probably missed. Please correct it from the original.")
     if any(t.get("flag") == "critical" for t in rec.get("tests") or []):
         warnings.append("One or more values are far outside the usual range. Please contact your doctor promptly.")
     if rec.get("doc_type") == "other" and not rec.get("tests") and not rec.get("medicines"):

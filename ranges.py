@@ -105,9 +105,14 @@ def _scaled(std_name, value, unit):
     if floor is None:
         return value
     u = (unit or "").lower()
-    if "lakh" in u or "lac" in u or value < 20:
+    if "lakh" in u or "lac" in u:
         return value * 100000
-    if "10^3" in u or "10*3" in u or "thou" in u or "k/" in u or value < 2000:
+    if "10^3" in u or "10*3" in u or "x10" in u or "thou" in u or "k/" in u:
+        return value * 1000
+    # no usable unit: platelets under 20 are lakhs (1.5 to 4.5), white cells under 100 are thousands
+    if std_name == "Platelet Count" and value < 20:
+        return value * 100000
+    if value < (2000 if std_name == "Platelet Count" else 100):
         return value * 1000
     return value
 
@@ -122,6 +127,21 @@ def flag_test(t):
     lo, hi = to_number(t.get("ref_low")), to_number(t.get("ref_high"))
     if value is None:
         t["flag"] = "unknown"
+        return t
+    sign = str(t.get("value")).strip()[:1] if isinstance(t.get("value"), str) else ""
+    if sign in "<>" and sign:
+        # "below 5" is normal when 5 is within the upper limit, "above 40" is high when 40 is at or over it;
+        # anything else cannot be decided from an inequality
+        t["ref_source"] = "report" if (lo is not None or hi is not None) else None
+        if sign == "<" and hi is not None and value <= hi and (lo is None or lo <= 0):
+            t["flag"] = "normal"
+        elif sign == ">" and hi is not None and value >= hi:
+            t["flag"] = "high"
+        elif sign == "<" and lo is not None and lo > 0 and value <= lo:
+            t["flag"] = "low"
+        else:
+            t["flag"] = "unknown"
+        t.pop("implausible", None)
         return t
 
     has_report_range = lo is not None or hi is not None

@@ -41,9 +41,10 @@ def _when(date):
 def _strip(d):
     """Drop None/empty values so the bundle stays valid FHIR."""
     if isinstance(d, dict):
-        return {k: _strip(v) for k, v in d.items() if v not in (None, "", [], {})}
+        out = {k: _strip(v) for k, v in d.items()}
+        return {k: v for k, v in out.items() if v not in (None, "", [], {})}
     if isinstance(d, list):
-        return [_strip(x) for x in d]
+        return [x for x in (_strip(x) for x in d) if x not in (None, "", [], {})]
     return d
 
 

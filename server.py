@@ -33,6 +33,7 @@ def _load_env():
 _load_env()
 
 import fhir  # noqa: E402
+import insights  # noqa: E402
 import llm  # noqa: E402
 import pipeline  # noqa: E402
 
@@ -97,7 +98,7 @@ class Handler(BaseHTTPRequestHandler):
     def _static(self, path):
         rel = PAGES.get(path.rstrip("/") or "/") or path.lstrip("/")
         full = os.path.normpath(os.path.join(PUBLIC, rel))
-        if not full.startswith(PUBLIC) or not os.path.isfile(full):
+        if not (full == PUBLIC or full.startswith(PUBLIC + os.sep)) or not os.path.isfile(full):
             return self._send(404, {"error": "Not found"})
         with open(full, "rb") as f:
             body = f.read()
@@ -140,6 +141,8 @@ class Handler(BaseHTTPRequestHandler):
                 out = {"overview": pipeline.overview(b.get("patient"), b.get("records") or [], lang)}
             elif path == "/api/ask":
                 out = pipeline.ask(b.get("question"), b.get("records") or [], lang)
+            elif path == "/api/insights":
+                out = insights.build(b.get("records") or [], lang)
             elif path == "/api/medcheck":
                 out = pipeline.medcheck(b.get("medicines") or [], lang)
             elif path == "/api/translate":
