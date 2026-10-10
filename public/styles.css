@@ -753,3 +753,26 @@ img.pet-svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
 @media (max-width: 820px) { .main { perspective: none; } .nav button[aria-current="page"] { box-shadow: inset 0 3px 0 var(--teal); } }
 @media print { .card, .stat, .tl-card, .trend { box-shadow: none; } }
 @media (min-width: 821px) { .dash-lead { padding-right: 150px; } }
+
+/* ===== Wellness log ===== */
+.quick { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.vit-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; margin-bottom: 16px; align-items: end; }
+.vit-form .wide, .vit-form .vit-act, .vit-form .vit-err { grid-column: 1 / -1; }
+.vit-nums { display: flex; align-items: center; gap: 8px; }
+.vit-nums input { min-width: 0; }
+.vit-unit { white-space: nowrap; }
+.vit-err { margin: 0; color: var(--crit); font-weight: 600; }
+.vit-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.vit-group { border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
+.vit-group h3 { font-size: 1rem; }
+.vit-latest { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.vit-big { font-size: 2rem; font-weight: 600; line-height: 1.1; }
+.vit-crit { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--crit); background: var(--crit-bg); color: var(--crit); font-weight: 600; font-size: .92rem; }
+.vit-group .trend { margin-top: 10px; padding: 8px; box-shadow: none; }
+.vit-all { margin-top: 10px; font-size: .9rem; }
+.vit-all summary { cursor: pointer; color: var(--teal-dark); }
+@media (max-width: 820px) {
+  .quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quick .qa:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .vit-form, .vit-groups { grid-template-columns: minmax(0, 1fr); }
+}

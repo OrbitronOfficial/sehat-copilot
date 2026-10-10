@@ -140,6 +140,14 @@ const STR = {
     dash_changed: 'What changed', dash_changed_none: 'Not enough repeat results yet.',
     dash_doctor: 'For your doctor', dash_doctor_n: '{n} question(s) from your records',
     qa_ask: 'Ask Saathi', qa_export: 'Export',
+    vit_title: 'Wellness log', vit_bp: 'Blood pressure', vit_sugar_fasting: 'Fasting sugar', vit_sugar_pp: 'Sugar after meal', vit_weight: 'Weight', vit_pulse: 'Pulse',
+    vit_type: 'Type', vit_value: 'Reading', vit_upper: 'Upper', vit_lower_in: 'Lower', vit_note: 'Note (optional)', vit_add: 'Add reading', vit_del: 'Delete',
+    vit_err_num: 'Please enter numbers only.', vit_err_range: 'That value looks out of range. Please check it ({min} to {max}).',
+    vit_err_date: 'Choose a date that is today or earlier.', vit_err_bp: 'The upper number should be higher than the lower one.',
+    vit_empty: 'Add a home reading such as blood pressure, sugar or weight to see it next to your reports.',
+    vit_caveat: 'Home readings vary with time of day, posture and the device. One reading is not a diagnosis. If a reading worries you, contact your doctor.',
+    vit_crit: 'This reading is far outside the usual range. If you feel unwell, call 112 or see a doctor now.',
+    vit_all: 'All readings ({n})', vit_lower: 'lower: {v}', vit_home: 'Home readings', qa_reading: 'Add a reading', kick_wellness: 'Wellness',
     kick_today: 'Today', kick_results: 'Results', kick_meds: 'Medicines', kick_doctor: 'For your doctor', kick_about: 'About you'
   },
   hi: {
@@ -280,6 +288,14 @@ const STR = {
     dash_changed: 'क्या बदला', dash_changed_none: 'दोहराए गए नतीजे अभी पर्याप्त नहीं हैं।',
     dash_doctor: 'डॉक्टर के लिए', dash_doctor_n: 'आपके रिकॉर्ड से {n} सवाल',
     qa_ask: 'साथी से पूछें', qa_export: 'एक्सपोर्ट',
+    vit_title: 'सेहत की डायरी', vit_bp: 'ब्लड प्रेशर', vit_sugar_fasting: 'खाली पेट शुगर', vit_sugar_pp: 'खाने के बाद शुगर', vit_weight: 'वज़न', vit_pulse: 'नाड़ी',
+    vit_type: 'प्रकार', vit_value: 'माप', vit_upper: 'ऊपरी', vit_lower_in: 'निचला', vit_note: 'नोट (वैकल्पिक)', vit_add: 'माप जोड़ें', vit_del: 'हटाएँ',
+    vit_err_num: 'कृपया सिर्फ़ संख्याएँ लिखें।', vit_err_range: 'यह मान सीमा से बाहर लगता है। कृपया जाँचें ({min} से {max})।',
+    vit_err_date: 'आज या उससे पहले की तारीख चुनें।', vit_err_bp: 'ऊपरी संख्या निचली से बड़ी होनी चाहिए।',
+    vit_empty: 'ब्लड प्रेशर, शुगर या वज़न जैसा घर पर लिया गया माप जोड़ें, ताकि वह आपकी रिपोर्ट के साथ दिखे।',
+    vit_caveat: 'घर पर लिए गए माप दिन के समय, बैठने के ढंग और उपकरण के साथ बदलते हैं। एक माप निदान नहीं है। कोई माप चिंता दे तो अपने डॉक्टर से संपर्क करें।',
+    vit_crit: 'यह माप सामान्य सीमा से बहुत दूर है। अगर आपको बेचैनी हो तो 112 पर कॉल करें या अभी डॉक्टर को दिखाएँ।',
+    vit_all: 'सभी माप ({n})', vit_lower: 'निचला: {v}', vit_home: 'घर पर लिए गए माप', qa_reading: 'माप जोड़ें', kick_wellness: 'सेहत की डायरी',
     kick_today: 'आज', kick_results: 'नतीजे', kick_meds: 'दवाइयाँ', kick_doctor: 'डॉक्टर के लिए', kick_about: 'आपके बारे में'
   }
 };
@@ -477,7 +493,7 @@ async function dbClear(store) {
 /* ================= State ================= */
 const S = {
   view: 'add', stage: 'idle', step: 0,
-  records: [], patient: null,
+  records: [], patient: null, vitals: [],
   draft: null, editingId: null, pendingFile: null, previewFile: null, dirty: false, reflag: false,
   detailId: null, filter: 'all',
   overview: {}, chat: [], asking: false,
@@ -1146,7 +1162,7 @@ function abhaNumber(p) {
 }
 /* ---- Insights: the server groups the records; if it fails, profile() is used instead ---- */
 function hashStr(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36); }
-function insightsKey() { return lang + '|' + S.records.length + '|' + hashStr(JSON.stringify(S.records.map(lite))); }
+function insightsKey() { return lang + '|' + S.records.length + '|' + hashStr(JSON.stringify(S.records.map(lite)) + '#' + JSON.stringify(S.vitals)); }
 const ukeyOf = u => String(u || '').replace(/\s+/g, '').toLowerCase();
 function fallbackInsights() {
   const P = profile(), recs = sortedRecords(), map = new Map();
@@ -1168,7 +1184,7 @@ function fallbackInsights() {
     fallback: true,
     conditions: P.cond.map(c => ({ name: c.name, first_seen: c.date || null, mentions: [{ text: c.name, date: c.date || null, record: c.id }] })),
     medicines: P.meds.map(o => ({ name: o.m.name, generic: o.m.generic || null, strength: o.m.strength || null, dose: o.m.dose || null, frequency: o.m.frequency || null, timing: o.m.timing || null, duration: o.m.duration || null, date: o.date || null, record: o.id, ends: null, status: 'unconfirmed', mentions: 1 })),
-    tests, attention, questions: [], cross: [], disclaimer: ''
+    tests, attention, questions: [], cross: [], vitals: [], disclaimer: ''
   };
 }
 function normInsights(d) {
@@ -1178,21 +1194,22 @@ function normInsights(d) {
     if (!x.latest) x.latest = x.points[x.points.length - 1] || {};
     return x;
   });
-  return { conditions: arr(d.conditions), medicines: arr(d.medicines), tests, attention: arr(d.attention), questions: arr(d.questions), cross: arr(d.cross), disclaimer: d.disclaimer || '' };
+  return { conditions: arr(d.conditions), medicines: arr(d.medicines), tests, attention: arr(d.attention), questions: arr(d.questions), cross: arr(d.cross), vitals: arr(d.vitals), disclaimer: d.disclaimer || '' };
 }
 async function runInsights(key) {
   let res = null;
-  try { res = await api('/api/insights', { records: S.records.map(lite), lang }); } catch (e) { /* fall back to profile() */ }
+  try { res = await api('/api/insights', { records: S.records.map(lite), vitals: S.vitals, lang }); } catch (e) { /* fall back to profile() */ }
   if (!S.insights || S.insights.key !== key) return;
   if (res && typeof res === 'object' && Array.isArray(res.tests)) {
     S.insights.state = 'ok'; S.insights.data = normInsights(res); S.insights.stale = null;
     try { localStorage.setItem('sehat_insights', JSON.stringify({ key, day: new Date().toISOString().slice(0, 10), data: res })); } catch (x) { /* ignore */ }
   } else S.insights.state = 'fail';
-  if (S.view === 'health' || S.view === 'visit') render();
+  const typing = document.activeElement && document.activeElement.closest && document.activeElement.closest('#vitForm');
+  if ((S.view === 'health' || S.view === 'visit') && !typing) render();
 }
 /* Used by views: starts the request when records or language changed. */
 function getInsights() {
-  if (!S.records.length) return { loading: false, data: fallbackInsights() };
+  if (!S.records.length && !S.vitals.length) return { loading: false, data: fallbackInsights() };
   const key = insightsKey();
   if (!S.insights || S.insights.key !== key) {
     // while the new profile loads, keep showing the previous one rather than a blank state
@@ -1272,7 +1289,8 @@ const QA_ICON = {
   add: '<path d="M12 5v14M5 12h14"/>',
   ask: '<path d="M4 5h16v11H9l-5 4z"/>',
   visit: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
-  exp: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'
+  exp: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  vit: '<path d="M3 12h4l2-6 4 12 2-6h6"/>'
 };
 function quickTile(icon, label, attrs) {
   return '<button type="button" class="qa" ' + attrs + '><svg viewBox="0 0 24 24" aria-hidden="true">' + QA_ICON[icon] + '</svg><span>' + esc(label) + '</span></button>';
@@ -1292,7 +1310,7 @@ function dashHTML(I) {
     '<div class="card mini"><div class="kicker">' + esc(t('dash_doctor')) + '</div><p class="dash-t">' + esc(t('dash_doctor_n', { n: I.questions.length })) + '</p>' +
     '<button type="button" class="btn small secondary" data-act="visit">' + esc(t('visit_btn')) + '</button></div></div>';
   const quick = '<div class="quick">' + quickTile('add', t('nav_add'), 'data-act="nav" data-view="add"') + quickTile('ask', t('qa_ask'), 'data-pet="open"') +
-    quickTile('visit', t('visit_btn'), 'data-act="visit"') + quickTile('exp', t('qa_export'), 'data-act="nav" data-view="abha"') + '</div>';
+    quickTile('visit', t('visit_btn'), 'data-act="visit"') + quickTile('vit', t('qa_reading'), 'data-act="vitgo"') + quickTile('exp', t('qa_export'), 'data-act="nav" data-view="abha"') + '</div>';
   return '<div class="dash">' + lead + side + '</div>' + quick;
 }
 function skelCard(n) {
@@ -1317,7 +1335,8 @@ function medsRecordedCard(I) {
 }
 function viewHealth() {
   const head = '<div class="page-head"><h1>' + esc(t('health_title')) + '</h1><p>' + esc(t('health_sub')) + '</p></div>';
-  if (!S.records.length) return head + '<div class="card empty"><p>' + esc(t('none_yet')) + '</p><button type="button" class="btn" data-act="nav" data-view="add">' + esc(t('go_add')) + '</button></div>';
+  if (!S.records.length && !S.vitals.length) return head + '<div class="card empty"><p>' + esc(t('none_yet')) + '</p><button type="button" class="btn" data-act="nav" data-view="add">' + esc(t('go_add')) + '</button></div>' +
+    '<section class="hsec"><div class="kicker">' + esc(t('kick_wellness')) + '</div>' + wellnessCard(null) + '</section>';
   const p = S.patient || {}, ab = abhaNumber(p);
   const sexLbl = s => { const v = String(s || '').toLowerCase(); return v === 'male' || v === 'm' ? t('sex_male') : (v === 'female' || v === 'f' ? t('sex_female') : (s || '')); };
   const headV = '<div class="page-head row between"><div><div class="kicker">' + esc(t('health_title')) + '</div><h1>' + esc(greetingLine()) + '</h1><p>' +
@@ -1356,7 +1375,7 @@ function viewHealth() {
     }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>';
   const patientCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab || t('not_linked')) + '</dd></dl></div>';
   const sec = (k, body) => '<section class="hsec"><div class="kicker">' + esc(t(k)) + '</div>' + body + '</section>';
-  return headV + dashHTML(I) + tiles +
+  return headV + dashHTML(I) + sec('kick_wellness', wellnessCard(I)) + tiles +
     sec('kick_results', '<div class="stack">' + attn + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>') +
     sec('kick_meds', '<div class="stack">' + medsRecordedCard(I) + medsTodayCard(sched) + pharmacistCard(sched) + '</div>') +
     sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>') +
@@ -1482,7 +1501,7 @@ async function exportFhir() {
   if (S.busy.fhir) return;
   S.busy.fhir = true; clearError(); render();
   try {
-    const b = await api('/api/fhir', { patient: S.patient || {}, records: S.records.map(lite) });
+    const b = await api('/api/fhir', { patient: S.patient || {}, records: S.records.map(lite), vitals: S.vitals });
     S.fhir = b;
     const blob = new Blob([JSON.stringify(b, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -1495,7 +1514,7 @@ async function exportFhir() {
 async function wipeAll() {
   if (!confirm(t('confirm_wipe'))) return;
   await dbClear('records'); await dbClear('files'); await dbClear('meta');
-  S.records = []; S.patient = null; S.overview = {}; S.chat = []; S.fhir = null; S.notice = null;
+  S.records = []; S.patient = null; S.vitals = []; S.vform = null; S.insights = null; S.overview = {}; S.chat = []; S.fhir = null; S.notice = null;
   S.draft = null; S.stage = 'idle'; S.view = 'add'; S.detailId = null;
   render();
 }
@@ -1704,6 +1723,7 @@ function viewVisit() {
       I.medicines.map(m => '<tr><td><strong>' + esc(m.name) + '</strong></td><td>' + esc(m.strength || '') + '</td><td>' + esc([m.dose, m.frequency, m.timing].filter(Boolean).join(', ')) + '</td><td>' + esc(fmtDate(m.date)) + '</td><td>' + esc(m.status === 'course_ended' ? (m.ends ? t('med_ended_d', { d: fmtDate(m.ends) }) : t('med_ended')) : t('med_unconf')) + '</td></tr>').join('') + '</tbody></table></div><p class="muted small" style="margin:8px 0 0">' + esc(t('med_note')) + '</p>' : none) +
     sec(t('visit_abn'), I.attention.length ? '<div class="tablewrap"><table class="data">' + th([t('t_name'), t('t_value'), t('t_range'), t('f_date'), t('t_flag')]) + '<tbody>' +
       I.attention.map(a => '<tr><td>' + esc(a.name) + '</td><td class="mono">' + esc(a.value == null ? '' : a.value) + ' ' + esc(a.unit || '') + '</td><td class="mono">' + esc(a.ref_text || '-') + '</td><td>' + esc(fmtDate(a.date)) + '</td><td><strong>' + esc(t('flag_' + normFlag(a.flag))) + '</strong></td></tr>').join('') + '</tbody></table></div>' : none) +
+    vitVisitHTML(I) +
     sec(t('visit_changes'), series.length ? '<ul class="qlist">' + series.map(s => '<li><strong>' + esc(s.name) + ':</strong> ' + esc(changeText(s)) + '</li>').join('') + '</ul>' : none) +
     sec(t('visit_q'), (qs.length ? '<ul class="qlist">' + qs.map(q => '<li>' + esc(q) + '</li>').join('') + '</ul>' : '<p class="muted noprint">' + esc(t('visit_noq')) + '</p>') +
       '<h3 style="margin:12px 0 6px">' + esc(t('visit_notes')) + '</h3><textarea id="visitNotes" class="visit-notes" rows="5" aria-label="' + esc(t('visit_notes')) + '">' + esc(notes) + '</textarea>' +
@@ -1743,7 +1763,7 @@ function backupCard() {
 async function backupDownload() {
   try {
     const files = arr(await dbGetAll('files'));
-    const payload = { version: 1, exportedAt: new Date().toISOString(), patient: S.patient || null, records: S.records, files };
+    const payload = { version: 1, exportedAt: new Date().toISOString(), patient: S.patient || null, records: S.records, files, vitals: S.vitals };
     const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'sehat-backup-' + todayKey() + '.json';
@@ -1760,7 +1780,7 @@ async function backupRestore(file) {
     let j = null;
     try { j = JSON.parse(await file.text()); } catch (x) { throw new Error(t('bk_bad')); }
     const good = j && typeof j === 'object' && j.version === 1 && Array.isArray(j.records) &&
-      (j.files === undefined || Array.isArray(j.files)) && (j.patient == null || typeof j.patient === 'object') &&
+      (j.files === undefined || Array.isArray(j.files)) && (j.vitals === undefined || Array.isArray(j.vitals)) && (j.patient == null || typeof j.patient === 'object') &&
       j.records.every(r => r && typeof r === 'object' && typeof r.id === 'string' && r.id) &&
       arr(j.files).every(f => f && typeof f === 'object' && typeof f.id === 'string' && f.id && typeof f.dataUrl === 'string' && f.dataUrl.indexOf('data:') === 0);
     if (!good) throw new Error(t('bk_bad'));
@@ -1770,6 +1790,12 @@ async function backupRestore(file) {
     }
     for (const raw of j.records) await saveRecordLocal(normalizeRecord(raw));
     for (const f of arr(j.files)) await dbPut('files', { id: f.id, mime: String(f.mime || ''), dataUrl: f.dataUrl });
+    if (arr(j.vitals).length) {
+      const byId = new Map(S.vitals.map(e => [e.id, e]));
+      arr(j.vitals).map(cleanVital).filter(Boolean).forEach(e => byId.set(e.id, e));
+      S.vitals = Array.from(byId.values());
+      await saveVitals();
+    }
     S.overview = {};
     S.backupMsg = { ok: true, text: t('bk_done', { n: j.records.length }) };
   } catch (e) {
@@ -1782,6 +1808,135 @@ document.addEventListener('change', e => {
   const f = e.target.files && e.target.files[0];
   e.target.value = '';
   backupRestore(f);
+});
+
+/* ================= Wellness log (home readings) ================= */
+const VIT_TYPES = ['bp', 'sugar_fasting', 'sugar_pp', 'weight', 'pulse'];
+const VIT_UNIT = { bp: 'mmHg', sugar_fasting: 'mg/dL', sugar_pp: 'mg/dL', weight: 'kg', pulse: 'beats/min' };
+const VIT_BOUNDS = { bp: [60, 260], sugar_fasting: [20, 800], sugar_pp: [20, 800], weight: [2, 400], pulse: [20, 250] };
+const VIT_BOUNDS2 = [30, 160];
+function cleanVital(e) {
+  if (!e || typeof e !== 'object' || typeof e.id !== 'string' || !e.id) return null;
+  if (VIT_TYPES.indexOf(e.type) < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(String(e.date || '')) || !isNum(e.value)) return null;
+  return { id: e.id, type: e.type, date: e.date, value: Number(e.value), value2: e.type === 'bp' && isNum(e.value2) ? Number(e.value2) : null, note: e.note ? String(e.note).slice(0, 200) : null };
+}
+async function saveVitals() { await dbPut('meta', S.vitals, 'vitals'); }
+function vf() {
+  if (!S.vform) S.vform = { type: 'bp', date: '', v: '', v2: '', note: '', err: null };
+  if (!S.vform.date) S.vform.date = todayKey();
+  return S.vform;
+}
+const vitText = e => (e.type === 'bp' && e.value2 != null ? fmtNum(e.value) + '/' + fmtNum(e.value2) : fmtNum(e.value));
+/* The browser only displays flags; the server decides them (matched to readings by id). */
+function vitGroups(I) {
+  return VIT_TYPES.map(ty => {
+    const entries = S.vitals.filter(e => e.type === ty).sort((a, b) => a.date.localeCompare(b.date));
+    if (!entries.length) return null;
+    const sg = arr(I && I.vitals).find(g => g && g.type === ty) || {};
+    const byId = {};
+    arr(sg.points).forEach(p => { if (p && p.id) byId[p.id] = p; });
+    const pts = entries.map(e => { const sp = byId[e.id] || {}; return { e, flag: sp.flag || 'unknown', text: sp.text || vitText(e) }; });
+    return { type: ty, name: sg.name || t('vit_' + ty), unit: sg.unit || VIT_UNIT[ty], ref_text: sg.ref_text || null, pts, latest: pts[pts.length - 1] };
+  }).filter(Boolean);
+}
+const vitBadge = (type, flag) => (type === 'weight' || normFlag(flag) === 'unknown' ? '' : badge(flag));
+function vitSeries(g) {
+  return {
+    name: g.name, unit: g.unit,
+    pts: g.pts.slice(-30).map(p => ({
+      date: p.e.date, v: p.e.value, flag: p.flag, lo: null, hi: null,
+      note: [p.e.type === 'bp' && p.e.value2 != null ? t('vit_lower', { v: fmtNum(p.e.value2) }) : '', p.e.note || ''].filter(Boolean).join(' - ')
+    }))
+  };
+}
+function wellnessCard(I) {
+  const f = vf(), groups = vitGroups(I), bp = f.type === 'bp';
+  const opts = VIT_TYPES.map(ty => '<option value="' + ty + '"' + (f.type === ty ? ' selected' : '') + '>' + esc(t('vit_' + ty)) + '</option>').join('');
+  const errTxt = f.err ? t(f.err.k, f.err.vars) : '';
+  const form = '<form id="vitForm" class="vit-form" novalidate>' +
+    '<label class="fld"><span>' + esc(t('vit_type')) + '</span><select id="vitType">' + opts + '</select></label>' +
+    '<label class="fld"><span>' + esc(t('f_date')) + '</span><input type="date" id="vitDate" max="' + esc(todayKey()) + '" value="' + esc(f.date) + '"></label>' +
+    '<div class="fld vit-val"><span>' + esc(t('vit_value')) + '</span><div class="vit-nums">' +
+    '<input type="text" inputmode="decimal" id="vitV" class="mono" autocomplete="off" aria-label="' + esc(bp ? t('vit_upper') : t('vit_value')) + '" placeholder="' + esc(bp ? t('vit_upper') : '') + '" value="' + esc(f.v) + '">' +
+    (bp ? '<span class="muted">/</span><input type="text" inputmode="decimal" id="vitV2" class="mono" autocomplete="off" aria-label="' + esc(t('vit_lower_in')) + '" placeholder="' + esc(t('vit_lower_in')) + '" value="' + esc(f.v2) + '">' : '') +
+    '<span class="muted small vit-unit">' + esc(VIT_UNIT[f.type]) + '</span></div></div>' +
+    '<label class="fld wide"><span>' + esc(t('vit_note')) + '</span><input type="text" id="vitNote" maxlength="120" autocomplete="off" value="' + esc(f.note) + '"></label>' +
+    '<div class="vit-act"><button type="submit" class="btn">' + esc(t('vit_add')) + '</button></div>' +
+    '<p class="vit-err" id="vitErr" role="alert"' + (errTxt ? '' : ' hidden') + '>' + esc(errTxt) + '</p></form>';
+  const body = groups.length ? '<div class="vit-groups">' + groups.map(g => {
+    const l = g.latest;
+    return '<div class="vit-group"><div class="row between"><h3>' + esc(g.name) + '</h3><span class="muted small">' + esc(fmtDate(l.e.date)) + '</span></div>' +
+      '<div class="vit-latest"><span class="vit-big mono">' + esc(l.text) + '</span><span class="muted">' + esc(g.unit) + '</span>' + vitBadge(g.type, l.flag) + '</div>' +
+      (g.ref_text ? '<p class="muted small" style="margin:2px 0 0">' + esc(g.ref_text) + '</p>' : '') +
+      (l.flag === 'critical' ? '<p class="vit-crit" role="alert">' + esc(t('vit_crit')) + '</p>' : '') +
+      (g.pts.length >= 2 ? '<div class="trend">' + chartSVG(vitSeries(g)) + '</div>' : '') +
+      '<details class="vit-all"><summary>' + esc(t('vit_all', { n: g.pts.length })) + '</summary><ul class="list">' +
+      g.pts.slice().reverse().map(p => '<li><span class="l"><span class="mono">' + esc(p.text) + ' ' + esc(g.unit) + '</span> ' + vitBadge(g.type, p.flag) + '<br><span class="muted small">' + esc(fmtDate(p.e.date)) + (p.e.note ? ' · ' + esc(p.e.note) : '') + '</span></span>' +
+        '<span class="r"><button type="button" class="btn small danger" data-act="vitdel" data-id="' + esc(p.e.id) + '">' + esc(t('vit_del')) + '</button></span></li>').join('') + '</ul></details></div>';
+  }).join('') + '</div>' : '<p class="muted">' + esc(t('vit_empty')) + '</p>';
+  return '<div class="card" id="wellness"><h2 style="margin-bottom:10px">' + esc(t('vit_title')) + '</h2>' + form + body +
+    '<p class="muted small" style="margin:12px 0 0">' + esc(t('vit_caveat')) + '</p></div>';
+}
+function vitVisitHTML(I) {
+  const groups = vitGroups(I);
+  if (!groups.length) return '';
+  return '<section class="visit-sec"><h2>' + esc(t('vit_home')) + '</h2><div class="tablewrap"><table class="data"><thead><tr><th>' + esc(t('vit_value')) + '</th><th>' + esc(t('t_value')) + '</th><th>' + esc(t('f_date')) + '</th><th>' + esc(t('t_flag')) + '</th></tr></thead><tbody>' +
+    groups.map(g => { const l = g.latest, show = g.type !== 'weight' && normFlag(l.flag) !== 'unknown'; return '<tr><td>' + esc(g.name) + '</td><td class="mono">' + esc(l.text) + ' ' + esc(g.unit) + '</td><td>' + esc(fmtDate(l.e.date)) + '</td><td>' + (show ? '<strong>' + esc(t('flag_' + normFlag(l.flag))) + '</strong>' : '-') + '</td></tr>'; }).join('') +
+    '</tbody></table></div></section>';
+}
+const vNum = s => { s = String(s == null ? '' : s).trim().replace(',', '.'); return /^\d{1,4}(\.\d{1,2})?$/.test(s) ? Number(s) : NaN; };
+async function addVital() {
+  const f = vf(), ty = f.type, b = VIT_BOUNDS[ty];
+  const bad = (k, vars) => { f.err = { k, vars }; render(); };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date) || f.date > todayKey()) return bad('vit_err_date');
+  const v = vNum(f.v);
+  if (isNaN(v)) return bad('vit_err_num');
+  if (v < b[0] || v > b[1]) return bad('vit_err_range', { min: b[0], max: b[1] });
+  let v2 = null;
+  if (ty === 'bp') {
+    v2 = vNum(f.v2);
+    if (isNaN(v2)) return bad('vit_err_num');
+    if (v2 < VIT_BOUNDS2[0] || v2 > VIT_BOUNDS2[1]) return bad('vit_err_range', { min: VIT_BOUNDS2[0], max: VIT_BOUNDS2[1] });
+    if (v2 >= v) return bad('vit_err_bp');
+  }
+  const note = String(f.note || '').trim();
+  S.vitals.push({ id: 'vit_' + Math.random().toString(36).slice(2, 10), type: ty, date: f.date, value: v, value2: v2, note: note ? note.slice(0, 120) : null });
+  f.v = ''; f.v2 = ''; f.note = ''; f.err = null;
+  try { await saveVitals(); } catch (e) { /* kept in memory */ }
+  render();
+}
+async function delVital(id) {
+  S.vitals = S.vitals.filter(e => e.id !== id);
+  try { await saveVitals(); } catch (e) { /* ignore */ }
+  render();
+}
+document.addEventListener('submit', e => {
+  if (!e.target || e.target.id !== 'vitForm') return;
+  e.preventDefault();
+  addVital();
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!el || !el.id || !S.vform) return;
+  if (el.id === 'vitDate') S.vform.date = el.value;
+  else if (el.id === 'vitV') S.vform.v = el.value;
+  else if (el.id === 'vitV2') S.vform.v2 = el.value;
+  else if (el.id === 'vitNote') S.vform.note = el.value;
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (!el || !el.id) return;
+  if (el.id === 'vitType') { const f = vf(); f.type = VIT_TYPES.indexOf(el.value) >= 0 ? el.value : 'bp'; f.v = ''; f.v2 = ''; f.err = null; render(); }
+  else if (el.id === 'vitDate') vf().date = el.value;
+});
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-act="vitdel"],[data-act="vitgo"]') : null;
+  if (!el) return;
+  if (el.dataset.act === 'vitdel') delVital(el.dataset.id);
+  else {
+    const c = document.getElementById('wellness');
+    if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); const i = document.getElementById('vitV'); if (i) setTimeout(() => i.focus({ preventScroll: true }), 350); }
+  }
 });
 
 /* ================= Source buttons in the record detail ================= */
@@ -2015,9 +2170,10 @@ window.addEventListener('resize', syncDiscHeight);
   try {
     S.records = arr(await dbGetAll('records')).map(normalizeRecord);
     S.patient = await dbGet('meta', 'patient');
+    S.vitals = arr(await dbGet('meta', 'vitals')).map(cleanVital).filter(Boolean);
   } catch (e) { S.records = []; }
   S.ready = true;
-  if (S.records.length && S.view === 'add' && S.stage === 'idle') S.view = 'health';
+  if ((S.records.length || S.vitals.length) && S.view === 'add' && S.stage === 'idle') S.view = 'health';
   render();
   loadSamples();
 })();
