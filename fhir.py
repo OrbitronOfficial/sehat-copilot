@@ -107,7 +107,30 @@ def _condition(d, patient, date):
             "code": {"text": d.get("name")}, "subject": _ref(patient), "recordedDate": date}
 
 
-def bundle(patient, records):
+VITAL_CATEGORY = {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                              "code": "vital-signs", "display": "Vital Signs"}]}
+
+
+def _vital_observation(v, meta, patient):
+    name, unit, loinc, _ = meta
+    obs = {"resourceType": "Observation", "id": _id(), "meta": {"profile": [NRCES + "ObservationVitalSigns"]},
+           "status": "final", "category": [VITAL_CATEGORY],
+           "code": {"coding": [{"system": LOINC, "code": loinc, "display": name}], "text": name},
+           "subject": _ref(patient), "effectiveDateTime": _when(v["date"]),
+           "performer": [{"display": "Self-reported by the patient"}],
+           "note": [{"text": v["note"]}] if v.get("note") else None}
+    if v["type"] == "bp":
+        obs["component"] = [
+            {"code": {"coding": [{"system": LOINC, "code": "8480-6", "display": "Systolic blood pressure"}]},
+             "valueQuantity": {"value": v["value"], "unit": "mmHg"}},
+            {"code": {"coding": [{"system": LOINC, "code": "8462-4", "display": "Diastolic blood pressure"}]},
+             "valueQuantity": {"value": v["value2"], "unit": "mmHg"}}]
+    else:
+        obs["valueQuantity"] = {"value": v["value"], "unit": unit}
+    return obs
+
+
+def bundle(patient, records, vitals=None):
     pat = _patient(patient)
     resources = [pat]
     for rec in sorted((r for r in records or [] if isinstance(r, dict)), key=lambda r: r.get("date") or ""):
@@ -145,6 +168,11 @@ def bundle(patient, records):
             "title": rec.get("title"),
             "identifier": {"system": "urn:sehat-copilot:record", "value": rec.get("id")},
             "section": sections})
+
+    if vitals:
+        import insights  # local import: insights imports pipeline, which this module does not need otherwise
+        for v in insights.clean_vitals(vitals):
+            resources.append(_vital_observation(v, insights.VITALS[v["type"]], pat))
 
     return _strip({
         "resourceType": "Bundle", "id": _id(), "type": "collection",

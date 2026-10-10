@@ -151,6 +151,54 @@ class CrossCheckTests(unittest.TestCase):
         self.assertEqual(insights.build(DEMO, today=TODAY)["cross"], [])
 
 
+class WellnessTests(unittest.TestCase):
+    READINGS = [
+        {"id": "v1", "type": "bp", "date": "2026-10-01", "value": 128, "value2": 82},
+        {"id": "v2", "type": "bp", "date": "2026-10-08", "value": 152, "value2": 94},
+        {"id": "v3", "type": "sugar_fasting", "date": "2026-10-08", "value": 96},
+        {"id": "v4", "type": "weight", "date": "2026-10-08", "value": 84},
+        {"id": "bad1", "type": "bp", "date": "2026-10-08", "value": 900, "value2": 80},      # impossible
+        {"id": "bad2", "type": "mood", "date": "2026-10-08", "value": 5},                    # unknown type
+        {"id": "bad3", "type": "pulse", "date": "not a date", "value": 72},
+    ]
+
+    def test_flags_are_decided_in_code(self):
+        self.assertEqual(insights.vital_flag("bp", 128, 82), "normal")
+        self.assertEqual(insights.vital_flag("bp", 152, 94), "high")
+        self.assertEqual(insights.vital_flag("bp", 118, 92), "high")       # either number can raise it
+        self.assertEqual(insights.vital_flag("bp", 185, 100), "critical")
+        self.assertEqual(insights.vital_flag("bp", 86, 55), "low")
+        self.assertEqual(insights.vital_flag("sugar_fasting", 96), "normal")
+        self.assertEqual(insights.vital_flag("sugar_fasting", 130), "high")
+        self.assertEqual(insights.vital_flag("sugar_pp", 130), "normal")
+        self.assertEqual(insights.vital_flag("sugar_fasting", 48), "critical")
+        self.assertEqual(insights.vital_flag("pulse", 112), "high")
+        self.assertEqual(insights.vital_flag("weight", 84), "unknown")     # weight is never flagged
+
+    def test_series_are_dated_and_bad_readings_are_dropped(self):
+        out = insights.build([], today=TODAY, vitals=self.READINGS)
+        kinds = [s["type"] for s in out["vitals"]]
+        self.assertEqual(kinds, ["bp", "sugar_fasting", "weight"])
+        bp = out["vitals"][0]
+        self.assertEqual([p["text"] for p in bp["points"]], ["128/82", "152/94"])
+        self.assertEqual(bp["latest"]["flag"], "high")
+
+    def test_latest_abnormal_reading_needs_attention_and_raises_a_question(self):
+        out = insights.build(DEMO, today=TODAY, vitals=self.READINGS)
+        home = [a for a in out["attention"] if a.get("source") == "vitals"]
+        self.assertEqual([(a["name"], a["value"]) for a in home], [("Blood pressure", "152/94")])
+        self.assertTrue(any("152/94" in q["text"] and q["text"].endswith("?") for q in out["questions"]))
+
+    def test_readings_export_as_fhir_vital_signs(self):
+        import fhir
+        b = fhir.bundle({"name": "Test"}, [], self.READINGS)
+        obs = [e["resource"] for e in b["entry"] if e["resource"]["resourceType"] == "Observation"]
+        self.assertEqual(len(obs), 4)
+        bp = next(o for o in obs if o["code"]["coding"][0]["code"] == "85354-9")
+        self.assertEqual([c["valueQuantity"]["value"] for c in bp["component"]], [128, 82])
+        self.assertTrue(all(o["category"][0]["coding"][0]["code"] == "vital-signs" for o in obs))
+
+
 class ShapeTests(unittest.TestCase):
     def test_empty_and_malformed_input(self):
         out = insights.build([], today=TODAY)

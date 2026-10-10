@@ -13,23 +13,43 @@ Built by team ANTIJAREX for HacXLerate 2026 Round 1 (Altrix Labs challenge: AI-P
 | Medical record intelligence and OCR | Add record: photo, PDF or text in; medicines, doses, test values, diagnoses and dates out, each with a confidence score |
 | Summary in simple language | Every record gets a summary, a meaning for each abnormal value, the purpose of each medicine and questions to ask the doctor |
 | Unified health profile | Timeline, conditions, current medicines, latest values and trend charts across reports |
-| Multi-language (bonus) | Ten languages: English, Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Punjabi. Summaries and chat answers are written in the chosen language; Hindi and mixed-language documents are read |
+| Multi-language (bonus) | 43 languages: ten ship ready (English, Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Punjabi), the rest are translated on demand. Summaries and chat are written in the chosen language; Hindi, mixed-language and handwritten documents are read |
+| Wellness data | A log for home readings (blood pressure, sugar, weight, pulse) with code-decided flags and trends, shown beside the lab results and exported as FHIR vital signs |
 | Guide on every screen | Saathi, a floating helper with a tip for the current screen and a chat that shares the Ask page's safety gate |
 | ABDM/ABHA readiness (bonus) | FHIR R4 bundle export shaped on NRCeS profiles; mock ABHA link and import |
 
 ## Architecture
 
 ```mermaid
-flowchart LR
-  U[Photo / PDF / text] --> B[Browser: downscale, preview]
-  B -->|POST /api/extract| R[Stage 1: vision model reads the document<br/>fixed JSON schema, per-item confidence]
-  R --> C[Stage 2: code checks it<br/>reference ranges, flags, medicine list, date sanity]
-  C --> V[Review screen: user corrects beside the original]
-  V -->|POST /api/explain| W[Stage 3: model writes the explanation<br/>around flags the code already set]
-  W --> S[(On-device store: IndexedDB)]
-  S --> T[Timeline / profile / trends / ask]
-  S -->|POST /api/fhir| F[FHIR R4 bundle<br/>Patient, Composition, DiagnosticReport,<br/>Observation, MedicationRequest, Condition]
-  B -.vision quota exhausted.-> O[Backup: on-device Tesseract OCR] --> R2[Text model structures the OCR text] --> C
+flowchart TB
+  subgraph Device["On the user's device (browser)"]
+    U[Photo / PDF / text] --> B[Upload: downscale, preview]
+    V[Review screen<br/>extraction beside the original,<br/>source line per value, user corrects]
+    S[(IndexedDB<br/>records, originals, home readings)]
+    D[Dashboard / timeline / trends / chat<br/>wellness log, medicine schedule]
+    O[Backup reader: Tesseract.js]
+  end
+  subgraph Server["Stateless server (Python on Vercel), stores nothing"]
+    R[1 Read<br/>vision model fills a fixed JSON schema:<br/>value, source line, confidence, unread lines]
+    C[2 Check: code<br/>reference ranges and flags, plausibility,<br/>handwriting cap, medicine list, date sanity]
+    W[3 Explain<br/>model writes around fixed flags;<br/>numeric guard replaces invented numbers]
+    P[4 Profile: code, insights.py<br/>merged conditions, medicines recorded,<br/>normalised dated trends, attention list,<br/>grounded questions, cross checks]
+    G[Safety gate: code<br/>emergency and medicine-change questions<br/>get fixed replies, no model]
+    F[FHIR R4 bundle, ABDM profiles<br/>Patient, Composition, DiagnosticReport,<br/>Observation, MedicationRequest, Condition]
+  end
+  subgraph AI["AI services"]
+    GEM[Gemini: reads documents]
+    GRQ[Groq: writes<br/>NVIDIA and OpenRouter as fallbacks]
+  end
+  B -->|/api/extract| R --> C --> V -->|save| S
+  R -.-> GEM
+  B -.vision unavailable.-> O -->|OCR text| R
+  V -->|/api/explain| W -.-> GRQ
+  S --> D
+  D -->|/api/insights| P
+  D -->|/api/ask| G --> GRQ
+  S -->|/api/fhir| F
+  A[Mock ABHA link and import] --> S
 ```
 
 Design decisions:
@@ -90,6 +110,13 @@ Python 3 standard library server (no framework), vanilla JS frontend, Gemini (do
 | `tests/` | unit tests for the gate, labels and guard (`python -m unittest discover tests`) |
 | `public/` | landing page (`/`), sign-in (`/login`), pricing (`/pricing`) and the app (`/app`) |
 | `tools/` | sample-document generator, demo builder, interface translators (`build_i18n.py` for the app, `build_site_i18n.py` for the site pages), model check |
+
+## Deliverables
+
+- Working prototype: https://sehat-copilot.vercel.app
+- Architecture diagram: above
+- Approach and demo: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md); submission text in [docs/SUBMISSION.md](docs/SUBMISSION.md)
+- Tests: `python -m unittest discover tests` (263 tests). CI workflow ready in `docs/ci.yml`.
 
 ## Run locally
 

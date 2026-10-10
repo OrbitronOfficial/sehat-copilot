@@ -146,7 +146,7 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/ask":
                 out = pipeline.ask(b.get("question"), b.get("records") or [], lang)
             elif path == "/api/insights":
-                out = insights.build(b.get("records") or [], lang)
+                out = insights.build(b.get("records") or [], lang, vitals=b.get("vitals"))
             elif path == "/api/medcheck":
                 out = pipeline.medcheck(b.get("medicines") or [], lang)
             elif path == "/api/translate":
@@ -154,7 +154,7 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/abha":
                 out = mock_abha(b.get("abha"))
             elif path == "/api/fhir":
-                out = fhir.bundle(b.get("patient"), b.get("records") or [])
+                out = fhir.bundle(b.get("patient"), b.get("records") or [], b.get("vitals"))
             else:
                 return self._send(404, {"error": "Not found"})
             return self._send(200, out)

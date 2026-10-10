@@ -312,7 +312,80 @@ def _questions(tests, meds, records, cross, lang):
     return out[:7]
 
 
-def build(records, lang="en", today=None):
+# ---- wellness log: readings the person takes at home ----
+# type: (name, unit, LOINC, reference text). Flags are decided here, never in the browser.
+VITALS = {
+    "bp": ("Blood pressure", "mmHg", "85354-9", "below 140/90 mmHg"),
+    "sugar_fasting": ("Fasting sugar", "mg/dL", "1558-6", "70 - 100 mg/dL"),
+    "sugar_pp": ("Sugar after meal", "mg/dL", "1521-4", "70 - 140 mg/dL"),
+    "weight": ("Weight", "kg", "29463-7", None),
+    "pulse": ("Pulse", "beats/min", "8867-4", "60 - 100 beats/min"),
+}
+VITAL_NAMES_HI = {"bp": "ब्लड प्रेशर", "sugar_fasting": "खाली पेट शुगर", "sugar_pp": "खाने के बाद शुगर",
+                  "weight": "वज़न", "pulse": "नब्ज़"}
+_BOUNDS = {"bp": (60, 260), "sugar_fasting": (20, 800), "sugar_pp": (20, 800), "weight": (2, 400), "pulse": (20, 250)}
+
+
+def vital_flag(kind, value, value2=None):
+    """Adult thresholds for a single home reading. Weight has no flag."""
+    if kind == "bp":
+        if value2 is None:
+            return "unknown"
+        if value >= 180 or value2 >= 120:
+            return "critical"
+        if value >= 140 or value2 >= 90:
+            return "high"
+        if value < 90 or value2 < 60:
+            return "low"
+        return "normal"
+    if kind in ("sugar_fasting", "sugar_pp"):
+        if value < 54 or value > 400:
+            return "critical"
+        if value < 70:
+            return "low"
+        return "high" if value > (100 if kind == "sugar_fasting" else 140) else "normal"
+    if kind == "pulse":
+        if value < 40 or value > 150:
+            return "critical"
+        if value < 60:
+            return "low"
+        return "high" if value > 100 else "normal"
+    return "unknown"
+
+
+def clean_vitals(vitals):
+    """Validated readings, oldest first. Anything malformed or out of bounds is dropped."""
+    out = []
+    for v in vitals or []:
+        if not isinstance(v, dict) or v.get("type") not in VITALS or not _date(v.get("date")):
+            continue
+        value, value2 = ranges.to_number(v.get("value")), ranges.to_number(v.get("value2"))
+        lo, hi = _BOUNDS[v["type"]]
+        if value is None or not lo <= value <= hi:
+            continue
+        if v["type"] == "bp" and (value2 is None or not 30 <= value2 <= 160):
+            continue
+        out.append({"id": pipeline._s(v.get("id"), 40), "type": v["type"], "date": str(v["date"])[:10],
+                    "value": value, "value2": value2 if v["type"] == "bp" else None,
+                    "note": pipeline._s(v.get("note"), 200)})
+    return sorted(out, key=lambda v: v["date"])
+
+
+def _vitals(vitals, lang):
+    series = {}
+    for v in clean_vitals(vitals):
+        name, unit, _, ref = VITALS[v["type"]]
+        s = series.setdefault(v["type"], {"type": v["type"], "unit": unit, "ref_text": ref, "points": [],
+                                          "name": VITAL_NAMES_HI[v["type"]] if lang == "hi" else name})
+        text = f"{ranges._fmt(v['value'])}/{ranges._fmt(v['value2'])}" if v["type"] == "bp" else ranges._fmt(v["value"])
+        s["points"].append({"id": v["id"], "date": v["date"], "value": v["value"], "value2": v["value2"],
+                            "flag": vital_flag(v["type"], v["value"], v["value2"]), "text": text, "note": v["note"]})
+    for s in series.values():
+        s["latest"] = s["points"][-1]
+    return [series[k] for k in VITALS if k in series]
+
+
+def build(records, lang="en", today=None, vitals=None):
     lang = lang if lang in DISCLAIMER else "en"
     today = today or dt.date.today()
     records = sorted((r for r in records or [] if isinstance(r, dict)), key=lambda r: r.get("date") or "")
@@ -322,6 +395,21 @@ def build(records, lang="en", today=None):
     questions = _questions(tests, meds, records, cross, lang)
     for m in meds:
         m.pop("_entry", None)
-    return {"conditions": _conditions(records), "medicines": meds, "tests": tests,
-            "attention": _attention(tests), "questions": questions, "cross": cross,
+    home = _vitals(vitals, lang)
+    attention = _attention(tests)
+    for s in home:
+        p = s["latest"]
+        if p["flag"] in ("low", "high", "critical"):
+            attention.append({"name": s["name"], "value": p["text"], "unit": s["unit"], "flag": p["flag"],
+                              "date": p["date"], "record": None, "ref_text": s["ref_text"], "source": "vitals"})
+            hi = lang == "hi"
+            side = {"low": ("below", "से कम"), "high": ("above", "से अधिक"), "critical": ("far outside", "से बहुत बाहर")}[p["flag"]]
+            if len(questions) < 8:
+                questions.append({"records": [], "text": (
+                    f"घर पर {p['date']} को मेरा {s['name']} {p['text']} {s['unit']} आया, जो सामान्य सीमा ({s['ref_text']}) {side[1]} है। "
+                    "क्या मुझे इसे दोबारा नापना चाहिए, और कब?" if hi else
+                    f"At home on {p['date']} my {s['name'].lower()} was {p['text']} {s['unit']}, {side[0]} the usual range "
+                    f"({s['ref_text']}). Should I measure it again, and when?")})
+    return {"conditions": _conditions(records), "medicines": meds, "tests": tests, "vitals": home,
+            "attention": attention, "questions": questions, "cross": cross,
             "disclaimer": DISCLAIMER[lang]}
