@@ -11,7 +11,6 @@ import json
 import os
 import shutil
 import tempfile
-import time
 from playwright.sync_api import sync_playwright
 
 BASE = "http://localhost:8820"
@@ -53,19 +52,43 @@ CURSOR = r"""
 """
 
 
+def _stamps(video):
+    """Seconds into the recording at which each corner stamp first shows."""
+    import subprocess
+    raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", video, "-vf", "fps=25,crop=6:6:1:1,scale=1:1",
+                          "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+    out, on = [], False
+    for i in range(len(raw) // 3):
+        r, g, b = raw[i * 3:i * 3 + 3]
+        hit = r > 170 and g < 110 and b > 170
+        if hit and not on:
+            out.append(round(i / 25, 2))
+        on = hit
+    return out
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     tmp = tempfile.mkdtemp(prefix="sehat_clips_")
-    marks, cuts = [], []
+    marks, cuts, events = [], [], []
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="chrome", headless=True)
         ctx = browser.new_context(viewport=SIZE, record_video_dir=tmp, record_video_size=SIZE, color_scheme="light")
         ctx.add_init_script(CURSOR)
         page = ctx.new_page()
-        t0 = time.monotonic()
-        now = lambda: round(time.monotonic() - t0, 2)
-        mark = lambda name: marks.append((name, now()))
         pause = page.wait_for_timeout
+
+        def event(kind, name=None):
+            """The recording's clock does not run evenly with ours (it compresses while the page is
+            busy), so every step and cut is stamped into the picture itself: a small magenta square
+            in the corner for a few frames, found again afterwards."""
+            page.evaluate("""() => { const m = document.createElement('div');
+              m.style.cssText = 'position:fixed;left:0;top:0;width:8px;height:8px;background:#ff00ff;z-index:2147483647';
+              document.documentElement.appendChild(m); setTimeout(() => m.remove(), 150); }""")
+            events.append((kind, name))
+            pause(260)
+
+        mark = lambda name: event("mark", name)
 
         def go(sel, after=450, nth=0):
             """Glide to an element and click it."""
@@ -75,9 +98,7 @@ def main():
             x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
             page.mouse.move(x, y, steps=26)
             pause(160)
-            page.mouse.down()
-            pause(70)
-            page.mouse.up()
+            el.click(delay=70)  # a real click at the same spot (retries if the layout was still settling)
             pause(after)
 
         def typed(sel, text, delay=62):
@@ -87,11 +108,9 @@ def main():
 
         def waiting(fn):
             """Run a wait that should not be watched: keep its first 1.4 s and last 0.4 s only."""
-            a = now()
+            event("wait_a")
             fn()
-            b = now()
-            if b - a > 2.4:
-                cuts.append((round(a + 1.4, 2), round(b - 0.4, 2)))
+            event("wait_b")
 
         def scroll(total, step=60, gap=45):
             for _ in range(abs(total) // step):
@@ -99,7 +118,7 @@ def main():
                 pause(gap)
             pause(350)
 
-        page.goto(BASE + "/login", wait_until="load")
+        page.goto(BASE + "/login", wait_until="domcontentloaded")
         pause(1200)
 
         mark("login")  # create an account on this device
@@ -108,7 +127,7 @@ def main():
         typed("#email", "rahul@example.com")
         typed("#pw", "walkthrough-only-1")
         go("#submit", 300)
-        page.wait_for_url("**/app*", timeout=20000)
+        page.wait_for_url("**/app*", wait_until="domcontentloaded", timeout=30000)
         page.wait_for_function("typeof S !== 'undefined' && S.ready", timeout=20000)
         page.evaluate("PET.tipOff = true; renderPet()")
         pause(900)
@@ -119,39 +138,49 @@ def main():
         pause(900)
 
         mark("review")  # what was read, beside the original
-        scroll(420)
+        pause(700)
+        scroll(300, gap=70)
         box = page.locator('[data-path="tests.0.value"]').bounding_box()
         if box:
-            page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, steps=24)
-            pause(900)
+            page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, steps=30)
+            pause(1500)
+        scroll(360, gap=70)
         go('[data-act="save"]', 300)
         page.wait_for_function("S.view === 'detail'", timeout=30000)
 
         mark("detail")  # the explanation in plain words
         waiting(lambda: page.wait_for_function(
-            "(() => { const r = getRec(S.detailId); return r && r.explanation && r.explanation.summary; })()", timeout=90000))
-        pause(900)
-        page.mouse.move(520, 420, steps=18)
-        scroll(360)
-        pause(600)
+            "(() => { const r = getRec(S.detailId), e = r && r.explanation; return !!(e && ((e[lang] && e[lang].summary) || e.summary)); })()", timeout=90000))
+        pause(1500)
+        page.mouse.move(520, 420, steps=24)
+        scroll(420, gap=85)
+        pause(1200)
 
-        a = now()  # off camera: the rest of the sample patient's history
+        event("gap_a")  # off camera: the rest of the sample patient's history (it includes this same report)
+        first = page.evaluate("S.detailId")
         page.evaluate("loadDemo()")
-        page.wait_for_function("S.records.length >= 5", timeout=30000)
+        page.wait_for_function("S.records.length >= 6", timeout=30000)
+        page.evaluate("""async id => {
+          await new Promise(done => { const o = indexedDB.open('sehat'); o.onsuccess = () => {
+            const tx = o.result.transaction(['records', 'files'], 'readwrite');
+            tx.objectStore('records').delete(id); tx.objectStore('files').delete(id); tx.oncomplete = done; tx.onerror = done; }; o.onerror = done; });
+          S.records = S.records.filter(r => r.id !== id); S.insights = null; S.overview = {};
+        }""", first)
         pause(600)
         page.evaluate("PET.tipOff = true; PET.open = false; S.view = 'detail'; render(); window.scrollTo(0, 0)")
         pause(300)
-        cuts.append((a, now()))
+        event("gap_b")
 
         mark("timeline")
-        go('[data-act="nav"][data-view="timeline"]', 900)
-        page.mouse.move(640, 420, steps=18)
-        scroll(520)
+        go('[data-act="nav"][data-view="timeline"]', 1100)
+        page.mouse.move(640, 420, steps=22)
+        scroll(560, gap=75)
 
         mark("health")
         go('[data-act="nav"][data-view="health"]', 1800)
         page.mouse.move(640, 430, steps=18)
-        scroll(1500, gap=38)
+        scroll(1500, gap=58)
+        pause(600)
 
         mark("ask")
         go('[data-act="nav"][data-view="ask"]', 900)
@@ -173,15 +202,28 @@ def main():
         go('#abhaConsentForm button[type="submit"]', 900)
         go('#abhaPickForm button[type="submit"]', 1600)
         mark("end")
-        pause(500)
+        pause(600)
         video = page.video
         ctx.close()
         browser.close()
         shutil.copyfile(video.path(), os.path.join(OUT, "session.webm"))
+    stamps = _stamps(os.path.join(OUT, "session.webm"))
+    if len(stamps) != len(events):
+        raise SystemExit(f"found {len(stamps)} stamps in the recording for {len(events)} events; record again")
+    opened = None
+    for (kind, name), at in zip(events, stamps):
+        if kind == "mark":
+            marks.append((name, at))
+        elif kind in ("wait_a", "gap_a"):
+            opened = at
+        elif kind == "wait_b" and at - opened > 2.6:
+            cuts.append((round(opened + 1.4, 2), round(at - 0.4, 2)))  # keep the start and end of a wait
+        elif kind == "gap_b":
+            cuts.append((opened, at))
     with open(os.path.join(OUT, "marks.json"), "w", encoding="utf-8") as f:
         json.dump({"size": [SIZE["width"], SIZE["height"]], "marks": marks, "cuts": cuts}, f, indent=1)
     shutil.rmtree(tmp, ignore_errors=True)
-    print("recorded", marks[-1][1], "s;", "steps:", [(n, t) for n, t in marks], "cuts:", cuts)
+    print("recorded", marks[-1][1], "s; steps:", marks, "cuts:", cuts)
 
 
 if __name__ == "__main__":

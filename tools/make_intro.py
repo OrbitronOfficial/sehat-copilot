@@ -1,13 +1,16 @@
 """Renders docs/intro.mp4: a narrated walkthrough of the product, one step of the user's journey
 per scene (sign in, add a record, check it, read the explanation, timeline, dashboard, ask, export).
 
-Pictures: real screenshots of the app in its light theme (docs/shots, taken by tools/make_shots.py)
-and two stock clips washed to white behind the opening and closing cards (docs/footage, see
+Pictures: a real recording of the app being used (docs/clips, made by tools/make_clips.py: typing,
+clicking, scrolling, with the cursor drawn in), cut into the steps and fitted to each spoken line.
+If there is no recording, still screenshots are used instead (docs/shots, tools/make_shots.py).
+Two stock clips washed to white behind the opening and closing cards (docs/footage, see
 CREDITS.md there).
 Voice: docs/voice/1.mp3 ... N.mp3 if you record your own, else a neural voice through the edge-tts
 package, else the offline Windows voice. Every scene lasts exactly as long as its line, and what
 appears on screen is timed as a fraction of that length, so picture and voice stay together.
 Needs Pillow and ffmpeg on PATH.  Run: python tools/make_intro.py"""
+import json
 import math
 import os
 import random
@@ -232,11 +235,11 @@ def click(im, box, t, at):
     im.paste(CURSOR, (round(px - 4 + press), round(py - 3 + press)), CURSOR)
 
 
-def progress(d, n, total, k):
+def progress(d, n, total, k, y=662, x=64):
     """Where this step sits in the journey."""
     for i in range(total):
         fill = TEAL if i < n - 1 else (mix(LINE, TEAL, k) if i == n - 1 else LINE)
-        d.rounded_rectangle((64 + i * 52, 662, 108 + i * 52, 668), 3, fill=fill)
+        d.rounded_rectangle((x + i * 52, y, x + 44 + i * 52, y + 6), 3, fill=fill)
 
 
 # ---------------- scenes: everything is placed as a fraction of the line's length ----------------
@@ -265,6 +268,97 @@ def s_step(im, d, t, secs, n, total, title, sub, shot, at):
         x0, y0 = place(cx - bw / 2, bar + (cy - bh / 2) * (1 - bar))
         x1, y1 = place(cx + bw / 2, bar + (cy + bh / 2) * (1 - bar))
         click(im, (x0, y0, x1, y1), t, max(1.1, secs * 0.36))
+
+
+# ---------------- the recorded session, cut into steps ----------------
+
+def _marks():
+    try:
+        with open(os.path.join(ROOT, "docs", "clips", "marks.json"), encoding="utf-8") as f:
+            m = json.load(f)
+        return m if os.path.exists(os.path.join(ROOT, "docs", "clips", "session.webm")) else None
+    except (OSError, ValueError):
+        return None
+
+
+MARKS = _marks()
+# where the camera leans in during each step: (centre x, centre y, zoom), as shares of the recording
+ZOOM = {"login": (0.50, 0.46, 1.28), "add": (0.56, 0.52, 1.15), "review": (0.58, 0.50, 1.12), "detail": (0.50, 0.50, 1.12),
+        "timeline": (0.56, 0.50, 1.10), "health": (0.56, 0.50, 1.10), "ask": (0.58, 0.56, 1.14), "abha": (0.56, 0.48, 1.20)}
+CLIP_W, CLIP_H, BAR = 960, 600, 26
+
+
+def clip(name, n):
+    """Yields n frames of one step of the recording: its waiting stretches cut out, and the rest
+    slowed or sped up to last exactly as long as the spoken line."""
+    names = [m[0] for m in MARKS["marks"]]
+    if name not in names:
+        return
+    i = names.index(name)
+    a, b = MARKS["marks"][i][1], MARKS["marks"][i + 1][1]
+    keep, at = [], a
+    for c0, c1 in sorted(MARKS["cuts"]):
+        if c1 <= at or c0 >= b:
+            continue
+        if c0 > at:
+            keep.append((at, min(c0, b)))
+        at = max(at, c1)
+    if at < b:
+        keep.append((at, b))
+    total = sum(y - x for x, y in keep)
+    if total <= 0:
+        return
+    w, h = MARKS["size"]
+    pick = "+".join(f"between(t,{x:.2f},{y:.2f})" for x, y in keep)
+    vf = f"select='{pick}',setpts=N/(25*TB),setpts={(n / FPS) / total:.4f}*PTS,fps={FPS}"
+    ff = subprocess.Popen(["ffmpeg", "-loglevel", "error", "-i", os.path.join(ROOT, "docs", "clips", "session.webm"), "-vf", vf,
+                           "-frames:v", str(n), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    size, last = w * h * 3, None
+    for _ in range(n):
+        buf = ff.stdout.read(size)
+        if len(buf) == size:
+            last = Image.frombytes("RGB", (w, h), buf)
+            last.paste(last.crop((12, 0, 24, 10)), (0, 0))  # cover the corner stamp the recorder uses for timing
+        if last is None:
+            break
+        yield last
+    ff.stdout.close()
+    ff.wait()
+
+
+def _window():
+    """The empty browser window the recording plays inside, with its shadow, drawn once."""
+    im = Image.new("RGB", (CLIP_W, CLIP_H + BAR), "#EEF2F0")
+    d = ImageDraw.Draw(im)
+    for i, c in enumerate(("#E0605A", "#E6B44C", "#5FBF77")):
+        d.ellipse((14 + i * 18, 8, 24 + i * 18, 18), fill=c)
+    d.rounded_rectangle((90, 6, CLIP_W - 90, 20), 7, fill=WHITE)
+    d.text((CLIP_W // 2, 13), "sehat-copilot.vercel.app", font=font(11), fill=MUTED, anchor="mm")
+    return im
+
+
+WINDOW = _window()
+WIN_X, WIN_Y = (W - CLIP_W) // 2, 72
+
+
+def s_clip(im, d, t, secs, n, total, title, sub, frame, shot):
+    """One step: the real recording of it, in a browser window, with the camera leaning in."""
+    cx, cy, z = ZOOM.get(shot, (0.5, 0.5, 1.1))
+    m = max(0.0, min(1.0, (t - secs * 0.12) / (secs * 0.30)))
+    k = 1 + (z - 1) * (m * m * (3 - 2 * m))
+    fw, fh = frame.size
+    w, h = fw / k, fh / k
+    x0 = max(0, min(fw - w, cx * fw - w / 2))
+    y0 = max(0, min(fh - h, cy * fh - h / 2))
+    view = frame.resize((CLIP_W, CLIP_H), Image.LANCZOS, box=(x0, y0, x0 + w, y0 + h))
+    win = WINDOW.copy()
+    win.paste(view, (0, BAR))
+    rise = round((1 - ease(t / 0.6)) * 26)
+    card3d(im, win, WIN_X, WIN_Y + rise, 0.0)
+    text(d, (WIN_X, 12), f"STEP {n} OF {total}", 17, TEAL, t, 0.0, mono=True)
+    text(d, (WIN_X, 32), title.replace("\n", " "), 28, INK, t, 0.1, bold=True)
+    text(d, (WIN_X + CLIP_W, 40), sub, 19, MUTED, t, secs * 0.25, anchor="ra")
+    progress(d, n, total, ease(t / 0.6), y=706, x=WIN_X)
 
 
 def s_title(im, d, t, secs):
@@ -421,6 +515,7 @@ def main():
         n = round(secs * FPS)
         n_step += kind == "step"
         reel = footage("prescription" if kind == "title" else "pills", n) if kind != "step" else None
+        moving = clip(shot, n) if kind == "step" and MARKS else None
         for i in range(n):
             t = i / FPS
             frame = next(reel, None) if reel else None
@@ -433,7 +528,11 @@ def main():
             elif kind == "end":
                 s_end(im, d, t, secs)
             else:
-                s_step(im, d, t, secs, n_step, total, title, sub, shot, at)
+                live = next(moving, None) if moving else None
+                if live:
+                    s_clip(im, d, t, secs, n_step, total, title, sub, live, shot)
+                else:
+                    s_step(im, d, t, secs, n_step, total, title, sub, shot, at)
             ff.stdin.write(camera(im, t, secs).tobytes())
             T += 1 / FPS
     ff.stdin.close()
