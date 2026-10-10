@@ -132,9 +132,25 @@ def main():
         page.evaluate("PET.tipOff = true; renderPet()")
         pause(900)
 
-        mark("add")  # open a sample report: it is read live
-        go('[data-act="sample"]:has-text("September")', 300)
-        waiting(lambda: page.wait_for_function("S.stage === 'review'", timeout=90000))
+        mark("add")  # a real file is uploaded and read live
+        # The desktop's own drag cannot be recorded, so the file being carried is drawn in the page;
+        # the upload itself is real (the same file goes through the page's file input).
+        page.evaluate("""() => { const f = document.createElement('div'); f.id = '__file';
+          f.style.cssText = 'position:fixed;left:0;top:0;z-index:2147483646;pointer-events:none;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #CBD5D1;box-shadow:0 10px 24px rgba(15,23,42,.18);font:600 13px system-ui;color:#0F172A;transform:translate(1210px,640px) rotate(-3deg)';
+          f.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0F766E" stroke-width="2" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>lab-report-sept.jpg';
+          document.documentElement.appendChild(f);
+          document.addEventListener('mousemove', e => { f.style.transform = 'translate(' + (e.clientX + 16) + 'px,' + (e.clientY + 12) + 'px) rotate(-3deg)'; }, true); }""")
+        page.mouse.move(1150, 700, steps=10)
+        pause(400)
+        drop = page.locator("#drop").bounding_box()
+        page.mouse.move(drop["x"] + drop["width"] / 2, drop["y"] + drop["height"] / 2, steps=42)
+        pause(500)
+        page.evaluate("document.getElementById('__file').remove()")
+        page.set_input_files("#fileInput", os.path.join(os.path.dirname(OUT), "..", "public", "samples", "lab-2026-09.png"))
+        waiting(lambda: page.wait_for_function("S.stage !== 'processing'", timeout=90000))
+        if page.evaluate("S.stage") != "review":  # no reader free just now: open the bundled sample instead
+            go('[data-act="sample"]:has-text("September")', 300)
+            waiting(lambda: page.wait_for_function("S.stage === 'review'", timeout=90000))
         pause(900)
 
         mark("review")  # what was read, beside the original
@@ -201,6 +217,14 @@ def main():
         go('#abhaOtpForm button[type="submit"]', 900)
         go('#abhaConsentForm button[type="submit"]', 900)
         go('#abhaPickForm button[type="submit"]', 1600)
+        mark("lang")  # the same screen in other languages
+        go('[data-act="nav"][data-view="health"]', 1200)
+        sel = page.locator("#langSel").bounding_box()
+        page.mouse.move(sel["x"] + sel["width"] / 2, sel["y"] + sel["height"] / 2, steps=26)
+        pause(500)
+        for code in ("hi", "ta", "bn", "en"):
+            page.select_option("#langSel", code)
+            pause(1500)
         mark("end")
         pause(600)
         video = page.video

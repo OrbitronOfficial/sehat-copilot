@@ -31,7 +31,7 @@ STEPS = [
     ("title", "Sehat Copilot. Understand your own health records.", None, None, None, None),
     ("step", "First, sign in. Your account stays on your own device.",
      "Sign in", "Your account stays on your device.", "login", (0.50, 0.772, 0.255, 0.052)),
-    ("step", "Add a photo or PDF of any prescription or lab report.",
+    ("step", "Upload a photo or PDF of any prescription or lab report, and watch it being read.",
      "Add a record", "Photo, PDF or text. Printed or handwritten.", "add", (0.535, 0.435, 0.078, 0.052)),
     ("step", "Check what was read, side by side with the original, and fix anything before it is saved.",
      "Check it against\nthe original", "Unreadable lines are listed, never guessed.", "review", (0.84, 0.76, 0.118, 0.048)),
@@ -43,8 +43,10 @@ STEPS = [
      "Your health\nat a glance", "Trends, home readings, doctor questions.", "health", (0.445, 0.395, 0.425, 0.36)),
     ("step", "Meet Saathi, your guide on every screen. Say hi, ask about your records, and every answer names the report it came from.",
      "Meet Saathi,\nyour guide", "Ask anything. Answers name the report they came from.", "ask", (0.50, 0.48, 0.54, 0.225)),
-    ("step", "Export everything in the fire format, with a mock Aabha link. All of it in forty-three languages.",
-     "Take it with you", "FHIR export and a mock ABHA link. 43 languages.", "abha", (0.31, 0.67, 0.13, 0.052)),
+    ("step", "Export everything in the fire format, with a mock Aabha link that follows the national consent steps.",
+     "Take it with you", "FHIR export and a mock ABHA link.", "abha", (0.31, 0.67, 0.13, 0.052)),
+    ("step", "And all of it works in forty-three languages. Switch in one tap.",
+     "In your language", "43 languages, ten Indian languages ready.", "lang", (0.90, 0.03, 0.10, 0.05)),
     ("end", "Sehat Copilot. A guide to your records. Not a doctor.", None, None, None, None),
 ]
 
@@ -283,8 +285,7 @@ def _marks():
 
 MARKS = _marks()
 # where the camera leans in during each step: (centre x, centre y, zoom), as shares of the recording
-ZOOM = {"login": (0.50, 0.46, 1.28), "add": (0.56, 0.52, 1.15), "review": (0.58, 0.50, 1.12), "detail": (0.50, 0.50, 1.12),
-        "timeline": (0.56, 0.50, 1.10), "health": (0.56, 0.50, 1.10), "ask": (0.80, 0.60, 1.55), "abha": (0.56, 0.48, 1.20)}
+ZOOM = {"ask": (0.80, 0.60, 1.55)}
 CLIP_W, CLIP_H, BAR, RADIUS = 1008, 630, 26, 14
 
 
@@ -355,8 +356,9 @@ SHADOW_INK = Image.new("RGB", WIN_SHADOW.size, "#2F4F4A")
 
 
 def s_clip(im, d, t, secs, n, total, title, sub, frame, shot):
-    """One step: the real recording of it, in a browser window, with the camera leaning in."""
-    cx, cy, z = ZOOM.get(shot, (0.5, 0.5, 1.1))
+    """One step: the real recording of it, whole, in a browser window. Each arrives differently."""
+    backdrop_now = im.copy()
+    cx, cy, z = ZOOM.get(shot, (0.5, 0.5, 1.0))
     m = max(0.0, min(1.0, (t - secs * 0.12) / (secs * 0.30)))
     k = 1 + (z - 1) * (m * m * (3 - 2 * m))
     fw, fh = frame.size
@@ -366,10 +368,20 @@ def s_clip(im, d, t, secs, n, total, title, sub, frame, shot):
     view = frame.resize((CLIP_W, CLIP_H), Image.LANCZOS, box=(x0, y0, x0 + w, y0 + h))
     win = WINDOW.copy()
     win.paste(view, (0, BAR))
-    rise = round((1 - ease(t / 0.6)) * 26)
+    e = ease(t / 0.65)
+    dx, dy, scale = [(0, 34, 1), (150, 0, 1), (0, 0, 0.90), (-150, 0, 1), (0, -34, 1)][n % 5]  # rise, from right, grow, from left, drop
+    dx, dy = round(dx * (1 - e)), round(dy * (1 - e))
     off = (WIN_SHADOW.size[0] - CLIP_W) // 2
-    im.paste(SHADOW_INK, (WIN_X - off, WIN_Y + rise - off + 16), WIN_SHADOW)  # soft shadow, then the rounded window
-    im.paste(win, (WIN_X, WIN_Y + rise), WIN_MASK)
+    if scale != 1 and e < 1:  # grows into place
+        k = scale + (1 - scale) * e
+        size = (round(CLIP_W * k), round((CLIP_H + BAR) * k))
+        x, y = WIN_X + (CLIP_W - size[0]) // 2, WIN_Y + (CLIP_H + BAR - size[1]) // 2
+        im.paste(win.resize(size, Image.BICUBIC), (x, y), WIN_MASK.resize(size))
+    else:
+        im.paste(SHADOW_INK, (WIN_X + dx - off, WIN_Y + dy - off + 16), WIN_SHADOW)  # soft shadow, then the rounded window
+        im.paste(win, (WIN_X + dx, WIN_Y + dy), WIN_MASK)
+    if e < 1:  # and fades up from the page as it arrives
+        im.paste(Image.blend(im, backdrop_now, 1 - e), (0, 0))
     text(d, (WIN_X, 5), f"STEP {n} OF {total}", 15, TEAL, t, 0.0, mono=True)
     text(d, (WIN_X, 22), title.replace("\n", " "), 27, INK, t, 0.1, bold=True)
     text(d, (WIN_X + CLIP_W, 34), sub, 18, MUTED, t, secs * 0.25, anchor="ra")
