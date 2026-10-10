@@ -2536,7 +2536,8 @@ renderUser();
     renderUser();
   }
   if (!S.records.length) await loadDemo();
-  if (S.records.length && S.stage === 'idle') { S.view = 'health'; render(); }
+  const want = (location.search.match(/[?&]view=([a-z]+)/) || [])[1];  // /app?demo=1&view=timeline opens that tab
+  if (S.records.length && S.stage === 'idle') { S.view = ['timeline', 'ask', 'abha', 'add'].indexOf(want) >= 0 ? want : 'health'; render(); }
   try { history.replaceState(null, '', '/app'); } catch (e) { /* ignore */ }
 })();
 

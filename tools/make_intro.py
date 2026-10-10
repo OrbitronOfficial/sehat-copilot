@@ -1,5 +1,10 @@
-"""Renders docs/intro.mp4: a short narrated introduction built from the project's own sample
-document and demo values. Needs Pillow and ffmpeg on PATH.  Run: python tools/make_intro.py"""
+"""Renders docs/intro.mp4: a short narrated product introduction.
+
+Pictures: real screenshots of the app (docs/shots, taken by tools/make_shots.py), the project's
+own sample document, and three stock clips (docs/footage, see CREDITS.md there).
+Voice: docs/voice/1.mp3 ... 8.mp3 if you record your own, else a neural voice through the
+edge-tts package, else the offline Windows voice.
+Needs Pillow and ffmpeg on PATH.  Run: python tools/make_intro.py"""
 import os
 import subprocess
 import math
@@ -103,6 +108,27 @@ def helix(d, cx, top, height, radius, T, bg, k=1.0):
         d.ellipse((x - r, y - r, x + r, y + r), fill=mix(bg, c, k * (0.35 + 0.65 * (z + 1) / 2)))
 
 
+def footage(name, n, start=1.0):
+    """Yields n frames of a stock clip, cropped to fill the frame. Nothing if the clip is missing."""
+    path = os.path.join(ROOT, "docs", "footage", name + ".mp4")
+    if not os.path.exists(path):
+        return
+    ff = subprocess.Popen(["ffmpeg", "-loglevel", "error", "-ss", str(start), "-i", path, "-frames:v", str(n), "-vf",
+                           f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS}",
+                           "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    size = W * H * 3
+    while True:
+        buf = ff.stdout.read(size)
+        if len(buf) < size:
+            break
+        yield Image.frombytes("RGB", (W, H), buf)
+    ff.stdout.close()
+    ff.wait()
+
+
+TINT = Image.new("RGB", (W, H), "#062522")
+
+
 def camera(im, t, secs, bg):
     """A slow push-in through the scene, and a fly-through into the next one at the end."""
     z, left = 1 + 0.045 * t / secs, secs - t
@@ -166,15 +192,6 @@ def s_title(im, d, t):
     text(d, (cx, 600), "HacXLerate 2026  ·  Team ANTIJAREX", 22, MINT, DARK, t, 1.5, mono=True, anchor="ma")
 
 
-def s_problem(im, d, t):
-    helix(d, 1090, 90, 540, 70, t, PAPER, ease(t / 1.0))
-    text(d, (96, 150), "A prescription you cannot read.", 50, INK, PAPER, t, 0.0, bold=True)
-    text(d, (96, 230), "A lab report full of numbers.", 50, INK, PAPER, t, 0.9, bold=True)
-    text(d, (96, 310), "Papers from five visits, in five folders.", 50, INK, PAPER, t, 1.8, bold=True)
-    text(d, (96, 440), "Most people leave the clinic without knowing", 30, MUTED, PAPER, t, 2.8)
-    text(d, (96, 482), "what their own records say.", 30, MUTED, PAPER, t, 2.8)
-
-
 def paste_doc(im, t, x=96, y=210):
     k = ease(t / 1.4)
     doc = SAMPLE.crop((0, 0, 440, min(SAMPLE.height, 470)))
@@ -201,23 +218,8 @@ def s_read(im, d, t):
     text(d, (600, 580), "Sample document shown.", 20, MUTED, PAPER, t, 2.8, mono=True)
 
 
-def s_check(im, d, t):
-    step(d, 2, "Check it with code, not AI", t)
-    items = ["High, low and critical come from the range printed on the report.",
-             "Lines that cannot be read are listed, never guessed.",
-             "Handwriting is marked for you to check against the original.",
-             "You correct anything before it is saved."]
-    for i, s in enumerate(items):
-        dl = 0.6 + i * 0.8
-        k = ease((t - dl) / 0.5)
-        if k > 0:
-            d.ellipse((100, 248 + i * 86, 124, 272 + i * 86), fill=mix(PAPER, TEAL, k))
-        text(d, (150, 240 + i * 86), s, 32, INK, PAPER, t, dl)
-    text(d, (96, 620), "The model reads and writes. Code decides.", 26, TEAL, PAPER, t, 4.0, bold=True)
-
-
 def s_explain(im, d, t):
-    step(d, 3, "Explain it in plain words", t)
+    step(d, 2, "In the language you think in", t)
     k = ease((t - 0.5) / 0.6)
     if k > 0:
         d.rounded_rectangle((104, 232, 1192, 412), 20, fill=mix(PAPER, "#C9DAD5", k))
@@ -232,29 +234,65 @@ def s_explain(im, d, t):
     text(d, (96, 580), "It explains your records. It never diagnoses and never tells you to change a medicine.", 24, AMBER, PAPER, t, 4.0)
 
 
-def s_profile(im, d, t):
-    step(d, 4, "One profile, one timeline", t)
-    pts = [(220, 300, "8.4", "12 Mar"), (480, 370, "7.6", "18 Jun"), (740, 432, "6.9", "22 Sep")]
-    d.line((160, 500, 800, 500), fill="#DDE5E0", width=2)
-    prog = ease((t - 0.6) / 2.2) * 2
-    for i in range(2):
-        k = max(0.0, min(1.0, prog - i))
-        if k > 0:
-            a, b = pts[i], pts[i + 1]
-            d.line((a[0], a[1], a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k), fill=TEAL, width=5)
-    for i, (x, y, v, dt_) in enumerate(pts):
-        dl = 0.6 + i * 1.1
-        k = ease((t - dl) / 0.4)
-        if k > 0:
-            pulse = 16 + 4 * math.sin(t * 3 + i)
-            d.ellipse((x - pulse, y - pulse, x + pulse, y + pulse), fill=mix(PAPER, "#BFE0DA", k))
-            d.ellipse((x - 10, y - 10, x + 10, y + 10), fill=mix(PAPER, TEAL, k))
-        text(d, (x, y - 54), v, 30, INK, PAPER, t, dl, bold=True, anchor="ma")
-        text(d, (x, 514), dt_, 20, MUTED, PAPER, t, dl, mono=True, anchor="ma")
-    text(d, (160, 200), "HbA1c, three sample reports", 22, MUTED, PAPER, t, 0.3, mono=True)
-    for i, s in enumerate(["Conditions merged", "Dated trends", "Home readings", "Questions for your doctor", "Things to discuss"]):
-        text(d, (880, 250 + i * 58), s, 30, INK, PAPER, t, 1.4 + i * 0.4)
-    text(d, (96, 610), "Built by code from the saved records. Stored on your device.", 26, MUTED, PAPER, t, 3.6)
+# ---------------- real app screens, framed like a browser window and floated in 3D ----------------
+
+def _framed(name, width):
+    """A screenshot inside a dark browser frame, scaled to `width`."""
+    path = os.path.join(ROOT, "docs", "shots", name + ".png")
+    shot = Image.open(path).convert("RGB") if os.path.exists(path) else Image.new("RGB", (1440, 900), "#0E2B28")
+    h = round(width * shot.height / shot.width)
+    shot = shot.resize((width, h), Image.LANCZOS)
+    bar = max(18, width // 34)
+    im = Image.new("RGB", (width, h + bar), "#0A2320")
+    d = ImageDraw.Draw(im)
+    for i, c in enumerate(("#E0605A", "#E6B44C", "#5FBF77")):
+        r = bar // 5
+        d.ellipse((bar // 2 + i * (r * 3) - r, bar // 2 - r, bar // 2 + i * (r * 3) + r, bar // 2 + r), fill=c)
+    im.paste(shot, (0, bar))
+    return im
+
+
+SHOT = {n: _framed(n, w) for n, w in (("detail", 820), ("health", 760), ("timeline", 500), ("trends", 500))}
+
+
+def screen(im, name, x, y, t, delay=0.0, yaw0=58, yaw1=13, drift=0.0):
+    """A screen swings in about its left edge, settles at a slight angle and keeps drifting."""
+    k = ease((t - delay) / 1.3)
+    if k <= 0:
+        return
+    yaw = math.radians(yaw0 - (yaw0 - yaw1) * k + 2.5 * math.sin((t + drift) * 0.8))
+    card3d(im, SHOT[name], x + (1 - k) * 160, y + 7 * math.sin((t + drift) * 1.0), yaw, lift=14 * k)
+
+
+def label(d, n, title, t, sub=None):
+    text(d, (84, 54), f"STEP {n}" if n else "SEHAT COPILOT", 22, MINT, DARK, t, 0, mono=True)
+    text(d, (84, 86), title, 50, "#FFFFFF", DARK, t, 0.1, bold=True)
+    if sub:
+        text(d, (84, 154), sub, 26, MINT, DARK, t, 0.5)
+
+
+def s_problem(im, d, t):
+    """Over stock footage: the lines land one by one."""
+    for i, line in enumerate(["A prescription you cannot read.", "A lab report full of numbers.", "Papers from five visits."]):
+        text(d, (96, 210 + i * 92), line, 62, "#FFFFFF", "#0A2A27", t, 0.2 + i * 1.5, bold=True)
+    text(d, (96, 540), "Most people never learn what their own records say.", 30, MINT, "#0A2A27", t, 4.6)
+
+
+s_problem.clips = ["prescription", "writing"]
+
+
+def s_explained(im, d, t):
+    label(d, 2, "Checked by code, explained in plain words", t)
+    screen(im, "detail", 400, 196, t, 0.3)
+    for i, line in enumerate(["High and low come from", "the printed range.", "", "Unreadable lines are", "listed, never guessed."]):
+        text(d, (40, 300 + i * 38), line, 24, MINT if i < 2 else "#FFFFFF", DARK, t, 1.6 + (0.8 if i > 2 else 0))
+
+
+def s_screens(im, d, t):
+    label(d, 3, "One profile, one timeline", t)
+    screen(im, "timeline", 730, 150, t, 0.9, yaw0=64, yaw1=20, drift=1.3)
+    screen(im, "trends", 750, 420, t, 1.5, yaw0=64, yaw1=20, drift=2.6)
+    screen(im, "health", 70, 200, t, 0.2, yaw0=56, yaw1=12)
 
 
 def s_abdm(im, d, t):
@@ -284,8 +322,10 @@ def s_end(im, d, t):
     text(d, (cx, 630), "Prototype. Sample data is synthetic. ABHA link is a mock.", 20, MINT, DARK, t, 2.0, mono=True, anchor="ma")
 
 
-SCENES = [(s_title, 4.5, DARK), (s_problem, 5.5, PAPER), (s_read, 5.5, PAPER), (s_check, 6.0, PAPER),
-          (s_explain, 6.0, PAPER), (s_profile, 5.5, PAPER), (s_abdm, 5.0, DARK), (s_end, 4.5, DARK)]
+s_abdm.clips = ["pills"]
+
+SCENES = [(s_title, 4.5, DARK), (s_problem, 6.5, DARK), (s_read, 5.5, PAPER), (s_explained, 6.0, DARK),
+          (s_explain, 6.0, PAPER), (s_screens, 6.0, DARK), (s_abdm, 5.0, DARK), (s_end, 4.5, DARK)]
 
 
 # One line of voice-over per scene, spoken by a Windows system voice (offline, System.Speech).
@@ -293,14 +333,59 @@ NARRATION = [
     "Sehat Copilot. Understand your own health records.",
     "A prescription you cannot read. A lab report full of numbers. Most people never learn what their own records say.",
     "Step one. Upload a photo or PDF. Every value is read with the line it came from.",
-    "Step two. Code, not the A I, decides what is high or low. Lines that cannot be read are listed, never guessed.",
-    "Step three. A plain language explanation, in forty three languages. It never diagnoses, and never tells you to change a medicine.",
-    "Step four. Every record joins one profile and one timeline, so you can see what changed.",
-    "Records export in the fire format, with a mock Abha link that follows the national consent steps.",
+    "Step two. Code, not the A.I., decides what is high or low. Then each result is explained in plain words, beside the original.",
+    "In forty-three languages. It never diagnoses, and it never tells you to change a medicine.",
+    "Step three. Every record joins one profile and one timeline, so you can see what changed.",
+    "Records export in the fire format, with a mock Aabha link that follows the national consent steps.",
     "Sehat Copilot. A guide to your records. Not a doctor.",
 ]
+VOICE = "en-IN-NeerjaNeural"  # any edge-tts voice name
 RATE = 22050
 LEAD = 0.35  # silence before each line
+
+
+def _lengths(tmp):
+    import wave
+    out = []
+    for i in range(len(NARRATION)):
+        with wave.open(os.path.join(tmp, f"line{i}.wav")) as w:
+            out.append(w.getnframes() / w.getframerate())
+    return out
+
+
+def _to_wav(src, dst):
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", src, "-ac", "1", "-ar", str(RATE), "-sample_fmt", "s16", dst], check=True)
+
+
+def _own_voice(tmp):
+    """docs/voice/1.mp3 ... N.mp3 (or .wav), one per narration line: your own recording wins."""
+    folder = os.path.join(ROOT, "docs", "voice")
+    files = [next((os.path.join(folder, f"{i + 1}{e}") for e in (".mp3", ".wav", ".m4a")
+                   if os.path.exists(os.path.join(folder, f"{i + 1}{e}"))), None) for i in range(len(NARRATION))]
+    if not all(files):
+        return []
+    for i, f in enumerate(files):
+        _to_wav(f, os.path.join(tmp, f"line{i}.wav"))
+    print("voice: docs/voice")
+    return _lengths(tmp)
+
+
+def _neural_voice(tmp):
+    try:
+        import asyncio
+        import edge_tts
+
+        async def run():
+            for i, line in enumerate(NARRATION):
+                await edge_tts.Communicate(line, VOICE, rate="+14%").save(os.path.join(tmp, f"line{i}.mp3"))
+        asyncio.run(run())
+        for i in range(len(NARRATION)):
+            _to_wav(os.path.join(tmp, f"line{i}.mp3"), os.path.join(tmp, f"line{i}.wav"))
+    except Exception as e:  # package missing or no network: fall back to the offline voice
+        print("neural voice unavailable:", str(e)[:120])
+        return []
+    print("voice:", VOICE, [round(x, 1) for x in _lengths(tmp)])
+    return _lengths(tmp)
 
 
 def speak(tmp):
@@ -308,6 +393,9 @@ def speak(tmp):
     no system voice is available (the video is then rendered silent)."""
     import json
     os.makedirs(tmp, exist_ok=True)
+    got = _own_voice(tmp) or _neural_voice(tmp)
+    if got:
+        return got
     with open(os.path.join(tmp, "lines.json"), "w", encoding="utf-8") as f:
         json.dump(NARRATION, f)
     ps = os.path.join(tmp, "speak.ps1")
@@ -375,9 +463,14 @@ def main():
     T = 0.0
     for fn, secs, bg in SCENES:
         n = round(secs * FPS)
+        clips = getattr(fn, "clips", [])
+        part = -(-n // len(clips)) if clips else 0  # frames per clip
+        reels = [footage(c, part) for c in clips]
         for i in range(n):
             t = i / FPS
-            im = backdrop(bg, T)
+            frame = next(reels[i // part], None) if clips else None
+            # stock footage sits under a dark tint so the words stay readable
+            im = Image.blend(frame, TINT, 0.62) if frame else backdrop(bg, T)
             d = ImageDraw.Draw(im)
             particles(d, bg, T)
             fn(im, d, t)
