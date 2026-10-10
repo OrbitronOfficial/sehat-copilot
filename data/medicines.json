@@ -1,0 +1,1555 @@
+[
+{
+"generic": "Paracetamol (Acetaminophen)",
+"brands": [
+"Crocin",
+"Dolo 650",
+"Calpol"
+],
+"class": "Analgesic / antipyretic",
+"uses": [
+"Fever",
+"Mild to moderate pain"
+]
+},
+{
+"generic": "Ibuprofen",
+"brands": [
+"Brufen",
+"Combiflam (with paracetamol)"
+],
+"class": "NSAID",
+"uses": [
+"Pain",
+"Fever",
+"Inflammation",
+"Period pain"
+]
+},
+{
+"generic": "Diclofenac",
+"brands": [
+"Voveran",
+"Voltaren"
+],
+"class": "NSAID",
+"uses": [
+"Joint and muscle pain",
+"Back pain",
+"Post-injury pain"
+]
+},
+{
+"generic": "Aspirin (Acetylsalicylic acid)",
+"brands": [
+"Disprin",
+"Ecosprin"
+],
+"class": "Antiplatelet / NSAID",
+"uses": [
+"Pain and fever (adults)",
+"Prevention of heart attack and stroke (low dose)",
+"Suspected heart attack (chewed 300 mg)"
+]
+},
+{
+"generic": "Naproxen",
+"brands": [
+"Naprosyn"
+],
+"class": "NSAID",
+"uses": [
+"Pain",
+"Arthritis",
+"Period pain",
+"Gout attack"
+]
+},
+{
+"generic": "Mefenamic acid",
+"brands": [
+"Meftal",
+"Ponstan"
+],
+"class": "NSAID",
+"uses": [
+"Period pain",
+"Mild to moderate pain",
+"Fever in children (on advice)"
+]
+},
+{
+"generic": "Aceclofenac",
+"brands": [
+"Hifenac",
+"Zerodol"
+],
+"class": "NSAID",
+"uses": [
+"Joint pain",
+"Back pain",
+"Inflammation"
+]
+},
+{
+"generic": "Tramadol",
+"brands": [
+"Contramal"
+],
+"class": "Opioid analgesic",
+"uses": [
+"Moderate to severe pain"
+]
+},
+{
+"generic": "Cetirizine",
+"brands": [
+"Cetzine",
+"Okacet",
+"Alerid"
+],
+"class": "Antihistamine (second generation)",
+"uses": [
+"Allergic rhinitis",
+"Urticaria (hives)",
+"Itching"
+]
+},
+{
+"generic": "Levocetirizine",
+"brands": [
+"Levocet",
+"Xyzal"
+],
+"class": "Antihistamine (second generation)",
+"uses": [
+"Allergic rhinitis",
+"Urticaria",
+"Itching"
+]
+},
+{
+"generic": "Fexofenadine",
+"brands": [
+"Allegra"
+],
+"class": "Antihistamine (non-sedating)",
+"uses": [
+"Allergic rhinitis",
+"Urticaria"
+]
+},
+{
+"generic": "Chlorpheniramine (Chlorphenamine)",
+"brands": [],
+"class": "Antihistamine (first generation)",
+"uses": [
+"Allergy",
+"Runny nose and sneezing",
+"Itching"
+]
+},
+{
+"generic": "Loratadine",
+"brands": [
+"Lorfast"
+],
+"class": "Antihistamine (second generation)",
+"uses": [
+"Allergic rhinitis",
+"Urticaria"
+]
+},
+{
+"generic": "Omeprazole",
+"brands": [
+"Omez"
+],
+"class": "Proton pump inhibitor",
+"uses": [
+"Acidity and GERD",
+"Peptic ulcer",
+"H. pylori eradication (part of combination)"
+]
+},
+{
+"generic": "Pantoprazole",
+"brands": [
+"Pan 40",
+"Pantocid"
+],
+"class": "Proton pump inhibitor",
+"uses": [
+"Acidity and GERD",
+"Peptic ulcer",
+"Stomach protection with NSAIDs or steroids"
+]
+},
+{
+"generic": "Esomeprazole",
+"brands": [
+"Nexpro"
+],
+"class": "Proton pump inhibitor",
+"uses": [
+"GERD",
+"Peptic ulcer"
+]
+},
+{
+"generic": "Rabeprazole",
+"brands": [
+"Razo",
+"Rabium"
+],
+"class": "Proton pump inhibitor",
+"uses": [
+"GERD",
+"Peptic ulcer"
+]
+},
+{
+"generic": "Famotidine",
+"brands": [
+"Famocid"
+],
+"class": "H2 receptor blocker",
+"uses": [
+"Acidity",
+"Peptic ulcer",
+"GERD"
+]
+},
+{
+"generic": "Ranitidine (status note)",
+"brands": [],
+"class": "H2 receptor blocker",
+"uses": [
+"Historically used for acidity"
+]
+},
+{
+"generic": "Domperidone",
+"brands": [
+"Domstal",
+"Vomistop"
+],
+"class": "Prokinetic / anti-emetic",
+"uses": [
+"Nausea and vomiting",
+"Bloating and early fullness"
+]
+},
+{
+"generic": "Ondansetron",
+"brands": [
+"Emeset",
+"Ondem"
+],
+"class": "Anti-emetic (5-HT3 blocker)",
+"uses": [
+"Nausea and vomiting",
+"Gastroenteritis vomiting",
+"Chemotherapy-related nausea"
+]
+},
+{
+"generic": "Metoclopramide",
+"brands": [
+"Perinorm"
+],
+"class": "Anti-emetic / prokinetic",
+"uses": [
+"Nausea and vomiting",
+"Gastroparesis"
+]
+},
+{
+"generic": "Oral rehydration salts (WHO low-osmolarity ORS)",
+"brands": [
+"Electral"
+],
+"class": "Oral rehydration",
+"uses": [
+"Diarrhoea",
+"Vomiting",
+"Dehydration",
+"Heat illness"
+]
+},
+{
+"generic": "Zinc (sulphate or acetate)",
+"brands": [
+"Zinconia"
+],
+"class": "Mineral supplement",
+"uses": [
+"Diarrhoea in children (reduces duration and recurrence)"
+]
+},
+{
+"generic": "Loperamide",
+"brands": [
+"Eldoper",
+"Imodium"
+],
+"class": "Anti-diarrhoeal (opioid receptor agonist)",
+"uses": [
+"Acute watery diarrhoea (adults)"
+]
+},
+{
+"generic": "Lactulose",
+"brands": [
+"Duphalac"
+],
+"class": "Osmotic laxative",
+"uses": [
+"Constipation",
+"Hepatic encephalopathy (doctor-directed)"
+]
+},
+{
+"generic": "Simethicone",
+"brands": [],
+"class": "Anti-flatulent",
+"uses": [
+"Gas and bloating"
+]
+},
+{
+"generic": "Aluminium hydroxide / Magnesium hydroxide antacid gel",
+"brands": [
+"Digene",
+"Gelusil"
+],
+"class": "Antacid",
+"uses": [
+"Heartburn and acidity",
+"Indigestion"
+]
+},
+{
+"generic": "Bisacodyl",
+"brands": [
+"Dulcolax"
+],
+"class": "Stimulant laxative",
+"uses": [
+"Short-term constipation"
+]
+},
+{
+"generic": "Psyllium husk (Isabgol)",
+"brands": [],
+"class": "Bulk-forming laxative",
+"uses": [
+"Constipation",
+"Irritable bowel symptoms"
+]
+},
+{
+"generic": "Hyoscine butylbromide",
+"brands": [
+"Buscopan"
+],
+"class": "Antispasmodic",
+"uses": [
+"Abdominal cramps",
+"Colicky pain"
+]
+},
+{
+"generic": "Drotaverine",
+"brands": [
+"Drotin"
+],
+"class": "Antispasmodic",
+"uses": [
+"Abdominal and period cramps",
+"Renal or biliary colic"
+]
+},
+{
+"generic": "Amoxicillin",
+"brands": [
+"Novamox",
+"Mox"
+],
+"class": "Penicillin antibiotic",
+"uses": [
+"Ear, throat and sinus bacterial infections",
+"Chest infections",
+"Dental infections"
+]
+},
+{
+"generic": "Amoxicillin + Clavulanic acid",
+"brands": [
+"Augmentin",
+"Clavam"
+],
+"class": "Penicillin antibiotic with beta-lactamase inhibitor",
+"uses": [
+"Sinusitis",
+"Skin infections",
+"Urinary and chest infections",
+"Animal bite wounds"
+]
+},
+{
+"generic": "Azithromycin",
+"brands": [
+"Azithral",
+"Azee"
+],
+"class": "Macrolide antibiotic",
+"uses": [
+"Throat and chest infections",
+"Typhoid (alternative)",
+"Atypical pneumonia",
+"Traveller's diarrhoea"
+]
+},
+{
+"generic": "Ciprofloxacin",
+"brands": [
+"Ciplox",
+"Cifran"
+],
+"class": "Fluoroquinolone antibiotic",
+"uses": [
+"Urinary tract infections",
+"Typhoid",
+"Infectious diarrhoea"
+]
+},
+{
+"generic": "Doxycycline",
+"brands": [],
+"class": "Tetracycline antibiotic",
+"uses": [
+"Scrub typhus",
+"Leptospirosis (prophylaxis and treatment)",
+"Chest infections",
+"Acne",
+"Malaria prophylaxis"
+]
+},
+{
+"generic": "Cefixime",
+"brands": [
+"Taxim-O",
+"Zifi"
+],
+"class": "Cephalosporin antibiotic (3rd gen, oral)",
+"uses": [
+"Typhoid",
+"Urinary tract infection",
+"Throat and chest infections"
+]
+},
+{
+"generic": "Ceftriaxone",
+"brands": [
+"Monocef",
+"Intacef"
+],
+"class": "Cephalosporin antibiotic (3rd gen, injectable)",
+"uses": [
+"Severe bacterial infections in hospital",
+"Meningitis",
+"Pneumonia",
+"Typhoid"
+]
+},
+{
+"generic": "Metronidazole",
+"brands": [
+"Flagyl",
+"Metrogyl"
+],
+"class": "Nitroimidazole antibiotic / antiprotozoal",
+"uses": [
+"Amoebiasis and giardiasis",
+"Anaerobic infections",
+"Dental infections",
+"Bacterial vaginosis"
+]
+},
+{
+"generic": "Nitrofurantoin",
+"brands": [],
+"class": "Urinary antibiotic",
+"uses": [
+"Uncomplicated cystitis (lower urinary tract infection)"
+]
+},
+{
+"generic": "Co-trimoxazole (Sulfamethoxazole + Trimethoprim)",
+"brands": [
+"Septran",
+"Bactrim"
+],
+"class": "Sulfonamide combination antibiotic",
+"uses": [
+"Urinary tract infection",
+"Pneumocystis prophylaxis",
+"Some diarrhoeal and skin infections"
+]
+},
+{
+"generic": "Cephalexin",
+"brands": [
+"Sporidex",
+"Phexin"
+],
+"class": "Cephalosporin antibiotic (1st gen)",
+"uses": [
+"Skin and soft tissue infections",
+"Cellulitis",
+"Urinary tract infections"
+]
+},
+{
+"generic": "Levofloxacin",
+"brands": [
+"Levoflox",
+"Tavanic"
+],
+"class": "Fluoroquinolone antibiotic",
+"uses": [
+"Pneumonia",
+"Urinary tract infections",
+"Typhoid"
+]
+},
+{
+"generic": "Chloroquine",
+"brands": [],
+"class": "Antimalarial",
+"uses": [
+"Plasmodium vivax malaria (non-resistant)",
+"Prophylaxis in limited regions"
+]
+},
+{
+"generic": "Artemether + Lumefantrine",
+"brands": [
+"Lumerax",
+"Coartem"
+],
+"class": "Artemisinin-based combination antimalarial (ACT)",
+"uses": [
+"Uncomplicated P. falciparum malaria"
+]
+},
+{
+"generic": "Artesunate (injectable)",
+"brands": [],
+"class": "Antimalarial (artemisinin)",
+"uses": [
+"Severe or complicated malaria"
+]
+},
+{
+"generic": "Primaquine",
+"brands": [],
+"class": "Antimalarial (radical cure)",
+"uses": [
+"Radical cure of P. vivax and P. ovale malaria"
+]
+},
+{
+"generic": "Hydroxychloroquine",
+"brands": [
+"HCQS",
+"Plaquenil"
+],
+"class": "Antimalarial / DMARD",
+"uses": [
+"Rheumatoid arthritis",
+"Lupus",
+"Malaria prophylaxis (some regions)"
+]
+},
+{
+"generic": "Isoniazid",
+"brands": [],
+"class": "Anti-tuberculosis",
+"uses": [
+"Tuberculosis (treatment and prevention)"
+]
+},
+{
+"generic": "Rifampicin",
+"brands": [],
+"class": "Anti-tuberculosis",
+"uses": [
+"Tuberculosis",
+"Leprosy",
+"Some serious bacterial infections"
+]
+},
+{
+"generic": "Pyrazinamide",
+"brands": [],
+"class": "Anti-tuberculosis",
+"uses": [
+"Tuberculosis (first 2 months, intensive phase)"
+]
+},
+{
+"generic": "Ethambutol",
+"brands": [],
+"class": "Anti-tuberculosis",
+"uses": [
+"Tuberculosis"
+]
+},
+{
+"generic": "Metformin",
+"brands": [
+"Glycomet",
+"Glucophage"
+],
+"class": "Antidiabetic (biguanide)",
+"uses": [
+"Type 2 diabetes",
+"PCOS (doctor-directed)"
+]
+},
+{
+"generic": "Glimepiride",
+"brands": [
+"Amaryl",
+"Glimy"
+],
+"class": "Antidiabetic (sulfonylurea)",
+"uses": [
+"Type 2 diabetes"
+]
+},
+{
+"generic": "Gliclazide",
+"brands": [
+"Diamicron"
+],
+"class": "Antidiabetic (sulfonylurea)",
+"uses": [
+"Type 2 diabetes"
+]
+},
+{
+"generic": "Insulin (regular / soluble human)",
+"brands": [
+"Actrapid",
+"Humulin R"
+],
+"class": "Insulin",
+"uses": [
+"Type 1 and type 2 diabetes",
+"Diabetic ketoacidosis (IV in hospital)"
+]
+},
+{
+"generic": "Sitagliptin",
+"brands": [
+"Januvia"
+],
+"class": "Antidiabetic (DPP-4 inhibitor)",
+"uses": [
+"Type 2 diabetes"
+]
+},
+{
+"generic": "Empagliflozin",
+"brands": [
+"Jardiance"
+],
+"class": "Antidiabetic (SGLT2 inhibitor)",
+"uses": [
+"Type 2 diabetes",
+"Heart failure",
+"Chronic kidney disease (doctor-directed)"
+]
+},
+{
+"generic": "Oral glucose (dextrose powder)",
+"brands": [
+"Glucon-D"
+],
+"class": "Carbohydrate / hypoglycaemia treatment",
+"uses": [
+"Low blood sugar (conscious patient)"
+]
+},
+{
+"generic": "Amlodipine",
+"brands": [
+"Amlong",
+"Stamlo",
+"Norvasc"
+],
+"class": "Calcium channel blocker",
+"uses": [
+"Hypertension",
+"Angina"
+]
+},
+{
+"generic": "Telmisartan",
+"brands": [
+"Telma"
+],
+"class": "Angiotensin receptor blocker (ARB)",
+"uses": [
+"Hypertension",
+"Cardiovascular risk reduction"
+]
+},
+{
+"generic": "Losartan",
+"brands": [
+"Losar",
+"Cozaar"
+],
+"class": "Angiotensin receptor blocker (ARB)",
+"uses": [
+"Hypertension",
+"Diabetic kidney disease",
+"Heart failure"
+]
+},
+{
+"generic": "Enalapril",
+"brands": [
+"Envas"
+],
+"class": "ACE inhibitor",
+"uses": [
+"Hypertension",
+"Heart failure"
+]
+},
+{
+"generic": "Ramipril",
+"brands": [
+"Cardace"
+],
+"class": "ACE inhibitor",
+"uses": [
+"Hypertension",
+"Heart failure",
+"After heart attack"
+]
+},
+{
+"generic": "Atenolol",
+"brands": [
+"Tenormin",
+"Aten"
+],
+"class": "Beta blocker",
+"uses": [
+"Hypertension",
+"Angina",
+"Rapid heart rate"
+]
+},
+{
+"generic": "Metoprolol",
+"brands": [
+"Metolar",
+"Lopressor"
+],
+"class": "Beta blocker",
+"uses": [
+"Hypertension",
+"Angina",
+"After heart attack",
+"Rapid heart rate"
+]
+},
+{
+"generic": "Hydrochlorothiazide",
+"brands": [],
+"class": "Thiazide diuretic",
+"uses": [
+"Hypertension",
+"Mild fluid retention"
+]
+},
+{
+"generic": "Furosemide (Frusemide)",
+"brands": [
+"Lasix"
+],
+"class": "Loop diuretic",
+"uses": [
+"Fluid overload in heart failure",
+"Swelling from kidney or liver disease",
+"Pulmonary oedema (hospital)"
+]
+},
+{
+"generic": "Atorvastatin",
+"brands": [
+"Atorva",
+"Lipitor"
+],
+"class": "Statin",
+"uses": [
+"High cholesterol",
+"Cardiovascular prevention"
+]
+},
+{
+"generic": "Rosuvastatin",
+"brands": [
+"Rosuvas",
+"Crestor"
+],
+"class": "Statin",
+"uses": [
+"High cholesterol",
+"Cardiovascular prevention"
+]
+},
+{
+"generic": "Clopidogrel",
+"brands": [
+"Plavix",
+"Clopilet"
+],
+"class": "Antiplatelet",
+"uses": [
+"After heart attack or stent",
+"Stroke prevention",
+"Peripheral artery disease"
+]
+},
+{
+"generic": "Nitroglycerin (glyceryl trinitrate) sublingual",
+"brands": [],
+"class": "Nitrate vasodilator",
+"uses": [
+"Relief of angina chest pain"
+]
+},
+{
+"generic": "Warfarin",
+"brands": [
+"Warf",
+"Coumadin"
+],
+"class": "Anticoagulant",
+"uses": [
+"Atrial fibrillation stroke prevention",
+"Deep vein thrombosis",
+"Mechanical heart valves"
+]
+},
+{
+"generic": "Spironolactone",
+"brands": [
+"Aldactone"
+],
+"class": "Potassium-sparing diuretic / aldosterone antagonist",
+"uses": [
+"Heart failure",
+"Resistant hypertension",
+"Fluid retention in liver disease"
+]
+},
+{
+"generic": "Salbutamol (Albuterol) inhaler",
+"brands": [
+"Asthalin",
+"Ventolin"
+],
+"class": "Short-acting bronchodilator (SABA)",
+"uses": [
+"Asthma attack relief",
+"Wheezing in COPD"
+]
+},
+{
+"generic": "Budesonide inhaler",
+"brands": [
+"Budecort",
+"Pulmicort"
+],
+"class": "Inhaled corticosteroid",
+"uses": [
+"Asthma maintenance",
+"COPD (with LABA, specialist advice)"
+]
+},
+{
+"generic": "Montelukast",
+"brands": [
+"Montair",
+"Singulair"
+],
+"class": "Leukotriene receptor antagonist",
+"uses": [
+"Asthma maintenance",
+"Allergic rhinitis"
+]
+},
+{
+"generic": "Ambroxol",
+"brands": [
+"Ambrodil"
+],
+"class": "Mucolytic / expectorant",
+"uses": [
+"Productive cough with thick phlegm"
+]
+},
+{
+"generic": "Dextromethorphan",
+"brands": [],
+"class": "Cough suppressant",
+"uses": [
+"Dry irritating cough"
+]
+},
+{
+"generic": "Oxymetazoline nasal drops",
+"brands": [
+"Nasivion"
+],
+"class": "Nasal decongestant",
+"uses": [
+"Blocked nose from cold or allergy"
+]
+},
+{
+"generic": "Saline nasal drops or spray",
+"brands": [
+"Nasoclear"
+],
+"class": "Nasal saline",
+"uses": [
+"Blocked nose",
+"Nasal dryness",
+"Infant congestion"
+]
+},
+{
+"generic": "Levothyroxine",
+"brands": [
+"Thyronorm",
+"Eltroxin"
+],
+"class": "Thyroid hormone",
+"uses": [
+"Hypothyroidism"
+]
+},
+{
+"generic": "Carbimazole",
+"brands": [
+"Neomercazole"
+],
+"class": "Antithyroid drug",
+"uses": [
+"Hyperthyroidism"
+]
+},
+{
+"generic": "Sumatriptan",
+"brands": [
+"Suminat"
+],
+"class": "Triptan (5-HT1B/1D agonist)",
+"uses": [
+"Acute migraine attack"
+]
+},
+{
+"generic": "Phenytoin",
+"brands": [
+"Eptoin"
+],
+"class": "Antiepileptic",
+"uses": [
+"Epilepsy (tonic-clonic and focal seizures)"
+]
+},
+{
+"generic": "Levetiracetam",
+"brands": [
+"Levipil",
+"Keppra"
+],
+"class": "Antiepileptic",
+"uses": [
+"Epilepsy (focal and generalised seizures)"
+]
+},
+{
+"generic": "Sodium valproate",
+"brands": [
+"Valparin",
+"Encorate"
+],
+"class": "Antiepileptic / mood stabiliser",
+"uses": [
+"Epilepsy",
+"Bipolar disorder",
+"Migraine prevention (specialist)"
+]
+},
+{
+"generic": "Carbamazepine",
+"brands": [
+"Tegretol"
+],
+"class": "Antiepileptic",
+"uses": [
+"Epilepsy",
+"Trigeminal neuralgia",
+"Bipolar disorder (specialist)"
+]
+},
+{
+"generic": "Sertraline",
+"brands": [
+"Daxid",
+"Zoloft"
+],
+"class": "SSRI antidepressant",
+"uses": [
+"Depression",
+"Anxiety and panic disorder",
+"OCD"
+]
+},
+{
+"generic": "Escitalopram",
+"brands": [
+"Nexito",
+"Lexapro"
+],
+"class": "SSRI antidepressant",
+"uses": [
+"Depression",
+"Anxiety disorders",
+"Panic disorder"
+]
+},
+{
+"generic": "Fluoxetine",
+"brands": [
+"Prozac",
+"Fludac"
+],
+"class": "SSRI antidepressant",
+"uses": [
+"Depression",
+"OCD",
+"Bulimia nervosa"
+]
+},
+{
+"generic": "Alprazolam",
+"brands": [
+"Alprax",
+"Restyl"
+],
+"class": "Benzodiazepine",
+"uses": [
+"Short-term anxiety",
+"Panic disorder (specialist)"
+]
+},
+{
+"generic": "Clonazepam",
+"brands": [
+"Rivotril",
+"Clonotril"
+],
+"class": "Benzodiazepine",
+"uses": [
+"Seizure disorders (adjunct)",
+"Panic disorder",
+"Short-term anxiety"
+]
+},
+{
+"generic": "Diazepam",
+"brands": [
+"Valium",
+"Calmpose"
+],
+"class": "Benzodiazepine",
+"uses": [
+"Acute anxiety",
+"Muscle spasm",
+"Seizures and alcohol withdrawal (doctor-directed)"
+]
+},
+{
+"generic": "Amitriptyline",
+"brands": [
+"Tryptomer"
+],
+"class": "Tricyclic antidepressant",
+"uses": [
+"Depression",
+"Neuropathic pain",
+"Migraine prevention"
+]
+},
+{
+"generic": "Propranolol",
+"brands": [
+"Inderal"
+],
+"class": "Non-selective beta blocker",
+"uses": [
+"Migraine prevention",
+"Essential tremor",
+"Anxiety physical symptoms",
+"Hypertension"
+]
+},
+{
+"generic": "Gabapentin",
+"brands": [
+"Gabapin"
+],
+"class": "Anticonvulsant / neuropathic pain agent",
+"uses": [
+"Neuropathic pain",
+"Focal seizures (adjunct)"
+]
+},
+{
+"generic": "Iron + Folic acid (ferrous salt)",
+"brands": [
+"Fefol"
+],
+"class": "Mineral / vitamin supplement",
+"uses": [
+"Iron-deficiency anaemia",
+"Prevention of anaemia in pregnancy and adolescents"
+]
+},
+{
+"generic": "Vitamin D3 (Cholecalciferol)",
+"brands": [
+"Uprise-D3",
+"Calcirol"
+],
+"class": "Vitamin supplement",
+"uses": [
+"Vitamin D deficiency",
+"Bone health",
+"Rickets and osteomalacia"
+]
+},
+{
+"generic": "Calcium (carbonate or citrate) with or without vitamin D3",
+"brands": [
+"Shelcal",
+"Calcimax"
+],
+"class": "Mineral supplement",
+"uses": [
+"Calcium deficiency",
+"Osteoporosis prevention",
+"Pregnancy and lactation supplementation"
+]
+},
+{
+"generic": "Vitamin B12 (Cyanocobalamin / Methylcobalamin)",
+"brands": [
+"Methycobal"
+],
+"class": "Vitamin supplement",
+"uses": [
+"B12 deficiency",
+"Pernicious anaemia",
+"Neuropathy due to deficiency"
+]
+},
+{
+"generic": "Folic acid",
+"brands": [
+"Folvite"
+],
+"class": "Vitamin supplement",
+"uses": [
+"Folate deficiency anaemia",
+"Prevention of neural tube defects (preconception and early pregnancy)"
+]
+},
+{
+"generic": "Clotrimazole cream (1%)",
+"brands": [
+"Candid"
+],
+"class": "Topical antifungal",
+"uses": [
+"Ringworm (tinea)",
+"Athlete's foot",
+"Candidal skin and vaginal infection"
+]
+},
+{
+"generic": "Permethrin cream (5%)",
+"brands": [
+"Scabper",
+"Permite"
+],
+"class": "Topical scabicide",
+"uses": [
+"Scabies",
+"Head lice (lotion)"
+]
+},
+{
+"generic": "Mupirocin ointment (2%)",
+"brands": [
+"T-Bact",
+"Bactroban"
+],
+"class": "Topical antibiotic",
+"uses": [
+"Impetigo",
+"Infected small skin wounds",
+"MRSA nasal decolonisation"
+]
+},
+{
+"generic": "Hydrocortisone cream (1%)",
+"brands": [],
+"class": "Mild topical corticosteroid",
+"uses": [
+"Eczema",
+"Allergic and contact dermatitis",
+"Insect bites"
+]
+},
+{
+"generic": "Fluconazole",
+"brands": [
+"Forcan",
+"Zocon"
+],
+"class": "Oral antifungal",
+"uses": [
+"Vaginal candidiasis",
+"Oral thrush",
+"Resistant fungal skin infections",
+"Cryptococcal infection (hospital)"
+]
+},
+{
+"generic": "Terbinafine",
+"brands": [
+"Terbicip",
+"Lamisil"
+],
+"class": "Antifungal (allylamine)",
+"uses": [
+"Ringworm of body and scalp",
+"Nail fungus",
+"Athlete's foot"
+]
+},
+{
+"generic": "Calamine lotion",
+"brands": [
+"Lacto Calamine"
+],
+"class": "Topical soothing agent",
+"uses": [
+"Itching from insect bites, chickenpox, heat rash, sunburn"
+]
+},
+{
+"generic": "Benzoyl peroxide gel (2.5-5%)",
+"brands": [
+"Benzac"
+],
+"class": "Topical anti-acne",
+"uses": [
+"Mild to moderate acne"
+]
+},
+{
+"generic": "Adapalene gel (0.1%)",
+"brands": [
+"Adaferin",
+"Differin"
+],
+"class": "Topical retinoid",
+"uses": [
+"Acne"
+]
+},
+{
+"generic": "Acyclovir",
+"brands": [
+"Zovirax",
+"Acivir"
+],
+"class": "Antiviral",
+"uses": [
+"Herpes zoster (shingles)",
+"Chickenpox in adults and high-risk groups",
+"Herpes simplex"
+]
+},
+{
+"generic": "Albendazole",
+"brands": [
+"Zentel",
+"Bandy"
+],
+"class": "Anthelmintic",
+"uses": [
+"Roundworm, hookworm, whipworm, pinworm",
+"Mass deworming"
+]
+},
+{
+"generic": "Ivermectin",
+"brands": [
+"Ivecop",
+"Iverheal"
+],
+"class": "Anti-parasitic",
+"uses": [
+"Scabies",
+"Strongyloidiasis",
+"Lice"
+]
+},
+{
+"generic": "Prednisolone",
+"brands": [
+"Wysolone",
+"Omnacortil"
+],
+"class": "Oral corticosteroid",
+"uses": [
+"Severe asthma or COPD flare",
+"Severe allergy",
+"Autoimmune and inflammatory conditions"
+]
+},
+{
+"generic": "Dexamethasone",
+"brands": [
+"Decdan",
+"Dexona"
+],
+"class": "Oral and injectable corticosteroid",
+"uses": [
+"Severe allergy",
+"Brain swelling",
+"Croup in children (single dose)",
+"Severe inflammation"
+]
+},
+{
+"generic": "Epinephrine (Adrenaline)",
+"brands": [
+"Adrenaline injection"
+],
+"class": "Emergency sympathomimetic",
+"uses": [
+"Anaphylaxis",
+"Severe asthma (emergency)",
+"Cardiac arrest (hospital protocols)"
+]
+},
+{
+"generic": "Polyvalent anti-snake venom (Indian)",
+"brands": [],
+"class": "Antivenom",
+"uses": [
+"Bites by the Indian big four (cobra, krait, Russell's viper, saw-scaled viper)"
+]
+},
+{
+"generic": "Rabies vaccine (cell culture)",
+"brands": [
+"Rabipur",
+"Abhayrab",
+"Verorab"
+],
+"class": "Vaccine",
+"uses": [
+"Post-exposure prophylaxis after animal bites",
+"Pre-exposure prophylaxis"
+]
+},
+{
+"generic": "Rabies immunoglobulin (human or equine)",
+"brands": [],
+"class": "Passive immunisation",
+"uses": [
+"Post-exposure prophylaxis for category III animal exposure (bites, scratches with bleeding, licks on broken skin)"
+]
+},
+{
+"generic": "Tetanus toxoid (TT or Td)",
+"brands": [
+"TT",
+"Td"
+],
+"class": "Vaccine",
+"uses": [
+"Tetanus prevention after wounds",
+"Routine immunisation and pregnancy"
+]
+},
+{
+"generic": "Combined oral contraceptive pill",
+"brands": [
+"Mala-D",
+"Ovral L"
+],
+"class": "Hormonal contraceptive",
+"uses": [
+"Contraception",
+"Cycle regulation (on advice)"
+]
+},
+{
+"generic": "Tranexamic acid",
+"brands": [
+"Tranexa"
+],
+"class": "Antifibrinolytic",
+"uses": [
+"Heavy menstrual bleeding",
+"Bleeding after trauma or surgery (doctor-directed)"
+]
+},
+{
+"generic": "Allopurinol",
+"brands": [
+"Zyloric"
+],
+"class": "Xanthine oxidase inhibitor",
+"uses": [
+"Gout prevention",
+"Uric acid kidney stones"
+]
+},
+{
+"generic": "Colchicine",
+"brands": [],
+"class": "Anti-gout agent",
+"uses": [
+"Acute gout attack",
+"Gout flare prevention"
+]
+},
+{
+"generic": "Tamsulosin",
+"brands": [
+"Urimax",
+"Veltam"
+],
+"class": "Alpha blocker",
+"uses": [
+"Benign prostate enlargement symptoms",
+"Ureteric stone passage (specialist use)"
+]
+},
+{
+"generic": "Oseltamivir",
+"brands": [
+"Fluvir"
+],
+"class": "Antiviral (neuraminidase inhibitor)",
+"uses": [
+"Influenza treatment (especially severe or high-risk)",
+"Influenza prevention in selected contacts"
+]
+},
+{
+"generic": "Timolol eye drops (0.25-0.5%)",
+"brands": [],
+"class": "Beta blocker eye drops",
+"uses": [
+"Glaucoma and raised eye pressure"
+]
+},
+{
+"generic": "Lubricant eye drops (carboxymethylcellulose)",
+"brands": [
+"Refresh Tears"
+],
+"class": "Ocular lubricant",
+"uses": [
+"Dry eyes",
+"Eye irritation from screens or dust"
+]
+},
+{
+"generic": "Labetalol",
+"brands": [],
+"class": "Alpha and beta blocker",
+"uses": [
+"Hypertension in pregnancy",
+"Pre-eclampsia"
+]
+},
+{
+"generic": "Methyldopa",
+"brands": [
+"Alphadopa"
+],
+"class": "Centrally acting antihypertensive",
+"uses": [
+"Hypertension in pregnancy"
+]
+},
+{
+"generic": "Nifedipine (retard)",
+"brands": [
+"Depin"
+],
+"class": "Calcium channel blocker",
+"uses": [
+"Hypertension in pregnancy",
+"Severe hypertension (doctor-directed)"
+]
+},
+{
+"generic": "Sildenafil",
+"brands": [
+"Viagra",
+"Manforce",
+"Penegra",
+"Kamagra"
+],
+"class": "PDE-5 inhibitor",
+"uses": [
+"Erectile dysfunction"
+]
+},
+{
+"generic": "Tadalafil",
+"brands": [
+"Cialis",
+"Tadacip",
+"Megalis"
+],
+"class": "PDE-5 inhibitor",
+"uses": [
+"Erectile dysfunction",
+"Benign prostatic hyperplasia"
+]
+}
+]

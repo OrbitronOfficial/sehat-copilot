@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="only light">
+<meta name="theme-color" content="#0F766E">
+<title>Sehat Copilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name" id="brandName">Sehat Copilot</span>
+  </div>
+  <div class="top-right">
+    <span class="local-note" id="localNote">Stored on this device</span>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-act="lang" data-lang="en" id="langEn">EN</button>
+      <button type="button" data-act="lang" data-lang="hi" id="langHi">हिंदी</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="nav" id="nav" aria-label="Main"></nav>
+  <main class="main">
+    <div id="err" aria-live="assertive"></div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<footer class="disclaimer" id="disclaimer" role="note">Sehat Copilot explains your records. It is not a diagnosis. Always confirm with your doctor.</footer>
+
+<input type="file" id="fileInput" accept="image/*,application/pdf,text/plain" hidden>
+<input type="file" id="camInput" accept="image/*" capture="environment" hidden>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1080 @@
+{
+ "patient": {
+  "name": "Rahul Sharma",
+  "age": "46",
+  "sex": "M",
+  "abha": null
+ },
+ "records": [
+  {
+   "id": "rec_demo_labmar",
+   "doc_type": "lab_report",
+   "title": "Diagnostic Report",
+   "date": "2026-03-12",
+   "facility": "CityCare Diagnostics",
+   "doctor": "Dr. Anita Mehta",
+   "patient": {
+    "name": "Mr. Rahul Sharma",
+    "age": "46 Years",
+    "sex": "M"
+   },
+   "language_detected": "en",
+   "handwritten": false,
+   "tests": [
+    {
+     "name": "HbA1c (Glycated Hemoglobin)",
+     "value": 8.4,
+     "unit": "%",
+     "ref_low": 4.0,
+     "ref_high": 5.6,
+     "ref_text": "4.0 - 5.6",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "4548-4",
+     "standard_name": "HbA1c"
+    },
+    {
+     "name": "Fasting Blood Sugar",
+     "value": 168.0,
+     "unit": "mg/dL",
+     "ref_low": 70.0,
+     "ref_high": 100.0,
+     "ref_text": "70 - 100",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "1558-6",
+     "standard_name": "Fasting Blood Sugar"
+    },
+    {
+     "name": "Total Cholesterol",
+     "value": 236.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 200.0,
+     "ref_text": "< 200",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "2093-3",
+     "standard_name": "Total Cholesterol"
+    },
+    {
+     "name": "LDL Cholesterol",
+     "value": 152.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 100.0,
+     "ref_text": "< 100",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "13457-7",
+     "standard_name": "LDL Cholesterol"
+    },
+    {
+     "name": "HDL Cholesterol",
+     "value": 38.0,
+     "unit": "mg/dL",
+     "ref_low": 40.0,
+     "ref_high": null,
+     "ref_text": "> 40",
+     "ref_source": "report",
+     "flag": "low",
+     "confidence": 0.99,
+     "loinc": "2085-9",
+     "standard_name": "HDL Cholesterol"
+    },
+    {
+     "name": "Triglycerides",
+     "value": 214.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 150.0,
+     "ref_text": "< 150",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "2571-8",
+     "standard_name": "Triglycerides"
+    },
+    {
+     "name": "Hemoglobin",
+     "value": 13.8,
+     "unit": "g/dL",
+     "ref_low": 13.0,
+     "ref_high": 17.0,
+     "ref_text": "13.0 - 17.0",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "718-7",
+     "standard_name": "Hemoglobin"
+    },
+    {
+     "name": "Serum Creatinine",
+     "value": 0.9,
+     "unit": "mg/dL",
+     "ref_low": 0.6,
+     "ref_high": 1.3,
+     "ref_text": "0.6 - 1.3",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "2160-0",
+     "standard_name": "Serum Creatinine"
+    },
+    {
+     "name": "TSH",
+     "value": 2.1,
+     "unit": "uIU/mL",
+     "ref_low": 0.4,
+     "ref_high": 4.5,
+     "ref_text": "0.4 - 4.5",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "3016-3",
+     "standard_name": "TSH"
+    },
+    {
+     "name": "Vitamin D (25-OH)",
+     "value": 14.0,
+     "unit": "ng/mL",
+     "ref_low": 30.0,
+     "ref_high": 100.0,
+     "ref_text": "30 - 100",
+     "ref_source": "report",
+     "flag": "low",
+     "confidence": 0.99,
+     "loinc": "1989-3",
+     "standard_name": "Vitamin D (25-OH)"
+    }
+   ],
+   "medicines": [],
+   "diagnoses": [],
+   "advice": [],
+   "follow_up": null,
+   "overall_confidence": 0.99,
+   "warnings": [],
+   "explanation": {
+    "en": {
+     "summary": "This document is a blood test report from CityCare Diagnostics that checks your blood sugar, cholesterol fats, and vitamins. The results show that your blood sugar and several blood fat levels are higher than typical ranges, while your helpful cholesterol and vitamin D are lower. Other basic checks, such as your kidney health and thyroid, are in the normal range.",
+     "findings": [
+      {
+       "name": "HbA1c (Glycated Hemoglobin)",
+       "flag": "high",
+       "meaning": "This test measures your average blood sugar over the past two to three months. Your result is above the normal range, which is often linked to higher long-term blood sugar levels."
+      },
+      {
+       "name": "Fasting Blood Sugar",
+       "flag": "high",
+       "meaning": "This measures the amount of sugar in your blood after not eating for several hours. Your result is above the normal range, which can show how your body handles sugar."
+      },
+      {
+       "name": "Total Cholesterol",
+       "flag": "high",
+       "meaning": "This looks at the total amount of fats in your blood. Your number is above the recommended range, which doctors check to understand heart health."
+      },
+      {
+       "name": "LDL Cholesterol",
+       "flag": "high",
+       "meaning": "This is often called 'bad' cholesterol because extra amounts can collect in blood vessels. Your level is above the standard range."
+      },
+      {
+       "name": "HDL Cholesterol",
+       "flag": "low",
+       "meaning": "This is often called 'good' cholesterol because it helps clear other fats from your bloodstream. Your level is below the recommended range."
+      },
+      {
+       "name": "Triglycerides",
+       "flag": "high",
+       "meaning": "This test measures a common type of fat stored in the blood. Your number is above the target range, which can be linked to diet, exercise, or metabolism."
+      },
+      {
+       "name": "Vitamin D (25-OH)",
+       "flag": "low",
+       "meaning": "This measures a vitamin that helps keep your bones strong and supports your immune system. Your level is below the normal range, which is often linked to getting less sunlight or dietary intake."
+      }
+     ],
+     "medicines": [],
+     "questions": [
+      "What lifestyle changes or treatments do you suggest to help manage my blood sugar levels?",
+      "How can I work on improving my cholesterol and triglyceride numbers?",
+      "Do you recommend a vitamin D supplement to help bring my levels back into the normal range?",
+      "When should I have these blood tests repeated to check my progress?"
+     ],
+     "disclaimer": "This explanation is for understanding your records only. It is not a diagnosis or medical advice. Do not start, stop or change any medicine without your doctor."
+    },
+    "hi": {
+     "summary": "यह आपकी खून की जांच (ब्लड टेस्ट) की रिपोर्ट है। इस रिपोर्ट में आपके ब्लड शुगर और कोलेस्ट्रॉल के स्तर सामान्य से अधिक आए हैं। इसके अलावा, विटामिन डी का स्तर सामान्य से कम पाया गया है, जबकि किडनी और थायराइड के टेस्ट सामान्य हैं।",
+     "findings": [
+      {
+       "name": "HbA1c (Glycated Hemoglobin)",
+       "flag": "high",
+       "meaning": "यह टेस्ट पिछले 2-3 महीनों के औसत ब्लड शुगर को मापता है। यह सामान्य सीमा से ऊपर है, जो शरीर में शुगर के बढ़े हुए स्तर से जुड़ा हो सकता है।"
+      },
+      {
+       "name": "Fasting Blood Sugar",
+       "flag": "high",
+       "meaning": "यह खाली पेट रहने पर ब्लड शुगर की मात्रा की जांच करता है। यह मान सामान्य से अधिक है, जिसे शरीर में शुगर के संतुलन को देखने के लिए जांचा जाता है।"
+      },
+      {
+       "name": "Total Cholesterol",
+       "flag": "high",
+       "meaning": "यह खून में कुल फैट (वसा) की मात्रा को दर्शाता है। यह सामान्य से ज्यादा है, जो रक्त वाहिकाओं के स्वास्थ्य से संबंधित होता है।"
+      },
+      {
+       "name": "LDL Cholesterol",
+       "flag": "high",
+       "meaning": "इसे आमतौर पर 'खराब कोलेस्ट्रॉल' कहा जाता है। यह सीमा से अधिक है, जो नसों में वसा जमने के खतरे से जुड़ा हो सकता है।"
+      },
+      {
+       "name": "HDL Cholesterol",
+       "flag": "low",
+       "meaning": "इसे 'अच्छा कोलेस्ट्रॉल' माना जाता है, जो दिल की रक्षा में मदद करता है। यह मान सामान्य से कम आया है।"
+      },
+      {
+       "name": "Triglycerides",
+       "flag": "high",
+       "meaning": "यह खून में मौजूद एक अन्य प्रकार का फैट है। यह स्तर सामान्य से अधिक है, जो अक्सर खान-पान और जीवनशैली से जुड़ा होता है।"
+      },
+      {
+       "name": "Vitamin D (25-OH)",
+       "flag": "low",
+       "meaning": "यह शरीर में हड्डियों की मजबूती के लिए जरूरी विटामिन की जांच करता है। यह सामान्य सीमा से कम है।"
+      }
+     ],
+     "medicines": [],
+     "questions": [
+      "मेरे ब्लड शुगर और कोलेस्ट्रॉल को नियंत्रण में लाने के लिए मुझे खाने-पीने में क्या बदलाव करने चाहिए?",
+      "क्या विटामिन डी की कमी को पूरा करने के लिए मुझे सप्लीमेंट या धूप लेने की जरूरत है?",
+      "इन स्तरों में सुधार देखने के लिए मुझे दोबारा टेस्ट कब कराना चाहिए?",
+      "क्या मेरे लिए रोजाना कोई हल्का व्यायाम या सैर शुरू करना ठीक रहेगा?"
+     ],
+     "disclaimer": "यह जानकारी केवल आपके रिकॉर्ड को समझने के लिए है। यह कोई निदान या चिकित्सा सलाह नहीं है। अपने डॉक्टर से पूछे बिना कोई दवा शुरू, बंद या बदलें नहीं।"
+    }
+   },
+   "source": "sample",
+   "filename": "lab-2026-03.png",
+   "extracted_by": "gemini",
+   "file_url": "/samples/lab-2026-03.png"
+  },
+  {
+   "id": "rec_demo_rxmar",
+   "doc_type": "prescription",
+   "title": "Prescription - Dr. Anita Mehta",
+   "date": "2026-03-14",
+   "facility": "Mehta Diabetes & Heart Clinic",
+   "doctor": "Dr. Anita Mehta",
+   "patient": {
+    "name": "Rahul Sharma",
+    "age": "46",
+    "sex": "M"
+   },
+   "language_detected": "en",
+   "handwritten": false,
+   "tests": [],
+   "medicines": [
+    {
+     "name": "Tab. Glycomet",
+     "generic": "Metformin",
+     "strength": "500 mg",
+     "dose": null,
+     "frequency": "morning and night",
+     "timing": "after food",
+     "duration": "3 months",
+     "instructions": null,
+     "confidence": 0.99,
+     "known": true
+    },
+    {
+     "name": "Tab. Atorva",
+     "generic": "Atorvastatin",
+     "strength": "10 mg",
+     "dose": null,
+     "frequency": "night only",
+     "timing": "at bedtime",
+     "duration": "3 months",
+     "instructions": null,
+     "confidence": 0.99,
+     "known": true
+    },
+    {
+     "name": "Cap. Uprise-D3",
+     "generic": "Cholecalciferol 60,000 IU",
+     "strength": "60K",
+     "dose": null,
+     "frequency": "once a week",
+     "timing": null,
+     "duration": "8 weeks",
+     "instructions": null,
+     "confidence": 0.99,
+     "known": true
+    }
+   ],
+   "diagnoses": [
+    {
+     "name": "Type 2 Diabetes Mellitus (newly detected)",
+     "confidence": 0.99
+    },
+    {
+     "name": "Dyslipidemia",
+     "confidence": 0.99
+    },
+    {
+     "name": "Vitamin D deficiency",
+     "confidence": 0.99
+    }
+   ],
+   "advice": [
+    "Brisk walk 30 minutes daily. Avoid sugar, sweets and fried food.",
+    "Check fasting sugar at home twice a week.",
+    "Repeat HbA1c and lipid profile after 3 months."
+   ],
+   "follow_up": "after 3 months with reports",
+   "overall_confidence": 0.99,
+   "warnings": [],
+   "explanation": {
+    "en": {
+     "summary": "This document is a prescription from your clinic visit with Dr. Anita Mehta on March 14, 2026. It lists medicines to help support healthy blood sugar, cholesterol, and vitamin D levels. It also includes lifestyle guidance and schedules a follow-up visit in three months with updated lab tests.",
+     "findings": [
+      {
+       "name": "Lab tests",
+       "flag": "normal",
+       "meaning": "No lab test results were recorded in this document."
+      }
+     ],
+     "medicines": [
+      {
+       "name": "Tab. Glycomet",
+       "purpose": "This medicine is commonly used to help manage and lower blood sugar levels."
+      },
+      {
+       "name": "Tab. Atorva",
+       "purpose": "This medicine is often prescribed to lower blood cholesterol and support heart health."
+      },
+      {
+       "name": "Cap. Uprise-D3",
+       "purpose": "This is a vitamin supplement used to raise low vitamin D levels in the body."
+      }
+     ],
+     "questions": [
+      "What target blood sugar numbers should I look for when checking at home?",
+      "Are there any side effects I should watch out for with these medicines?",
+      "Does it matter what time of day or day of the week I take the vitamin D capsule?",
+      "Can you suggest any specific meal plans that fit the dietary advice?"
+     ],
+     "disclaimer": "This explanation is for understanding your records only. It is not a diagnosis or medical advice. Do not start, stop or change any medicine without your doctor."
+    },
+    "hi": {
+     "summary": "यह डॉक्टर अनीता मेहता द्वारा दिया गया दवा का पर्चा है। इसमें ब्लड शुगर, कोलेस्ट्रॉल और विटामिन डी के स्तर को ठीक रखने के लिए दवाएं और खान-पान से जुड़ी सलाह दी गई हैं। आपको तीन महीने बाद कुछ जांचें दोबारा कराकर डॉक्टर से मिलने को कहा गया है।",
+     "findings": [
+      {
+       "name": "लैब टेस्ट",
+       "flag": "normal",
+       "meaning": "इस पर्चे में कोई अलग से लैब टेस्ट परिणाम नहीं दिए गए हैं।"
+      }
+     ],
+     "medicines": [
+      {
+       "name": "Tab. Glycomet",
+       "purpose": "यह दवा आमतौर पर खून में शुगर (ग्लूकोज) के स्तर को नियंत्रित रखने के लिए दी जाती है।"
+      },
+      {
+       "name": "Tab. Atorva",
+       "purpose": "यह दवा खून में कोलेस्ट्रॉल यानी चर्बी की मात्रा को सही स्तर पर रखने में मदद करती है।"
+      },
+      {
+       "name": "Cap. Uprise-D3",
+       "purpose": "यह शरीर में विटामिन डी की कमी को पूरा करने और हड्डियों की मजबूती के लिए इस्तेमाल की जाती है।"
+      }
+     ],
+     "questions": [
+      "{'question': 'घर पर ब्लड शुगर नापते समय मेरा सही शुगर लेवल कितना होना चाहिए?'}",
+      "{'question': 'इन दवाओं को लेते समय मुझे खाने-पीने में किन चीजों से पूरी तरह परहेज करना चाहिए?'}",
+      "{'question': 'अगर मुझे किसी दवा से पेट में परेशानी या कोई अन्य लक्षण हो, तो मुझे क्या करना चाहिए?'}",
+      "{'question': 'तीन महीने बाद फॉलो-अप पर आने से पहले मुझे कौन से टेस्ट कराने होंगे?'}"
+     ],
+     "disclaimer": "यह जानकारी केवल आपके रिकॉर्ड को समझने के लिए है। यह कोई निदान या चिकित्सा सलाह नहीं है। अपने डॉक्टर से पूछे बिना कोई दवा शुरू, बंद या बदलें नहीं।"
+    }
+   },
+   "source": "sample",
+   "filename": "prescription-2026-03.png",
+   "extracted_by": "gemini",
+   "file_url": "/samples/prescription-2026-03.png"
+  },
+  {
+   "id": "rec_demo_labjun",
+   "doc_type": "lab_report",
+   "title": "Diabetes and Lipid Profile",
+   "date": "2026-06-18",
+   "facility": "CityCare Diagnostics",
+   "doctor": "Dr. Anita Mehta",
+   "patient": {
+    "name": "Mr. Rahul Sharma",
+    "age": "46 Years",
+    "sex": "M"
+   },
+   "language_detected": "en",
+   "handwritten": false,
+   "tests": [
+    {
+     "name": "HbA1c (Glycated Hemoglobin)",
+     "value": 7.6,
+     "unit": "%",
+     "ref_low": 4.0,
+     "ref_high": 5.6,
+     "ref_text": "4.0 - 5.6",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "4548-4",
+     "standard_name": "HbA1c"
+    },
+    {
+     "name": "Fasting Blood Sugar",
+     "value": 142.0,
+     "unit": "mg/dL",
+     "ref_low": 70.0,
+     "ref_high": 100.0,
+     "ref_text": "70 - 100",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "1558-6",
+     "standard_name": "Fasting Blood Sugar"
+    },
+    {
+     "name": "Total Cholesterol",
+     "value": 198.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 200.0,
+     "ref_text": "< 200",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "2093-3",
+     "standard_name": "Total Cholesterol"
+    },
+    {
+     "name": "LDL Cholesterol",
+     "value": 118.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 100.0,
+     "ref_text": "< 100",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "13457-7",
+     "standard_name": "LDL Cholesterol"
+    },
+    {
+     "name": "HDL Cholesterol",
+     "value": 41.0,
+     "unit": "mg/dL",
+     "ref_low": 40.0,
+     "ref_high": null,
+     "ref_text": "> 40",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "2085-9",
+     "standard_name": "HDL Cholesterol"
+    },
+    {
+     "name": "Triglycerides",
+     "value": 176.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 150.0,
+     "ref_text": "< 150",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "2571-8",
+     "standard_name": "Triglycerides"
+    },
+    {
+     "name": "Serum Creatinine",
+     "value": 0.9,
+     "unit": "mg/dL",
+     "ref_low": 0.6,
+     "ref_high": 1.3,
+     "ref_text": "0.6 - 1.3",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "2160-0",
+     "standard_name": "Serum Creatinine"
+    },
+    {
+     "name": "Vitamin D (25-OH)",
+     "value": 26.0,
+     "unit": "ng/mL",
+     "ref_low": 30.0,
+     "ref_high": 100.0,
+     "ref_text": "30 - 100",
+     "ref_source": "report",
+     "flag": "low",
+     "confidence": 0.99,
+     "loinc": "1989-3",
+     "standard_name": "Vitamin D (25-OH)"
+    }
+   ],
+   "medicines": [],
+   "diagnoses": [],
+   "advice": [],
+   "follow_up": null,
+   "overall_confidence": 0.99,
+   "warnings": [],
+   "explanation": {
+    "en": {
+     "summary": "This document is a lab report from CityCare Diagnostics dated June 18, 2026. It shows your blood sugar levels and cholesterol markers. Some of these results are outside the normal range and should be discussed with your doctor.",
+     "findings": [
+      {
+       "name": "HbA1c (Glycated Hemoglobin)",
+       "flag": "high",
+       "meaning": "This test measures your average blood sugar over the past few months. A high result is often checked to see how well your body manages sugar."
+      },
+      {
+       "name": "Fasting Blood Sugar",
+       "flag": "high",
+       "meaning": "This measures the amount of sugar in your blood after not eating for several hours. High levels can be linked to how your body processes energy from food."
+      },
+      {
+       "name": "LDL Cholesterol",
+       "flag": "high",
+       "meaning": "This is often called 'bad' cholesterol. High levels can be linked to a buildup of fats in your blood vessels."
+      },
+      {
+       "name": "Triglycerides",
+       "flag": "high",
+       "meaning": "These are a type of fat found in your blood. High levels are often checked to monitor your heart health."
+      },
+      {
+       "name": "Vitamin D (25-OH)",
+       "flag": "low",
+       "meaning": "This measures the amount of Vitamin D in your body. Low levels are common and are often linked to how much sunlight you get or what you eat."
+      }
+     ],
+     "medicines": [],
+     "questions": [
+      "What do these high blood sugar results mean for my overall health?",
+      "Are there specific changes to my diet or exercise that could help improve these numbers?",
+      "Do I need to repeat these tests in the future to see if the levels change?",
+      "Should I be taking a supplement for my low Vitamin D level?"
+     ],
+     "disclaimer": "This explanation is for understanding your records only. It is not a diagnosis or medical advice. Do not start, stop or change any medicine without your doctor."
+    },
+    "hi": {
+     "summary": "यह आपकी लैब रिपोर्ट है जो आपके शुगर लेवल और कोलेस्ट्रॉल की जांच करती है। इसमें कुछ नतीजे सामान्य से थोड़े अलग हैं, इसलिए आपको अपने डॉक्टर से इस पर बात करनी चाहिए।",
+     "findings": [
+      {
+       "name": "HbA1c (Glycated Hemoglobin)",
+       "flag": "high",
+       "meaning": "यह टेस्ट पिछले 2-3 महीनों के आपके औसत शुगर लेवल को बताता है। इसका लेवल ज्यादा होने का मतलब है कि शरीर में शुगर की मात्रा बढ़ गई है।"
+      },
+      {
+       "name": "Fasting Blood Sugar",
+       "flag": "high",
+       "meaning": "यह खाली पेट आपके खून में शुगर की मात्रा मापता है। इसका लेवल ज्यादा होने का मतलब है कि शरीर को शुगर कंट्रोल करने में दिक्कत हो रही है।"
+      },
+      {
+       "name": "LDL Cholesterol",
+       "flag": "high",
+       "meaning": "इसे 'खराब' कोलेस्ट्रॉल कहा जाता है। इसका लेवल ज्यादा होने से धमनियों में फैट जमा हो सकता है, जो दिल की सेहत के लिए अच्छा नहीं है।"
+      },
+      {
+       "name": "Triglycerides",
+       "flag": "high",
+       "meaning": "यह खून में मौजूद एक तरह का फैट है। इसका लेवल ज्यादा होने का संबंध खान-पान और जीवनशैली से हो सकता है।"
+      },
+      {
+       "name": "Vitamin D (25-OH)",
+       "flag": "low",
+       "meaning": "यह विटामिन हड्डियों और शरीर की मजबूती के लिए जरूरी है। इसका लेवल कम होने का मतलब है कि आपको धूप या डाइट के जरिए इसे बढ़ाने की जरूरत हो सकती है।"
+      }
+     ],
+     "medicines": [],
+     "questions": [
+      "क्या मुझे अपनी डाइट में कोई खास बदलाव करने की जरूरत है?",
+      "क्या मुझे इन नतीजों को ठीक करने के लिए और टेस्ट करवाने चाहिए?",
+      "क्या मेरी जीवनशैली में बदलाव करने से ये लेवल सामान्य हो सकते हैं?",
+      "क्या मुझे विटामिन डी के लिए कोई सप्लीमेंट लेने की जरूरत है?"
+     ],
+     "disclaimer": "यह जानकारी केवल आपके रिकॉर्ड को समझने के लिए है। यह कोई निदान या चिकित्सा सलाह नहीं है। अपने डॉक्टर से पूछे बिना कोई दवा शुरू, बंद या बदलें नहीं।"
+    }
+   },
+   "source": "sample",
+   "filename": "lab-2026-06.png",
+   "extracted_by": "gemini",
+   "file_url": "/samples/lab-2026-06.png"
+  },
+  {
+   "id": "rec_demo_disaug",
+   "doc_type": "discharge_summary",
+   "title": "Discharge Summary",
+   "date": "2026-08-08",
+   "facility": "Fortune Multispeciality Hospital",
+   "doctor": "Dr. Vikram Sood",
+   "patient": {
+    "name": "Mr. Rahul Sharma",
+    "age": "46 Y",
+    "sex": "M"
+   },
+   "language_detected": "en",
+   "handwritten": false,
+   "tests": [
+    {
+     "name": "Platelet Count (05/08, lowest)",
+     "value": 68000.0,
+     "unit": "/cumm",
+     "ref_low": 150000.0,
+     "ref_high": 410000.0,
+     "ref_text": "150000 - 410000",
+     "ref_source": "report",
+     "flag": "low",
+     "confidence": 0.99,
+     "loinc": "777-3",
+     "standard_name": "Platelet Count"
+    },
+    {
+     "name": "Platelet Count (at discharge)",
+     "value": 142000.0,
+     "unit": "/cumm",
+     "ref_low": 150000.0,
+     "ref_high": 410000.0,
+     "ref_text": "150000 - 410000",
+     "ref_source": "report",
+     "flag": "low",
+     "confidence": 0.99,
+     "loinc": "777-3",
+     "standard_name": "Platelet Count"
+    },
+    {
+     "name": "Hemoglobin",
+     "value": 14.6,
+     "unit": "g/dL",
+     "ref_low": 13.0,
+     "ref_high": 17.0,
+     "ref_text": "13.0 - 17.0",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "718-7",
+     "standard_name": "Hemoglobin"
+    },
+    {
+     "name": "Total WBC Count",
+     "value": 3400.0,
+     "unit": "/cumm",
+     "ref_low": 4000.0,
+     "ref_high": 11000.0,
+     "ref_text": "4000 - 11000",
+     "ref_source": "report",
+     "flag": "low",
+     "confidence": 0.99,
+     "loinc": "6690-2",
+     "standard_name": "Total WBC Count"
+    },
+    {
+     "name": "SGPT (ALT)",
+     "value": 88.0,
+     "unit": "U/L",
+     "ref_low": null,
+     "ref_high": 45.0,
+     "ref_text": "< 45",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "1742-6",
+     "standard_name": "SGPT (ALT)"
+    },
+    {
+     "name": "Dengue NS1 Antigen",
+     "value": "Positive",
+     "unit": "",
+     "ref_low": null,
+     "ref_high": null,
+     "ref_text": "Negative",
+     "ref_source": null,
+     "flag": "unknown",
+     "confidence": 0.99
+    }
+   ],
+   "medicines": [
+    {
+     "name": "Tab. Dolo",
+     "generic": "Paracetamol",
+     "strength": "650 mg",
+     "dose": null,
+     "frequency": "only when needed",
+     "timing": null,
+     "duration": "5 days",
+     "instructions": "for fever, maximum 3 tablets a day",
+     "confidence": 0.99,
+     "known": true
+    },
+    {
+     "name": "Tab. Pan",
+     "generic": "Pantoprazole",
+     "strength": "40 mg",
+     "dose": null,
+     "frequency": "morning only",
+     "timing": "before breakfast",
+     "duration": "5 days",
+     "instructions": null,
+     "confidence": 0.99,
+     "known": true
+    },
+    {
+     "name": "Tab. Glycomet",
+     "generic": null,
+     "strength": "500 mg",
+     "dose": null,
+     "frequency": "twice a day (morning and night)",
+     "timing": "after food",
+     "duration": null,
+     "instructions": "Continue",
+     "confidence": 0.99,
+     "known": true
+    }
+   ],
+   "diagnoses": [
+    {
+     "name": "Dengue fever (NS1 antigen positive) with thrombocytopenia",
+     "confidence": 0.99
+    },
+    {
+     "name": "Type 2 Diabetes Mellitus (known case)",
+     "confidence": 0.99
+    }
+   ],
+   "advice": [
+    "Drink plenty of fluids (3 litres a day).",
+    "Rest for one week.",
+    "Do NOT take ibuprofen, aspirin or other painkillers.",
+    "Come to emergency at once if bleeding, black stools, severe abdominal pain or drowsiness."
+   ],
+   "follow_up": "OPD after 3 days with repeat platelet count.",
+   "overall_confidence": 0.99,
+   "warnings": [],
+   "explanation": {
+    "en": {
+     "summary": "This document is a summary of your hospital stay for dengue fever and diabetes management. Your blood tests show some levels are still recovering, so it is important to follow the doctor's advice. You are being discharged with instructions to rest and monitor your health closely.",
+     "findings": [
+      {
+       "name": "Platelet Count (05/08, lowest)",
+       "flag": "low",
+       "meaning": "Platelets are cells that help your blood clot. A low count can be linked to viral infections like dengue."
+      },
+      {
+       "name": "Platelet Count (at discharge)",
+       "flag": "low",
+       "meaning": "This measures your blood clotting cells. While it is improving, it is still below the normal range."
+      },
+      {
+       "name": "Total WBC Count",
+       "flag": "low",
+       "meaning": "White blood cells help your body fight off germs. A low count is often seen during or after a viral infection."
+      },
+      {
+       "name": "SGPT (ALT)",
+       "flag": "high",
+       "meaning": "This is an enzyme found in your liver. A high level can be linked to liver inflammation or stress from an infection."
+      },
+      {
+       "name": "Dengue NS1 Antigen",
+       "flag": "unknown",
+       "meaning": "This test checks for the presence of the dengue virus. A positive result confirms you have been infected with dengue."
+      }
+     ],
+     "medicines": [
+      {
+       "name": "Tab. Dolo",
+       "purpose": "Used to reduce fever and relieve mild pain."
+      },
+      {
+       "name": "Tab. Pan",
+       "purpose": "Used to reduce stomach acid and protect the stomach lining."
+      },
+      {
+       "name": "Tab. Glycomet",
+       "purpose": "Used to help control blood sugar levels in people with diabetes."
+      }
+     ],
+     "questions": [
+      "When should I expect my platelet count to return to the normal range?",
+      "Are there specific signs of liver trouble I should watch for while my SGPT is high?",
+      "How should I adjust my diabetes management while I am recovering from this infection?",
+      "What specific activities should I avoid during my week of rest?"
+     ],
+     "disclaimer": "This explanation is for understanding your records only. It is not a diagnosis or medical advice. Do not start, stop or change any medicine without your doctor."
+    },
+    "hi": {
+     "summary": "यह अस्पताल से छुट्टी (डिस्चार्ज) की रिपोर्ट है, जिसमें आपके इलाज और स्वास्थ्य की जानकारी दी गई है। भर्ती होने के दौरान आपके प्लेटलेट्स पहले से सुधरे हैं, लेकिन कुछ रक्त जांचें अभी सामान्य स्तर से थोड़ी बाहर हैं। पूरी तरह ठीक होने के लिए आराम करने और डॉक्टर की सलाह के अनुसार 3 दिन बाद दोबारा जांच कराने के निर्देश दिए गए हैं।",
+     "findings": [
+      {
+       "name": "Platelet Count (05/08, lowest)",
+       "flag": "low",
+       "meaning": "यह खून का थक्का बनाने वाली कोशिकाओं की संख्या मापता है। यह स्तर सामान्य से काफी कम था, जो अक्सर वायरल बुखार के दौरान देखा जाता है।"
+      },
+      {
+       "name": "Platelet Count (at discharge)",
+       "flag": "low",
+       "meaning": "अस्पताल से छुट्टी के समय प्लेटलेट्स बढ़कर 142000 हो गए थे, हालांकि यह अभी भी सामान्य सीमा से थोड़े नीचे हैं। यह दिखाता है कि शरीर में सुधार हो रहा है।"
+      },
+      {
+       "name": "Total WBC Count",
+       "flag": "low",
+       "meaning": "यह संक्रमण से लड़ने वाली सफेद रक्त कोशिकाओं की संख्या है। यह सामान्य से कम है, जो वायरल बीमारियों के दौरान अस्थायी तौर पर घट सकती है।"
+      },
+      {
+       "name": "SGPT (ALT)",
+       "flag": "high",
+       "meaning": "यह लिवर से जुड़ा एक एंजाइम है। इसका स्तर सामान्य से अधिक है, जो अक्सर संक्रमण के दौरान लिवर पर पड़ने वाले हल्के प्रभाव से जुड़ा हो सकता है।"
+      },
+      {
+       "name": "Dengue NS1 Antigen",
+       "flag": "unknown",
+       "meaning": "यह जांच डेंगू वायरस की मौजूदगी देखने के लिए की जाती है। यह नतीजा 'पॉजिटिव' आया है, जो डेंगू संक्रमण की पुष्टि से जुड़ा होता है।"
+      }
+     ],
+     "medicines": [
+      {
+       "name": "Tab. Dolo",
+       "purpose": "यह आमतौर पर बुखार और दर्द को कम करने के लिए दी जाती है।"
+      },
+      {
+       "name": "Tab. Pan",
+       "purpose": "यह पेट में बनने वाले एसिड और जलन को कम करने के लिए इस्तेमाल होती है।"
+      },
+      {
+       "name": "Tab. Glycomet",
+       "purpose": "यह ब्लड शुगर के स्तर को नियंत्रित रखने के लिए उपयोग की जाती है।"
+      }
+     ],
+     "questions": [
+      "मेरे प्लेटलेट्स और सफेद रक्त कोशिकाओं को पूरी तरह सामान्य होने में कितना समय लग सकता है?",
+      "क्या 3 दिन बाद मुझे प्लेटलेट टेस्ट के साथ लिवर (SGPT) की जांच भी दोबारा करानी चाहिए?",
+      "घर पर आराम करते समय ऐसे कौन से लक्षण हैं जिनके दिखने पर मुझे तुरंत अस्पताल आना चाहिए?",
+      "कमजोरी दूर करने के लिए मुझे खान-पान और पानी पीने से जुड़ी किन बातों का ध्यान रखना चाहिए?"
+     ],
+     "disclaimer": "यह जानकारी केवल आपके रिकॉर्ड को समझने के लिए है। यह कोई निदान या चिकित्सा सलाह नहीं है। अपने डॉक्टर से पूछे बिना कोई दवा शुरू, बंद या बदलें नहीं।"
+    }
+   },
+   "source": "sample",
+   "filename": "discharge-2026-08.png",
+   "extracted_by": "gemini",
+   "file_url": "/samples/discharge-2026-08.png"
+  },
+  {
+   "id": "rec_demo_labsep",
+   "doc_type": "lab_report",
+   "title": "Diabetes, Lipid and General Lab Profile",
+   "date": "2026-09-22",
+   "facility": "CityCare Diagnostics",
+   "doctor": "Dr. Anita Mehta",
+   "patient": {
+    "name": "Mr. Rahul Sharma",
+    "age": "46 Years",
+    "sex": "M"
+   },
+   "language_detected": "en",
+   "handwritten": false,
+   "tests": [
+    {
+     "name": "HbA1c (Glycated Hemoglobin)",
+     "value": 6.9,
+     "unit": "%",
+     "ref_low": 4.0,
+     "ref_high": 5.6,
+     "ref_text": "4.0 - 5.6",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "4548-4",
+     "standard_name": "HbA1c"
+    },
+    {
+     "name": "Fasting Blood Sugar",
+     "value": 118.0,
+     "unit": "mg/dL",
+     "ref_low": 70.0,
+     "ref_high": 100.0,
+     "ref_text": "70 - 100",
+     "ref_source": "report",
+     "flag": "high",
+     "confidence": 0.99,
+     "loinc": "1558-6",
+     "standard_name": "Fasting Blood Sugar"
+    },
+    {
+     "name": "Total Cholesterol",
+     "value": 172.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 200.0,
+     "ref_text": "< 200",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "2093-3",
+     "standard_name": "Total Cholesterol"
+    },
+    {
+     "name": "LDL Cholesterol",
+     "value": 96.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 100.0,
+     "ref_text": "< 100",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "13457-7",
+     "standard_name": "LDL Cholesterol"
+    },
+    {
+     "name": "HDL Cholesterol",
+     "value": 44.0,
+     "unit": "mg/dL",
+     "ref_low": 40.0,
+     "ref_high": null,
+     "ref_text": "> 40",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "2085-9",
+     "standard_name": "HDL Cholesterol"
+    },
+    {
+     "name": "Triglycerides",
+     "value": 148.0,
+     "unit": "mg/dL",
+     "ref_low": null,
+     "ref_high": 150.0,
+     "ref_text": "< 150",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "2571-8",
+     "standard_name": "Triglycerides"
+    },
+    {
+     "name": "Hemoglobin",
+     "value": 14.1,
+     "unit": "g/dL",
+     "ref_low": 13.0,
+     "ref_high": 17.0,
+     "ref_text": "13.0 - 17.0",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "718-7",
+     "standard_name": "Hemoglobin"
+    },
+    {
+     "name": "Platelet Count",
+     "value": 2.4,
+     "unit": "lakh/cumm",
+     "ref_low": 1.5,
+     "ref_high": 4.1,
+     "ref_text": "1.5 - 4.1",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "777-3",
+     "standard_name": "Platelet Count"
+    },
+    {
+     "name": "Serum Creatinine",
+     "value": 1.0,
+     "unit": "mg/dL",
+     "ref_low": 0.6,
+     "ref_high": 1.3,
+     "ref_text": "0.6 - 1.3",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "2160-0",
+     "standard_name": "Serum Creatinine"
+    },
+    {
+     "name": "Vitamin D (25-OH)",
+     "value": 34.0,
+     "unit": "ng/mL",
+     "ref_low": 30.0,
+     "ref_high": 100.0,
+     "ref_text": "30 - 100",
+     "ref_source": "report",
+     "flag": "normal",
+     "confidence": 0.99,
+     "loinc": "1989-3",
+     "standard_name": "Vitamin D (25-OH)"
+    }
+   ],
+   "medicines": [],
+   "diagnoses": [],
+   "advice": [],
+   "follow_up": null,
+   "overall_confidence": 0.99,
+   "warnings": [],
+   "explanation": {
+    "en": {
+     "summary": "This document is a blood test report that looks at your blood sugar, cholesterol, blood counts, and kidney health. Most of your results, including your cholesterol and kidney tests, are in the normal range. However, your blood sugar tests came back higher than the standard range.",
+     "findings": [
+      {
+       "name": "HbA1c (Glycated Hemoglobin)",
+       "flag": "high",
+       "meaning": "This test measures your average blood sugar levels over the past two to three months. Your result is above the normal range, which is often linked to higher amounts of sugar in the blood over time."
+      },
+      {
+       "name": "Fasting Blood Sugar",
+       "flag": "high",
+       "meaning": "This test measures the amount of sugar in your blood after you have not eaten for several hours. Your result is higher than the standard range, which is commonly checked when looking at how your body handles sugar."
+      }
+     ],
+     "medicines": [],
+     "questions": [
+      "What could be causing my blood sugar and HbA1c levels to be higher than normal?",
+      "Are there any changes to my diet or daily habits that you would recommend?",
+      "When should I have these blood tests checked again?"
+     ],
+     "disclaimer": "This explanation is for understanding your records only. It is not a diagnosis or medical advice. Do not start, stop or change any medicine without your doctor."
+    },
+    "hi": {
+     "summary": "यह आपकी लैब रिपोर्ट है जिसमें आपके खून की जांच के नतीजे दिए गए हैं। ज्यादातर नतीजे सामान्य हैं, लेकिन शुगर से जुड़ी कुछ जांचें सामान्य से थोड़ी ज्यादा आई हैं। आपको इन नतीजों के बारे में अपने डॉक्टर से बात करनी चाहिए।",
+     "findings": [
+      {
+       "name": "HbA1c (Glycated Hemoglobin)",
+       "flag": "high",
+       "meaning": "यह टेस्ट पिछले 3 महीनों की आपकी औसत शुगर बताता है। इसका स्तर ज्यादा होने का मतलब है कि शरीर में शुगर का लेवल बढ़ा हुआ है।"
+      },
+      {
+       "name": "Fasting Blood Sugar",
+       "flag": "high",
+       "meaning": "यह खाली पेट की गई शुगर की जांच है। इसका स्तर ज्यादा होने का मतलब है कि आपके खून में शुगर की मात्रा सामान्य से अधिक है।"
+      }
+     ],
+     "medicines": [],
+     "questions": [
+      "मेरी शुगर का लेवल ज्यादा होने का क्या कारण हो सकता है?",
+      "क्या मुझे अपनी डाइट या खाने-पीने की आदतों में कोई बदलाव करने की जरूरत है?",
+      "क्या मुझे ये टेस्ट दोबारा करवाने चाहिए और कब?",
+      "क्या मुझे शुगर को कंट्रोल करने के लिए किसी और जांच की जरूरत है?"
+     ],
+     "disclaimer": "यह जानकारी केवल आपके रिकॉर्ड को समझने के लिए है। यह कोई निदान या चिकित्सा सलाह नहीं है। अपने डॉक्टर से पूछे बिना कोई दवा शुरू, बंद या बदलें नहीं।"
+    }
+   },
+   "source": "sample",
+   "filename": "lab-2026-09.png",
+   "extracted_by": "gemini",
+   "file_url": "/samples/lab-2026-09.png"
+  }
+ ]
+}
