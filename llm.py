@@ -8,6 +8,7 @@ Free-tier quotas are per model, so each provider has a chain of models and a
 model that reports "quota exhausted" is skipped until its cool-down passes.
 """
 import json
+import re
 import os
 import time
 import urllib.error
@@ -78,7 +79,7 @@ def _chain(env_name, default, call, deadline, provider="gemini", per_call=None):
         except _Http as e:
             if e.code == 429:
                 # a daily cap rests the model for an hour, a per-minute cap for a minute
-                _resting[rest_key] = time.time() + (3600 if "PerDay" in e.detail else 60)
+                _resting[rest_key] = time.time() + (3600 if re.search(r"PerDay|per day|TPD|RPD", e.detail) else 60)
             elif e.code in (401, 403, 404):
                 _resting[rest_key] = time.time() + 3600
             errors.append(f"{model}: {e}")
@@ -164,7 +165,7 @@ def _first(order, prompt, file):
                 out, model = _gemini(prompt, file, deadline)
             else:
                 out, model = _compat(provider, prompt, file, deadline)
-            LAST_SKIPPED[:] = [e[:220] for e in errors]  # why earlier providers were passed over
+            LAST_SKIPPED[:] = [re.sub(r"org_[a-z0-9]+", "org", e)[:900] for e in errors]  # why earlier providers were passed over
             return out, model if provider == "gemini" else f"{provider}: {model}"
         except LLMError as e:
             errors.append(f"{provider}: {e}")
@@ -183,5 +184,5 @@ def read_document(prompt, file):
 
 def write_json(prompt):
     """Text only: explanations, answers, structuring OCR text."""
-    order = os.environ.get("TEXT_ORDER", "groq,nvidia,openrouter,gemini").split(",")
+    order = os.environ.get("TEXT_ORDER", "groq,openrouter,nvidia,gemini").split(",")
     return _first([p.strip() for p in order], prompt, None)
