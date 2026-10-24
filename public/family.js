@@ -78,7 +78,10 @@ const SehatFamily = (function () {
       fam_err_hidden: 'Set a PIN first to hide this profile.', fam_err_crypto: 'This browser cannot set a PIN here (it needs a secure https page).',
       fam_confirm_remove: 'Remove {name} and all their records from this device? This cannot be undone.',
       fam_busy: 'Please finish or discard the record you are reviewing, or wait for the answer, before switching profiles.',
-      fam_viewing: 'Viewing {name}'
+      fam_viewing: 'Viewing {name}',
+      fam_view: 'Family overview', fam_active: 'Open now', fam_open_m: 'Open', fam_meds_n: 'Medicines today: {x} of {y} taken', fam_meds_none: 'No medicines being tracked',
+      fam_alerts: '{n} alerts', fam_alert_one: '1 alert', fam_add_card: 'Add a family member', fam_add_hint: 'Keep a parent, partner or child\'s records here too.',
+      fam_age_n: '{n} years', fam_locked_note: 'Locked. Enter the PIN to open.', fam_hidden_tag: 'Hidden from child profiles', fam_go_health: 'My health'
     });
     Object.assign(STR.hi, {
       fam_switch: 'परिवार प्रोफ़ाइल बदलें', fam_add: 'परिवार का सदस्य जोड़ें', fam_edit: 'बदलें', fam_remove: 'सदस्य हटाएँ',
@@ -95,7 +98,10 @@ const SehatFamily = (function () {
       fam_err_hidden: 'इस प्रोफ़ाइल को छिपाने से पहले पिन रखें।', fam_err_crypto: 'यह ब्राउज़र यहाँ पिन नहीं रख सकता (इसके लिए सुरक्षित https पेज चाहिए)।',
       fam_confirm_remove: '{name} और उनके सभी रिकॉर्ड इस डिवाइस से हटाएँ? यह वापस नहीं होगा।',
       fam_busy: 'प्रोफ़ाइल बदलने से पहले जिस रिकॉर्ड की जाँच कर रहे हैं उसे पूरा करें या हटाएँ, या जवाब आने तक रुकें।',
-      fam_viewing: '{name} की प्रोफ़ाइल'
+      fam_viewing: '{name} की प्रोफ़ाइल',
+      fam_view: 'परिवार की झलक', fam_active: 'अभी खुला है', fam_open_m: 'खोलें', fam_meds_n: 'आज की दवाइयाँ: {y} में से {x} ली गईं', fam_meds_none: 'कोई दवा ट्रैक नहीं हो रही',
+      fam_alerts: '{n} चेतावनियाँ', fam_alert_one: '1 चेतावनी', fam_add_card: 'परिवार का सदस्य जोड़ें', fam_add_hint: 'माता-पिता, जीवनसाथी या बच्चे के रिकॉर्ड भी यहीं रखें।',
+      fam_age_n: '{n} वर्ष', fam_locked_note: 'लॉक है। खोलने के लिए पिन डालें।', fam_hidden_tag: 'बच्चों की प्रोफ़ाइल से छिपा', fam_go_health: 'मेरी सेहत'
     });
   }
 
@@ -189,7 +195,7 @@ const SehatFamily = (function () {
     if (!el || !FAM.list) return;
     const me = byId(FAM.active) || FAM.list[0];
     let h = '<button type="button" class="fam-btn" data-fam="menu" aria-haspopup="true" aria-expanded="' + FAM.menu + '" aria-label="' + esc(t('fam_switch') + ': ' + nameOf(me)) + '">' +
-      avatar(me) + '<span class="fam-name">' + esc(nameOf(me)) + '</span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>';
+      avatar(me) + '<span class="fam-name">' + esc(nameOf(me)) + '</span>' + alertBadge() + '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>';
     if (FAM.menu) {
       const rows = FAM.list.filter(visible).map(p => {
         const n = p.id === FAM.active ? S.records.length : FAM.others.filter(r => r.profile === p.id).length;
@@ -200,6 +206,7 @@ const SehatFamily = (function () {
       }).join('');
       const hiddenAny = FAM.list.some(p => !visible(p));
       h += '<div class="fam-menu" role="menu">' + rows +
+        '<button type="button" class="fam-act" data-fam="view">' + esc(t('fam_view')) + '</button>' +
         (!isChild(FAM.active) ? '<button type="button" class="fam-act" data-fam="add">+ ' + esc(t('fam_add')) + '</button>' : '') +
         (hiddenAny ? '<button type="button" class="fam-act" data-fam="pinany">' + LOCK_SVG + ' ' + esc(t('fam_pin_any')) + '</button>' : '') + '</div>';
     }
@@ -305,6 +312,60 @@ const SehatFamily = (function () {
     switchTo(id);
   }
 
+  /* --- family overview: one card per member --- */
+  /* reminders.js (if present): number of caregiver alerts, optionally for one profile id */
+  function alerts(id) {
+    try { const R = window.SehatRem; if (R && typeof R.caregiverCount === 'function') { const n = Number(id ? R.caregiverCount(id) : R.caregiverCount()); return isFinite(n) && n > 0 ? n : 0; } } catch (e) { /* ignore */ }
+    return 0;
+  }
+  const alertBadge = () => { const n = alerts(); return n ? '<span class="fam-badge" title="' + esc(t('fam_alerts', { n })) + '"><span aria-hidden="true">' + n + '</span><span class="sr-only">' + esc(t('fam_alerts', { n })) + '</span></span>' : ''; };
+  /* today's doses taken / due. The active profile uses the live schedule; for the others it is worked out from their
+     records and their own "I take this" and "taken" keys (approximate: an ended course is not detected). */
+  function medProgress(p) {
+    try {
+      if (p.id === FAM.active) {
+        const list = buildDoses(schedMeds()).filter(d => isTickable(d.slot)), tk = takenGet();
+        return list.length ? { x: list.filter(d => tk[d.key]).length, y: list.length } : null;
+      }
+      const cur = JSON.parse(localStorage.getItem(profKeyFor('sehat_current', p.id)) || '{}') || {};
+      const seen = {}, meds = [];
+      FAM.others.filter(r => r.profile === p.id).forEach(r => arr(r.medicines).forEach(m => { const k = curKey(m); if (k && cur[k] && !seen[k]) { seen[k] = 1; meds.push({ m, date: r.date }); } }));
+      const list = buildDoses(meds).filter(d => isTickable(d.slot));
+      if (!list.length) return null;
+      const tk = JSON.parse(localStorage.getItem('sehat_taken_' + profKeyFor(todayKey(), p.id)) || '{}') || {};
+      return { x: list.filter(d => tk[d.key]).length, y: list.length };
+    } catch (e) { return null; }
+  }
+  function view() {
+    if (!FAM.list) return '';
+    const cards = FAM.list.filter(visible).map(p => {
+      const n = p.id === FAM.active ? S.records.length : FAM.others.filter(r => r.profile === p.id).length;
+      const locked = needsPin(p), on = p.id === FAM.active, mp = locked ? null : medProgress(p), al = locked ? 0 : alerts(p.id);
+      return '<div class="card fam-card' + (on ? ' on' : '') + '" data-pid="' + esc(p.id) + '"><div class="fam-card-top">' + avatar(p).replace('fam-av ', 'fam-av fam-av-lg ') +
+        '<div class="fam-card-who"><h3>' + esc(nameOf(p)) + (p.pin ? ' <span class="fam-lk" title="' + esc(t('fam_locked')) + '">' + LOCK_SVG + '<span class="sr-only">' + esc(t('fam_locked')) + '</span></span>' : '') + '</h3>' +
+        '<span class="muted small">' + esc(t('rel_' + p.relation)) + (p.age != null ? ' · ' + esc(t('fam_age_n', { n: p.age })) : '') + '</span></div>' +
+        (on ? '<span class="tag green">' + esc(t('fam_active')) + '</span>' : '') + '</div>' +
+        '<ul class="fam-stats"><li>' + esc(t('fam_records', { n })) + '</li>' +
+        (locked ? '<li class="muted small">' + esc(t('fam_locked_note')) + '</li>' :
+          '<li class="small">' + esc(mp ? t('fam_meds_n', mp) : t('fam_meds_none')) + '</li>' +
+          (al ? '<li><span class="tag amber">' + esc(al === 1 ? t('fam_alert_one') : t('fam_alerts', { n: al })) + '</span></li>' : '')) +
+        (p.hidden ? '<li class="muted small">' + esc(t('fam_hidden_tag')) + '</li>' : '') + '</ul>' +
+        '<div class="row fam-card-btns"><button type="button" class="btn small" data-fam="openm" data-id="' + esc(p.id) + '">' + esc(on ? t('fam_go_health') : t('fam_open_m')) + '</button>' +
+        (canEdit(p) ? '<button type="button" class="btn small secondary" data-fam="edit" data-id="' + esc(p.id) + '" aria-label="' + esc(t('fam_edit') + ' ' + nameOf(p)) + '">' + esc(t('fam_edit')) + '</button>' : '') + '</div></div>';
+    }).join('');
+    const add = !isChild(FAM.active) ? '<button type="button" class="card fam-card fam-addcard" data-fam="add"><span class="fam-plus" aria-hidden="true">+</span><strong>' + esc(t('fam_add_card')) + '</strong><span class="muted small">' + esc(t('fam_add_hint')) + '</span></button>' : '';
+    const hiddenAny = FAM.list.some(p => !visible(p));
+    return '<div class="fam-grid">' + cards + add + '</div>' + (hiddenAny ? '<p style="margin-top:12px"><button type="button" class="btn small secondary" data-fam="pinany">' + LOCK_SVG + ' ' + esc(t('fam_pin_any')) + '</button></p>' : '');
+  }
+  async function openMember(id) {
+    const p = byId(id);
+    if (!p) return;
+    if (id === FAM.active) { go('health'); return; }
+    if (needsPin(p)) { openPin(id); return; }
+    await switchTo(id);
+    if (FAM.active === id) go('health');
+  }
+
   /* --- demo family: Jay (self, the bundled demo records), his father Ramesh and son Aarav --- */
   function lab(id, date, tests, title) {
     return normalizeRecord({
@@ -322,7 +383,7 @@ const SehatFamily = (function () {
       normalizeRecord({
         id: 'rec_fam_r_rx1', profile: 'p_ramesh', doc_type: 'prescription', title: 'Prescription - Dr. K. Rao', date: '2026-07-03', facility: 'Rao Family Clinic', doctor: 'Dr. K. Rao',
         patient: { name: 'Ramesh Tawri', age: '72', sex: 'M' }, language_detected: 'en', handwritten: false, source: 'sample', extracted_by: 'sample', overall_confidence: 1, tests: [],
-        medicines: [{ name: 'Tab. Metformin', generic: 'Metformin', strength: '500 mg', dose: '1 tablet', frequency: 'twice a day', timing: 'after food', duration: '3 months', instructions: null, source_text: 'Tab. Metformin 500 mg 1-0-1 after food x 3 months', page: 1, confidence: 1, known: true }],
+        medicines: [{ name: 'Tab. Metformin', generic: 'Metformin', strength: '500 mg', dose: '1 tablet', frequency: 'twice a day', timing: 'after food', duration: '6 months', instructions: null, source_text: 'Tab. Metformin 500 mg 1-0-1 after food x 6 months', page: 1, confidence: 1, known: true }],
         diagnoses: [{ name: 'Type 2 Diabetes Mellitus', confidence: 1 }], advice: ['Walk 30 minutes daily', 'Repeat HbA1c in 3 months'], follow_up: null, warnings: [], unread: [], explanation: {}
       })
     ];
@@ -353,6 +414,8 @@ const SehatFamily = (function () {
     const a = el.getAttribute('data-fam'), id = el.getAttribute('data-id');
     if (a === 'menu') { FAM.menu = !FAM.menu; paint(); }
     else if (a === 'pick') pick(id);
+    else if (a === 'view') { FAM.menu = false; paint(); go('family'); }
+    else if (a === 'openm') openMember(id);
     else if (a === 'edit') openForm(id);
     else if (a === 'add') openForm(null);
     else if (a === 'pinany') openPin('*');
@@ -368,6 +431,8 @@ const SehatFamily = (function () {
     if (e.key !== 'Escape') return;
     if (FAM.modal) closeModal(); else if (FAM.menu) { FAM.menu = false; paint(); }
   });
+  /* reminders.js tells us when the caregiver alerts change */
+  document.addEventListener('sehat:caregiver', () => { paint(); if (S.view === 'family' && !FAM.modal) render(); });
   /* after app.js has run: add labels and repaint the chip on every render */
   document.addEventListener('DOMContentLoaded', () => {
     strings();
@@ -379,7 +444,7 @@ const SehatFamily = (function () {
   return {
     _norm: norm, _split: split, _loadProfileMeta: loadProfileMeta, _demo: demo, _bootPin: bootPin,
     active: () => FAM.active, list: () => (FAM.list || []).map(p => ({ id: p.id, name: nameOf(p), relation: p.relation, age: p.age, sex: p.sex, locked: !!p.pin, hidden: p.hidden })),
-    switchTo: id => pick(id), profKey, profKeyFor
+    switchTo: id => pick(id), view, profKey, profKeyFor
   };
 })();
 window.SehatFamily = SehatFamily;

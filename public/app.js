@@ -904,6 +904,7 @@ async function saveDraft() {
     }
     S.draft = null; S.pendingFile = null; S.previewFile = null; S.stage = 'idle'; S.editingId = null;
     S.overview = {};
+    if (window.SehatBulk && SehatBulk.afterSave(rec)) { S.busy.save = false; render(); window.scrollTo(0, 0); return; }  // bulk.js: back to the queue
     S.view = 'detail'; S.detailId = rec.id;
     S.busy.save = false;
     render();
@@ -917,6 +918,7 @@ async function saveDraft() {
 
 function discardDraft() {
   const wasEdit = S.editingId;
+  if (window.SehatBulk && !wasEdit) SehatBulk.onDiscard();  // bulk.js: a discarded batch draft counts as skipped
   S.draft = null; S.pendingFile = null; S.previewFile = null; S.stage = 'idle'; S.editingId = null;
   if (wasEdit && getRec(wasEdit)) { S.view = 'detail'; S.detailId = wasEdit; } else S.view = 'add';
   clearError(); render();
@@ -952,11 +954,12 @@ function viewAdd() {
       ? '<div class="sample-row">' + S.samples.map(s =>
         '<button type="button" class="btn secondary small" data-act="sample" data-id="' + esc(s.id) + '">' + esc(s.title || s.id) + '</button>').join('') + '</div>'
       : '<p class="muted">' + esc(t('samples_none')) + '</p>');
+  if (window.SehatBulk && S.bulk) return '<div class="page-head"><h1>' + esc(t('add_title')) + '</h1><p>' + esc(t('add_sub')) + '</p></div>' + SehatBulk.queueHTML();  // bulk.js
   return '<div class="page-head"><h1>' + esc(t('add_title')) + '</h1><p>' + esc(t('add_sub')) + '</p></div>' +
     (window.SehatRem ? SehatRem.actionsCard({ recent: true }) : '') /* reminders.js */ +
     '<div class="dropzone" id="drop">' +
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>' +
-    '<h2>' + esc(t('drop_title')) + '</h2><p class="muted">' + esc(t('drop_hint')) + '</p>' +
+    '<h2>' + esc(t('drop_title')) + '</h2><p class="muted">' + esc(t('drop_hint')) + (window.SehatBulk ? ' ' + esc(t('bulk_hint')) : '') + '</p>' +
     '<div class="row"><button type="button" class="btn" data-act="choose">' + esc(t('choose_file')) + '</button>' +
     '<button type="button" class="btn secondary" data-act="photo">' + esc(t('take_photo')) + '</button></div></div>' +
     '<ol class="how">' + [1, 2, 3].map(n => '<li><span class="how-n">' + n + '</span><div><strong>' + esc(t('how_' + n)) + '</strong><div class="muted small">' + esc(t('how_' + n + 's')) + '</div></div></li>').join('') + '</ol>' +
@@ -1053,7 +1056,7 @@ function viewReview() {
   const lowN = d.tests.filter(x => isLow(x.confidence)).length + d.medicines.filter(x => isLow(x.confidence)).length + d.diagnoses.filter(x => isLow(x.confidence)).length;
   const oc = isNum(d.overall_confidence) ? Math.round(Number(d.overall_confidence) * 100) : null;
   const saving = !!S.busy.save;
-  return '<div class="page-head"><h1>' + esc(S.editingId ? t('edit_title') : t('review_title')) + '</h1><p>' + esc(t('review_sub')) + '</p></div>' +
+  return '<div class="page-head"><h1>' + esc(S.editingId ? t('edit_title') : t('review_title')) + '</h1><p>' + esc(t('review_sub')) + '</p></div>' + (window.SehatBulk ? SehatBulk.reviewBanner() : '') /* bulk.js */ +
     '<div class="row" style="margin-bottom:14px">' +
     (d.handwritten ? '<span class="tag amber hw">' + esc(t('hw_check')) + '</span>' : '') +
     (oc !== null && !d.handwritten ? '<span class="small">' + esc(t('conf_label', { p: oc })) + '</span><span class="confbar ' + (oc < 70 ? 'low' : '') + '"><i style="width:' + Math.max(0, Math.min(100, oc)) + '%"></i></span>' : '') +
@@ -1337,10 +1340,12 @@ async function runInsights(key) {
     S.insights.state = 'ok'; S.insights.data = normInsights(res); S.insights.stale = null;
     try { localStorage.setItem(profKey('sehat_insights'), JSON.stringify({ key, day: new Date().toISOString().slice(0, 10), data: res })); } catch (x) { /* ignore */ }
   } else S.insights.state = 'fail';
-  const typing = document.activeElement && document.activeElement.closest && document.activeElement.closest('#vitForm');
-  if ((S.view === 'health' || S.view === 'visit') && !typing) render();
+  const typing = document.activeElement && document.activeElement.closest && document.activeElement.closest('#vitForm,#stepForm,#jrCard');
+  if (INS_VIEWS.indexOf(S.view) >= 0 && !typing) render();
 }
 /* Used by views: starts the request when records or language changed. */
+/* views that show insight cards: re-rendered when the insights arrive */
+const INS_VIEWS = ['health', 'visit', 'meds', 'visits', 'journal', 'wellness'];
 function getInsights() {
   if (!S.records.length && !S.vitals.length) return { loading: false, data: fallbackInsights() };
   const key = insightsKey();
@@ -1465,7 +1470,7 @@ function dashHTML(I) {
     '<div class="card mini"><div class="kicker">' + esc(t('dash_doctor')) + '</div><p class="dash-t">' + esc(t('dash_doctor_n', { n: I.questions.length })) + '</p>' +
     '<button type="button" class="btn small secondary" data-act="visit">' + esc(t('visit_btn')) + '</button></div></div>';
   const quick = '<div class="quick">' + quickTile('add', t('nav_add'), 'data-act="nav" data-view="add"') + quickTile('ask', t('qa_ask'), 'data-pet="open"') +
-    quickTile('visit', t('visit_btn'), 'data-act="visit"') + quickTile('vit', t('qa_reading'), 'data-act="vitgo"') + quickTile('exp', t('qa_export'), 'data-act="nav" data-view="abha"') + '</div>';
+    quickTile('visit', t('visit_btn'), 'data-act="visit"') + quickTile('vit', t('qa_reading'), 'data-act="nav" data-view="wellness"') + quickTile('exp', t('qa_export'), 'data-act="nav" data-view="abha"') + '</div>';
   return '<div class="dash">' + lead + side + '</div>' + quick;
 }
 function skelCard(n) {
@@ -1495,7 +1500,7 @@ function jrH(I, w) { return typeof journalHTML === 'function' ? journalHTML(I, w
 function viewHealth() {
   const head = '<div class="page-head"><h1>' + esc(t('health_title')) + '</h1><p>' + esc(t('health_sub')) + '</p></div>';
   if (!S.records.length && !S.vitals.length) return head + '<div class="card empty"><p>' + esc(t('none_yet')) + '</p><button type="button" class="btn" data-act="nav" data-view="add">' + esc(t('go_add')) + '</button></div>' +
-    '<section class="hsec"><div class="kicker">' + esc(t('kick_wellness')) + '</div>' + wellnessCard(null) + '</section>';
+    hubTiles();  // wellness.js
   const p = S.patient || {}, ab = abhaNumber(p);
   const sexLbl = s => { const v = String(s || '').toLowerCase(); return v === 'male' || v === 'm' ? t('sex_male') : (v === 'female' || v === 'f' ? t('sex_female') : (s || '')); };
   const headV = '<div class="page-head row between"><div><div class="kicker">' + esc(t('health_title')) + '</div><h1>' + esc(greetingLine()) + '</h1><p>' +
@@ -1536,13 +1541,10 @@ function viewHealth() {
   // Folding sections keep a long dashboard readable; the first ones start open and a choice is kept across re-renders.
   const sec = (k, body, open) => '<details class="hsec" data-k="' + k + '"' + ((S.secOpen && k in S.secOpen ? S.secOpen[k] : open) ? ' open' : '') +
     '><summary class="kicker">' + esc(t(k)) + '</summary>' + body + '</details>';
-  return headV + dashHTML(I) + tiles + (window.SehatRem ? SehatRem.actionsCard() : '') /* reminders.js */ +
+  // The overview only; medicines, visits, journal and wellness have their own views (hubTiles links to them).
+  return headV + dashHTML(I) + tiles + hubTiles() /* wellness.js */ + (window.SehatRem ? SehatRem.actionsCard() : '') /* reminders.js */ +
     sec('kick_results', '<div class="stack">' + attn + jrH(I, 'risk') + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>', true) +
-    sec('kick_meds', '<div class="stack">' + medsTodayCard(schedMeds()) + confirmMedsCard() + (window.SehatRem ? SehatRem.apptCard() : '') /* reminders.js */ + medsRecordedCard(I) + pharmacistCard(sched) + '</div>', true) +
-    sec('kick_journal', jrH(I, 'top'), true) +
-    sec('kick_habits', jrH(I, 'habits'), false) +
-    sec('kick_wellness', wellnessCard(I), false) +
-    sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>', false) +
+    sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>', true) +
     sec('kick_about', '<div class="health-grid">' + patientCard + condCard + '</div>', false);
 }
 async function genOverview() {
@@ -1832,7 +1834,7 @@ async function wipeAll() {
   } catch (e) { /* storage blocked: nothing was cached there */ }
   S.visitNotes = ''; S.medcheck = null; S.abhaFlow = null; S.pendingFile = null; S.previewFile = null;
   if (typeof TAKEN_MEM === 'object' && TAKEN_MEM) Object.keys(TAKEN_MEM).forEach(k => delete TAKEN_MEM[k]);
-  S.records = []; S.patient = null; S.vitals = []; S.vform = null; S.insights = null; S.overview = {}; S.chat = []; S.fhir = null; S.notice = null;
+  S.records = []; S.patient = null; S.vitals = []; S.vform = null; S.bulk = null; S.insights = null; S.overview = {}; S.chat = []; S.fhir = null; S.notice = null;
   S.draft = null; S.stage = 'idle'; S.view = 'add'; S.detailId = null;
   render();
 }
@@ -1956,26 +1958,8 @@ document.addEventListener('change', async e => {
     try { localStorage.setItem('sehat_remind', el.checked ? '1' : '0'); } catch (x) { /* ignore */ }
   }
 });
-/* While the tab is open: one notification per slot per day, at 08:00, 14:00 and 21:00, only if doses are still unticked. */
-const REMIND_AT = [['morning', 8], ['afternoon', 14], ['night', 21]];
-const REMINDED = {};
-function checkReminders() {
-  if (!remindOn() || !S.records.length) return;
-  const now = new Date(), mins = now.getHours() * 60 + now.getMinutes(), day = todayKey();
-  REMIND_AT.forEach(r => {
-    const slot = r[0], diff = mins - r[1] * 60, mk = day + slot;
-    if (diff < 0 || diff > 2 || REMINDED[mk]) return;
-    let sent = {};
-    try { sent = JSON.parse(localStorage.getItem('sehat_notified_' + day) || '{}') || {}; } catch (x) { /* ignore */ }
-    if (sent[slot]) { REMINDED[mk] = 1; return; }
-    REMINDED[mk] = 1; sent[slot] = 1;
-    try { localStorage.setItem('sehat_notified_' + day, JSON.stringify(sent)); } catch (x) { /* ignore */ }
-    const tk = takenGet();
-    const left = buildDoses(schedMeds()).filter(d => d.slot === slot && !tk[d.key]).length;
-    if (left) { try { new Notification(t('mt_notif_title'), { body: t('mt_notif_body', { slot: t('slot_' + slot), n: left }) }); } catch (x) { /* ignore */ } }
-  });
-}
-setInterval(checkReminders, 60000);
+/* In-app dose reminders: reminders.js (SehatRem.tick) is the only scheduler. It respects edited times, snoozes, taken ticks and course ends. */
+function checkReminders() { if (window.SehatRem) SehatRem.tick(); }
 
 /* ================= Things to ask your pharmacist ================= */
 async function runMedcheck(key, meds) {
@@ -1984,7 +1968,7 @@ async function runMedcheck(key, meds) {
   if (S.medcheck && S.medcheck.key === key) {
     S.medcheck.state = res && typeof res === 'object' ? 'ok' : 'fail';
     S.medcheck.data = res;
-    if (S.view === 'health') render();
+    if (S.view === 'health' || S.view === 'meds') render();
   }
 }
 function pharmacistCard(P) {
@@ -2081,7 +2065,8 @@ function backupCard() {
 }
 async function backupDownload() {
   try {
-    const files = arr(await dbGetAll('files'));
+    const mine = new Set(S.records.map(r => r.id));  // only this profile's originals: never another family member's documents
+    const files = arr(await dbGetAll('files')).filter(f => f && mine.has(f.id));
     const payload = { version: 1, exportedAt: new Date().toISOString(), patient: S.patient || null, records: S.records, files, vitals: S.vitals };
     const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -2107,8 +2092,9 @@ async function backupRestore(file) {
       S.patient = { name: j.patient.name || null, age: j.patient.age == null ? null : j.patient.age, sex: j.patient.sex || null, abha: j.patient.abha || null };
       await dbPut('meta', S.patient, profKey('patient'));
     }
-    for (const raw of j.records) await saveRecordLocal(normalizeRecord(raw));
-    for (const f of arr(j.files)) await dbPut('files', { id: f.id, mime: String(f.mime || ''), dataUrl: f.dataUrl });
+    const ids = new Set(j.records.map(r => r.id)), me = window.SehatFamily ? SehatFamily.active() : 'self';
+    for (const raw of j.records) { const rec = normalizeRecord(raw); rec.profile = me; await saveRecordLocal(rec); }  // restored records belong to the profile that is open
+    for (const f of arr(j.files).filter(f => ids.has(f.id))) await dbPut('files', { id: f.id, mime: String(f.mime || ''), dataUrl: f.dataUrl });
     if (arr(j.vitals).length) {
       const byId = new Map(S.vitals.map(e => [e.id, e]));
       arr(j.vitals).map(cleanVital).filter(Boolean).forEach(e => byId.set(e.id, e));
@@ -2188,12 +2174,13 @@ function wellnessCard(I) {
       '<div class="vit-latest"><span class="vit-big mono">' + esc(l.text) + '</span><span class="muted">' + esc(g.unit) + '</span>' + vitBadge(g.type, l.flag) + '</div>' +
       (g.ref_text ? '<p class="muted small" style="margin:2px 0 0">' + esc(g.ref_text) + '</p>' : '') +
       (l.flag === 'critical' ? '<p class="vit-crit" role="alert">' + esc(t('vit_crit')) + '</p>' : '') +
-      (g.pts.length >= 2 ? '<div class="trend">' + chartSVG(vitSeries(g)) + '</div>' : '') +
+      (window.SehatWell ? SehatWell.latestBox(l.e) : '') /* wellness.js: guidance for an out-of-range latest reading */ +
+      (g.pts.length >= 2 && !window.SehatWell ? '<div class="trend">' + chartSVG(vitSeries(g)) + '</div>' : '') +  /* wellness.js draws the 7/30 day graphs */
       '<details class="vit-all"><summary>' + esc(t('vit_all', { n: g.pts.length })) + '</summary><ul class="list">' +
       g.pts.slice().reverse().map(p => '<li><span class="l"><span class="mono">' + esc(p.text) + ' ' + esc(g.unit) + '</span> ' + vitBadge(g.type, p.flag) + '<br><span class="muted small">' + esc(fmtDate(p.e.date)) + (p.e.note ? ' · ' + esc(p.e.note) : '') + '</span></span>' +
         '<span class="r"><button type="button" class="btn small danger" data-act="vitdel" data-id="' + esc(p.e.id) + '">' + esc(t('vit_del')) + '</button></span></li>').join('') + '</ul></details></div>';
   }).join('') + '</div>' : '<p class="muted">' + esc(t('vit_empty')) + '</p>';
-  return '<div class="card" id="wellness"><h2 style="margin-bottom:10px">' + esc(t('vit_title')) + '</h2>' + form + body +
+  return '<div class="card" id="wellness"><h2 style="margin-bottom:10px">' + esc(t('vit_title')) + '</h2>' + form + (window.SehatWell ? SehatWell.savedBox() : '') /* wellness.js */ + body +
     '<p class="muted small" style="margin:12px 0 0">' + esc(t('vit_caveat')) + '</p></div>';
 }
 function vitVisitHTML(I) {
@@ -2221,6 +2208,7 @@ async function addVital() {
   const note = String(f.note || '').trim();
   S.vitals.push({ id: 'vit_' + Math.random().toString(36).slice(2, 10), type: ty, date: f.date, value: v, value2: v2, note: note ? note.slice(0, 120) : null });
   f.v = ''; f.v2 = ''; f.note = ''; f.err = null;
+  if (window.SehatWell) SehatWell.onSaved(S.vitals[S.vitals.length - 1]);  // wellness.js: guidance right after saving
   try { await saveVitals(); } catch (e) { /* kept in memory */ }
   render();
 }
@@ -2253,6 +2241,7 @@ document.addEventListener('click', e => {
   if (!el) return;
   if (el.dataset.act === 'vitdel') delVital(el.dataset.id);
   else {
+    if (S.view !== 'wellness') { go('wellness'); }
     const c = document.getElementById('wellness');
     const fold = c && c.closest('details');
     if (fold) { fold.open = true; (S.secOpen = S.secOpen || {})[fold.dataset.k] = true; }
@@ -2349,9 +2338,16 @@ const ICONS = {
   timeline: '<path d="M7 3v18"/><circle cx="7" cy="7" r="1.5"/><circle cx="7" cy="17" r="1.5"/><path d="M11 7h9M11 17h6"/>',
   health: '<path d="M3 12h4l2-6 4 12 2-6h6"/>',
   ask: '<path d="M4 5h16v11H9l-5 4z"/>',
-  abha: '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>'
+  abha: '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>',
+  meds: '<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="M9.5 8.7l5 6.6"/>',
+  visits: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  journal: '<path d="M6 3h11a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z"/><path d="M6 3v18M10 8h5M10 12h5"/>',
+  wellness: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',
+  family: '<circle cx="9" cy="8" r="3"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><circle cx="17" cy="9" r="2.200"/><path d="M17 14a4 4 0 0 1 4 4v2"/>',
+  more: '<circle cx="5" cy="12" r="1.600"/><circle cx="12" cy="12" r="1.600"/><circle cx="19" cy="12" r="1.600"/>'
 };
-const NAV = [['add', 'nav_add'], ['timeline', 'nav_timeline'], ['health', 'nav_health'], ['ask', 'nav_ask'], ['abha', 'nav_abha']];
+/* third item 'sec': on the phone bottom bar these live under "More" (the bar keeps at most 5 items) */
+const NAV = [['add', 'nav_add'], ['timeline', 'nav_timeline'], ['health', 'nav_health'], ['meds', 'nav_meds'], ['visits', 'nav_visits', 'sec'], ['journal', 'nav_journal', 'sec'], ['wellness', 'nav_wellness', 'sec'], ['family', 'nav_family', 'sec'], ['ask', 'nav_ask', 'sec'], ['abha', 'nav_abha', 'sec']];
 
 function applyStatic() {
   document.documentElement.lang = lang;
@@ -2362,7 +2358,12 @@ function applyStatic() {
   $('#disclaimer').textContent = t('disclaimer');
   if ($('#langSel')) $('#langSel').value = lang;
   const cur = S.view === 'detail' ? 'timeline' : (S.view === 'visit' ? 'health' : S.view);
-  $('#nav').innerHTML = NAV.map(n => '<button type="button" data-act="nav" data-view="' + n[0] + '"' + (cur === n[0] ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[n[0]] + '</svg><span>' + esc(t(n[1])) + '</span></button>').join('');
+  const nb = (n, c) => '<button type="button" class="' + (c || '') + '" data-act="nav" data-view="' + n[0] + '"' + (cur === n[0] ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[n[0]] + '</svg><span>' + esc(t(n[1])) + '</span></button>';
+  const secs = NAV.filter(n => n[2]), secCur = secs.some(n => n[0] === cur);
+  $('#nav').className = 'nav' + (S.moreOpen ? ' more-open' : '');
+  $('#nav').innerHTML = NAV.map(n => nb(n, n[2] ? 'nv-sec' : '')).join('') +
+    '<button type="button" class="nv-more" data-act="more" aria-expanded="' + !!S.moreOpen + '"' + (secCur ? ' aria-current="page"' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS.more + '</svg><span>' + esc(t('nav_more')) + '</span></button>' +
+    '<div class="nav-sheet" role="group" aria-label="' + esc(t('nav_more')) + '">' + secs.map(n => nb(n, 'nv-sheet')).join('') + '</div>';
   syncDiscHeight();
 }
 function syncDiscHeight() {
@@ -2381,6 +2382,11 @@ function render() {
     case 'timeline': html = viewTimeline(); break;
     case 'detail': html = viewDetail(); break;
     case 'health': html = viewHealth(); break;
+    case 'meds': html = viewMeds(); break;           // wellness.js
+    case 'visits': html = viewVisits(); break;
+    case 'journal': html = viewJournal(); break;
+    case 'wellness': html = viewWellness(); break;
+    case 'family': html = viewFamily(); break;
     case 'visit': html = viewVisit(); break;
     case 'ask': html = viewAsk(); break;
     case 'abha': html = viewAbha(); break;
@@ -2398,7 +2404,7 @@ function go(view) {
   if (S.view === 'add' && S.stage === 'review' && view !== 'add' && S.dirty && !confirm(t('discard') + '?')) return;
   S.chatUpload = false;
   if (view !== 'add' && S.stage === 'review' && S.view === 'add') { S.draft = null; S.pendingFile = null; S.previewFile = null; S.stage = 'idle'; S.editingId = null; }
-  S.view = view; S.notice = null;
+  S.view = view; S.notice = null; S.moreOpen = false;
   clearError();
   render();
   window.scrollTo(0, 0);
@@ -2416,6 +2422,7 @@ document.addEventListener('click', e => {
       if (S.error) { S.error = null; S.retry = null; }
       render(); break;
     case 'nav': go(el.dataset.view); break;
+    case 'more': S.moreOpen = !S.moreOpen; applyStatic(); break;
     case 'choose': S.chatUpload = false; $('#fileInput').click(); break;
     case 'askfile': S.chatUpload = true; $('#fileInput').click(); break;
     case 'photo': S.chatUpload = false; $('#camInput').click(); break;
@@ -2476,9 +2483,11 @@ document.addEventListener('submit', e => {
 
 ['fileInput', 'camInput'].forEach(id => {
   $('#' + id).addEventListener('change', e => {
-    const f = e.target.files && e.target.files[0];
+    const all = Array.from(e.target.files || []), f = all[0];
     e.target.value = '';
-    if (S.chatUpload && (S.view === 'ask' || PET.open)) { S.chatUpload = false; chatFile(f); } else { S.chatUpload = false; handleFile(f); }
+    if (S.chatUpload && (S.view === 'ask' || PET.open)) { S.chatUpload = false; chatFile(f); }
+    else if ((all.length > 1 || S.bulk) && window.SehatBulk) { S.chatUpload = false; SehatBulk.add(all); }  // bulk.js: several files at once
+    else { S.chatUpload = false; handleFile(f); }
   });
 });
 
@@ -2491,7 +2500,9 @@ document.addEventListener('dragleave', e => { if (!e.relatedTarget) { const d = 
 document.addEventListener('drop', e => {
   e.preventDefault();
   const d = $('#drop'); if (d) d.classList.remove('over');
-  if (e.target.closest && e.target.closest('#drop') && e.dataTransfer && e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  if (e.target.closest && e.target.closest('#drop') && e.dataTransfer && e.dataTransfer.files.length) {
+    if ((e.dataTransfer.files.length > 1 || S.bulk) && window.SehatBulk) SehatBulk.add(Array.from(e.dataTransfer.files)); else handleFile(e.dataTransfer.files[0]);
+  }
 });
 
 window.addEventListener('resize', syncDiscHeight);
@@ -2645,9 +2656,19 @@ renderUser();
     renderUser();
   }
   if (!S.records.length) await loadDemo();
+  // demo only: the sample family takes the medicines on their records, so the schedule and reminders have something to show
+  try {
+    const all = await dbGetAll('records');
+    for (const p of (window.SehatFamily ? SehatFamily.list() : [{ id: 'self' }])) {
+      const key = window.SehatFamily ? SehatFamily.profKeyFor('sehat_current', p.id) : 'sehat_current';
+      const names = {};
+      all.filter(r => (r.profile || 'self') === p.id).forEach(r => arr(r.medicines).forEach(m => { if (curKey(m)) names[curKey(m)] = 1; }));
+      if (Object.keys(names).length && !localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(names));
+    }
+  } catch (e) { /* storage blocked: the schedule just starts empty */ }
   if (typeof journalSeedDemo === 'function') journalSeedDemo(); /* journal.js */
   const want = (location.search.match(/[?&]view=([a-z]+)/) || [])[1];  // /app?demo=1&view=timeline opens that tab
-  if (S.records.length && S.stage === 'idle') { S.view = ['timeline', 'ask', 'abha', 'add'].indexOf(want) >= 0 ? want : 'health'; render(); }
+  if (S.records.length && S.stage === 'idle') { S.view = ['timeline', 'ask', 'abha', 'add', 'meds', 'visits', 'journal', 'wellness', 'family'].indexOf(want) >= 0 ? want : 'health'; render(); }
   try { history.replaceState(null, '', '/app'); } catch (e) { /* ignore */ }
 })();
 

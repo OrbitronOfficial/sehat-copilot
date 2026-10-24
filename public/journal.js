@@ -250,7 +250,7 @@
   }
   function openEntry(date) {
     J.form = Object.assign(blank(date), load().find(e => e.date === date) || {}); J.saved = false;
-    if (S.view !== 'health') S.view = 'health';
+    if (S.view !== 'journal') S.view = 'journal';
     rerender();
     const c = document.getElementById('jrCard'); if (c && c.scrollIntoView) c.scrollIntoView({ block: 'start' });
   }
