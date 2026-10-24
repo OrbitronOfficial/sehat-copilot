@@ -64,9 +64,10 @@
   <main class="main">
 
     <section class="d-view" data-view="today">
-      <div class="page-head"><div class="kicker">Today</div><h1>Today's patients</h1><p>Sorted most urgent first, set automatically from the complaint with the reason shown. Change the priority whenever you disagree.</p></div>
+      <div class="page-head"><div class="kicker">Today</div><h1 id="greet">Welcome, Doctor</h1><p id="greetSub"></p></div>
       <div class="stats five" id="qStats"></div>
       <div class="card d-grid">
+        <div><h2 style="margin:0">Today's patients</h2><p class="d-status" style="margin:4px 0 0">Sorted most urgent first, set automatically from the complaint with the reason shown. Change the priority whenever you disagree.</p></div>
         <div class="d-row"><input class="d-in" id="qName" placeholder="Name" style="flex:1;min-width:140px"><input class="d-in" id="qAge" placeholder="Age" style="width:80px"><input class="d-in" id="qCc" placeholder="Complaint, e.g. chest pain since morning" style="flex:2;min-width:220px"><button class="btn primary" id="qAdd">Add patient</button></div>
         <div class="d-scroll"><table class="d-table"><thead><tr><th>#</th><th>Patient</th><th>Complaint</th><th>Priority</th><th>Why</th><th></th></tr></thead><tbody id="queue"></tbody></table></div>
       </div>
