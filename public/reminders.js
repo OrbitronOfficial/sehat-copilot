@@ -33,7 +33,7 @@
     rm_next: 'Next visit: {date}', rm_link_lbl: 'This visit happened: pick a record', rm_link_none: 'Pick a record...',
     rm_resched: 'Reschedule', rm_new_date: 'New date', rm_fu_gen: 'Follow-up',
     vis_title: 'Visits', vis_done: 'Done', vis_missed: 'Missed', vis_up: 'Upcoming', vis_none: 'Nothing here yet.', vis_for: 'For: {what}', vis_fu_done: 'Follow-up done', vis_linked: 'Visit recorded',
-    cg_msg: '{name} missed {med} ({time})', cg_call: 'Call / remind', cg_followed: 'Followed up', cg_note: 'Based on what is marked in this app on this device.',
+    cg_msg: '{name} missed {med} ({time})', cg_msg_self: 'You have not marked {med} ({time}) as taken', cg_call: 'Call / remind', cg_followed: 'Followed up', cg_note: 'Based on what is marked in this app on this device.',
     td_title: 'Today', td_next: 'Next: {med} at {time}, in {when}', td_over: 'Overdue: {med} was due at {time}', td_alldone: 'No more doses today.',
     td_all_cal: 'Add all my medicine reminders to Google Calendar', td_links: 'If your browser blocked a tab, use these links:', td_one: 'Add {med}',
     td_h: '{h} h', td_hm: '{h} h {m} min', td_m: '{m} min', td_now: 'now',
@@ -60,7 +60,7 @@
     rm_next: 'अगली मुलाक़ात: {date}', rm_link_lbl: 'यह मुलाक़ात हो गई: रिकॉर्ड चुनें', rm_link_none: 'रिकॉर्ड चुनें...',
     rm_resched: 'तारीख़ बदलें', rm_new_date: 'नई तारीख़', rm_fu_gen: 'फ़ॉलो-अप',
     vis_title: 'मुलाक़ातें', vis_done: 'हो चुकी', vis_missed: 'छूट गई', vis_up: 'आने वाली', vis_none: 'यहाँ अभी कुछ नहीं है।', vis_for: 'किसलिए: {what}', vis_fu_done: 'फ़ॉलो-अप हो गया', vis_linked: 'मुलाक़ात दर्ज है',
-    cg_msg: '{name} ने {med} ({time}) नहीं ली', cg_call: 'फ़ोन करें / याद दिलाएँ', cg_followed: 'पूछ लिया गया', cg_note: 'यह इस डिवाइस पर इस ऐप में लगाए गए निशानों पर आधारित है।',
+    cg_msg: '{name} ने {med} ({time}) नहीं ली', cg_msg_self: 'आपने {med} ({time}) ली, यह अभी तक दर्ज नहीं किया', cg_call: 'फ़ोन करें / याद दिलाएँ', cg_followed: 'पूछ लिया गया', cg_note: 'यह इस डिवाइस पर इस ऐप में लगाए गए निशानों पर आधारित है।',
     td_title: 'आज', td_next: 'अगली: {med}, {time} बजे, {when} में', td_over: 'देर हो चुकी: {med} का समय {time} था', td_alldone: 'आज की कोई और खुराक नहीं है।',
     td_all_cal: 'मेरी सभी दवाओं के याद दिलाने Google कैलेंडर में जोड़ें', td_links: 'अगर ब्राउज़र ने कोई टैब रोका, तो ये लिंक इस्तेमाल करें:', td_one: '{med} जोड़ें',
     td_h: '{h} घंटे', td_hm: '{h} घंटे {m} मिनट', td_m: '{m} मिनट', td_now: 'अभी',
@@ -364,7 +364,7 @@
         body = (due ? '<p class="muted small" style="margin:2px 0 0">' + esc(t('rm_next', { date: fmtDate(due) })) + '</p>' : '') + linkSel(a.rec, a.date);
         b = (due ? calLink({ id: 'fu:' + a.rec, src: 'r', title: a.text, date: due, rdate: a.date, what: fr ? whatOf(fr) : a.text }) : '') + btn('rm_done', a.rec, 'rm_done') + '<button type="button" class="btn small link" data-act="openrec" data-id="' + esc(a.rec) + '">' + esc(t('rm_open_rec')) + '</button>' + btn('rm_dis', a.id, 'rm_dismiss', 'link');
       } else if (a.type === 'cg') {
-        head = t('cg_msg', { name: a.name, med: a.med, time: fmt12(a.time) });
+        head = a.pid === 'self' ? t('cg_msg_self', { med: a.med, time: fmt12(a.time) }) : t('cg_msg', { name: a.name, med: a.med, time: fmt12(a.time) });
         body = '<p class="muted small" style="margin:2px 0 0">' + esc(t('cg_note')) + '</p>';
         b = a.st === 'followed' ? '<span class="small">' + esc(t('cg_followed')) + '</span> ' + btn('rm_dis', a.id, 'rm_dismiss', 'link') : btn('rm_cg_call', a.id, 'cg_call', '') + btn('rm_dis', a.id, 'rm_dismiss', 'link');
       } else if (a.type === 'rp') {
@@ -629,7 +629,7 @@
     if (!window.SehatFamily) return;
     const now = Date.now(), day = todayKey();
     let l = null, add = false;
-    SehatFamily.list().filter(p => p.id !== 'self').forEach(p => {
+    SehatFamily.list().forEach(p => {  // the account holder's own doses too, so every profile behaves the same
       const c = careDoses(p), tk = takenP(p.id);
       c.doses.forEach(d => {
         if (tk[d.key]) return;
