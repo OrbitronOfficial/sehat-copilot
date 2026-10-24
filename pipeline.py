@@ -677,7 +677,12 @@ def ask(question, records, lang="en"):
     if not question:
         raise ValueError("Type a question first.")
     lang = _asked_language(question) or lang  # "answer in Hindi" beats the interface language
-    gated = safety.gate(question, lang)  # emergency, then medication change: no model call
+    names = set(_MED_NAMES) | {n.lower() for r in (records or []) if isinstance(r, dict)
+                               for m in r.get("medicines") or [] if isinstance(m, dict)
+                               for n in (m.get("name"), m.get("generic")) if n}
+    names |= {" ".join(w for w in n.split() if w not in ("tab", "tablet", "cap", "capsule", "syp", "inj") and not w[:1].isdigit())
+              for n in list(names)}
+    gated = safety.gate(question, lang, names)  # emergency, then medication change: no model call, before _direct
     if gated:
         return dict(gated, disclaimer=_disclaimer(lang))
     direct = _direct(question, records or [], lang)

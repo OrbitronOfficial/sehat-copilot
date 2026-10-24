@@ -464,8 +464,6 @@ def _follow_up_items(records, today, hi):
     for rec in [r for r in reversed(dated) if r.get("follow_up")][:3]:
         text = pipeline._s(rec["follow_up"], 200)
         due = course_end(rec["date"], text)
-        if any(_date(o["date"]) >= (due or _date(rec["date"]) + dt.timedelta(days=1)) for o in dated):
-            continue  # a record from on or after the due date shows that visit already happened
         d = _nice(rec["date"])
         out.append({"kind": "follow_up", "due": due.isoformat() if due else None, "overdue": bool(due and due < today),
                     "title": f"{d} के रिकॉर्ड का फ़ॉलो-अप" if hi else f"Follow-up from your {d} record",

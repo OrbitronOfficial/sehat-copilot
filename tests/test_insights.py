@@ -261,6 +261,15 @@ class PreventiveTests(unittest.TestCase):
         late = [i for i in self.items([rx("z", "2026-06-01", "after 1 week")]) if i["kind"] == "follow_up"]
         self.assertTrue(late[0]["overdue"])
 
+    def test_follow_up_stays_after_a_later_record(self):
+        def rx(rec_id, date, fu):
+            return pipeline.check({"id": rec_id, "doc_type": "prescription", "date": date,
+                                   "follow_up": fu, "medicines": [], "tests": []})
+        recs = [rx("a", "2026-06-01", "after 1 week"), rx("b", "2026-09-01", None)]
+        got = [i for i in self.items(recs) if i["kind"] == "follow_up"]
+        self.assertEqual([i["records"] for i in got], [["a"]])
+        self.assertTrue(got[0]["overdue"])
+
     def test_screening_by_age_and_sex(self):
         def titles(**p):
             return [i["title"] for i in self.items([], patient=p) if i["kind"] == "screening"]

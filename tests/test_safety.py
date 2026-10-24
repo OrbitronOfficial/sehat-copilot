@@ -222,3 +222,33 @@ class DateSanityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ChangeIntentTests(Base):
+    """R04: a stop/skip/dose-change request that names ANY medicine is caught before _direct and the model."""
+    NAMES = {"glycomet", "metformin", "crocin"}
+
+    def test_change_requests_naming_a_medicine_are_gated(self):
+        stub = self.use()
+        for q, lang in [("Can I stop taking Glycomet now that my HbA1c is lower?", "en"),
+                        ("Can I reduce metformin?", "en"),
+                        ("Should I double my Crocin", "en"),
+                        ("kya main Glycomet band kar sakta hu", "hi"),
+                        ("Glycomet chhodna hai", "en"),
+                        ("Glycomet kam karna chahta hu", "en"),
+                        ("क्या मैं ग्लाइकोमेट बंद कर दूँ दवा", "hi"),
+                        ("मैं गोली कम कर दूँ", "hi")]:
+            out = pipeline.ask(q, [RECORD], lang)
+            self.assertEqual(out.get("gate"), "medication", q)
+        self.assertEqual(stub.calls, 0)
+
+    def test_record_medicine_name_not_in_the_reference_list(self):
+        rec = dict(RECORD, medicines=[{"name": "Zorbitex", "strength": "5 mg"}])
+        self.assertEqual(pipeline.ask("Can I stop Zorbitex?", [rec], "en").get("gate"), "medication")
+
+    def test_plain_information_questions_pass(self):
+        for q in ["What is Glycomet for?", "When do I take Glycomet?", "Which medicines am I taking?",
+                  "Glycomet kab leni hai"]:
+            self.assertIsNone(safety.classify(q, self.NAMES), q)
+
+

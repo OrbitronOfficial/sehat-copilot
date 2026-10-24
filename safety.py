@@ -44,6 +44,26 @@ _MEDICATION = re.compile(
     rf"\b({_MED_ROMAN})\b.{{0,40}}\b({_CHANGE_ROMAN})|\b({_CHANGE_ROMAN})\b.{{0,40}}\b({_MED_ROMAN})\b",
     re.I | re.S)
 
+# Change intent: a stop/skip/dose change that names ANY medicine (or says medicine/tablet/dawa/goli).
+_INTENT = (r"stop(ping|ped)?|quit(ting)?|skip(ping)?|discontinu\w*|reduc\w*|increas\w*|doubl\w*|halv\w*|"
+           r"chang\w*|switch\w*|start(ing)?|take (more|less|extra|double|half)|taking (more|less|extra|double|half)|"
+           r"cut (down|back)|lower(ing)? the|raise|up the")
+_INTENT_HI = r"बंद|छोड़|छोड|रोक|कम|कम कर|बढ़ा|बढा|दोगुन|दुगुन|आधा|बदल|शुरू"
+_INTENT_ROMAN = (r"band\s*(kar|karna|karu|kr)|bandh|chhod\w*|chod\w*|kam\s*(kar|karna|karu|kr)|"
+                 r"badha\w*|badhana|ghata\w*|rok\w*|badal\w*")
+_INTENT_RE = re.compile(rf"\b({_INTENT})\b|({_INTENT_HI})|\b({_INTENT_ROMAN})", re.I)
+_ANY_MED = re.compile(rf"\b({_MED}|{_MED_ROMAN}|medicine|tablet|dawa)\b|{_MED_HI}", re.I)
+
+
+def _names_in(q, names):
+    low = " " + re.sub(r"[^a-z0-9ऀ-ॿ]+", " ", q.lower()) + " "
+    for n in names or ():
+        n = re.sub(r"[^a-z0-9ऀ-ॿ]+", " ", str(n or "").lower()).strip()
+        if len(n) >= 3 and " " + n + " " in low:
+            return True
+    return False
+
+
 TEMPLATES = {
     "emergency": {
         "en": "This sounds like it could be an emergency. If it is happening right now, call 112 "
@@ -113,19 +133,22 @@ def template(kind, lang):
     return TEMPLATES[kind][lang]
 
 
-def classify(question):
-    """'emergency', 'medication' or None. Emergency always wins."""
+def classify(question, names=()):
+    """'emergency', 'medication' or None. Emergency always wins. `names` are medicine names
+    (generic, brand, or from the user's records): a change request naming one is a medication question."""
     q = question or ""
     if _EMERGENCY.search(q):
         return "emergency"
     if _MEDICATION.search(q):
         return "medication"
+    if _INTENT_RE.search(q) and (_ANY_MED.search(q) or _names_in(q, names)):
+        return "medication"
     return None
 
 
-def gate(question, lang):
+def gate(question, lang, names=()):
     """Returns a complete fixed answer, or None when the question may go to the model."""
-    kind = classify(question)
+    kind = classify(question, names)
     if not kind:
         return None
     return {"answer": reply(kind, lang), "sources": [], "gate": kind,
