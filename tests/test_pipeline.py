@@ -611,5 +611,15 @@ class ReviewRound3(unittest.TestCase):
         self.assertTrue(any("\u0900" <= ch <= "\u097f" for ch in out["answer"]))
 
 
+class DateSwapTests(unittest.TestCase):
+    def test_future_date_with_day_and_month_swapped_is_flipped(self):
+        today = dt.date(2026, 10, 24)
+        self.assertEqual(pipeline._unswap("2026-11-10", today), "2026-10-11")
+        self.assertEqual(pipeline._unswap("2026-12-05", today), "2026-05-12")
+        self.assertEqual(pipeline._unswap("2026-10-02", today), "2026-10-02")  # not in the future: kept
+        self.assertEqual(pipeline._unswap("2026-11-25", today), "2026-11-25")  # day > 12: cannot be a swap
+        self.assertIsNone(pipeline._unswap(None, today))
+
+
 if __name__ == "__main__":
     unittest.main()

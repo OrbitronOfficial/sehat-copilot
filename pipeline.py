@@ -214,6 +214,23 @@ def _page(v):
         return None
 
 
+def _unswap(iso, today=None):
+    """A document date in the future is usually day and month read the wrong way round
+    (05/10 taken as May 10th becomes 10 May; 10/11 as 11 Oct becomes 10 Nov). If swapping
+    them gives a date that is not in the future, use that; the user still confirms it."""
+    if not iso:
+        return iso
+    today = today or dt.date.today()
+    d = dt.date.fromisoformat(iso)
+    if d <= today or d.day > 12:
+        return iso
+    try:
+        flipped = dt.date(d.year, d.day, d.month)
+    except ValueError:
+        return iso
+    return flipped.isoformat() if flipped <= today else iso
+
+
 def _date(v):
     v = _s(v)
     if not v:
@@ -254,7 +271,7 @@ def normalise(raw, source="upload"):
         "id": "rec_" + uuid.uuid4().hex[:8],
         "doc_type": raw.get("doc_type") if raw.get("doc_type") in DOC_TYPES else "other",
         "title": _s(raw.get("title"), 120) or "Health record",
-        "date": _date(raw.get("date")),
+        "date": _unswap(_date(raw.get("date"))),
         "facility": _s(raw.get("facility"), 160),
         "doctor": _s(raw.get("doctor"), 120),
         "patient": {"name": _s(patient.get("name"), 80), "age": _s(patient.get("age"), 20),
