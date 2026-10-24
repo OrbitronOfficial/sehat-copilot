@@ -15,7 +15,7 @@
     jr_meds: 'Did you take your medicines today?', jr_yes: 'Yes', jr_no: 'No', jr_unsure: 'Not sure',
     jr_side: 'Anything you noticed after medicines (side effects)?', jr_side_ph: 'e.g. felt sleepy after the evening tablet',
     jr_note: 'Note', jr_save: 'Save today', jr_save_d: 'Save entry', jr_saved: 'Saved.', jr_replace: 'You already have an entry for this date. Saving will replace it.',
-    jr_hist: 'Recent entries', jr_hist_none: 'No entries in the last 14 days.', jr_edit: 'Edit', jr_del: 'Delete', jr_new: 'New entry',
+    jr_hist: 'Recent entries', jr_more: 'Show all ({n})', jr_hist_none: 'No entries in the last 14 days.', jr_edit: 'Edit', jr_del: 'Delete', jr_new: 'New entry',
     jr_sym_ph: 'Type a symptom', jr_pain_n: 'Pain {n}/10',
     sym_headache: 'Headache', sym_dizziness: 'Dizziness', sym_tiredness: 'Tiredness', sym_nausea: 'Nausea', sym_pain: 'Pain', sym_cough: 'Cough', sym_fever: 'Fever', sym_breathlessness: 'Breathlessness',
     pv_title: 'Before your next visit', pv_sub: 'Summary of what you noted in your journal, to talk through with your doctor.',
@@ -37,7 +37,7 @@
     jr_meds: 'क्या आज आपने दवाइयाँ ली?', jr_yes: 'हाँ', jr_no: 'नहीं', jr_unsure: 'पक्का नहीं',
     jr_side: 'दवा के बाद कुछ महसूस हुआ (दुष्प्रभाव)?', jr_side_ph: 'जैसे शाम की गोली के बाद नींद आई',
     jr_note: 'नोट', jr_save: 'आज का सेव करें', jr_save_d: 'एंट्री सेव करें', jr_saved: 'सेव हो गया।', jr_replace: 'इस तारीख़ की एंट्री पहले से है। सेव करने पर वह बदल जाएगी।',
-    jr_hist: 'हाल की एंट्री', jr_hist_none: 'पिछले 14 दिनों में कोई एंट्री नहीं।', jr_edit: 'बदलें', jr_del: 'हटाएँ', jr_new: 'नई एंट्री',
+    jr_hist: 'हाल की एंट्री', jr_more: 'सभी देखें ({n})', jr_hist_none: 'पिछले 14 दिनों में कोई एंट्री नहीं।', jr_edit: 'बदलें', jr_del: 'हटाएँ', jr_new: 'नई एंट्री',
     jr_sym_ph: 'लक्षण लिखें', jr_pain_n: 'दर्द {n}/10',
     sym_headache: 'सिरदर्द', sym_dizziness: 'चक्कर', sym_tiredness: 'थकान', sym_nausea: 'मतली', sym_pain: 'दर्द', sym_cough: 'खाँसी', sym_fever: 'बुखार', sym_breathlessness: 'साँस फूलना',
     pv_title: 'अगली मुलाक़ात से पहले', pv_sub: 'आपकी डायरी के नोट का सार, डॉक्टर से बात करने के लिए।',
@@ -123,11 +123,14 @@
   }
   function histHTML() {
     const lo = daysAgo(13), list = byDate(load()).filter(e => e.date >= lo);
-    return '<h3 style="margin:16px 0 6px">' + esc(t('jr_hist')) + '</h3>' + (list.length ? '<ul class="list jr-hist">' + list.map(e => {
+    const row = e => {
       const bits = [e.symptoms.length ? e.symptoms.map(symLabel).join(', ') : '', e.pain ? t('jr_pain_n', { n: e.pain }) : ''].filter(Boolean).join(' · ');
       return '<li><button type="button" class="jr-row" data-act="jr_open" data-date="' + esc(e.date) + '"><span class="jr-em">' + (e.mood ? MOODS[e.mood - 1] : '·') + '</span><span class="l"><strong>' + esc(fmtDate(e.date)) + '</strong>' + (bits ? '<br><span class="muted small">' + esc(bits) + '</span>' : '') + '</span></button>' +
         '<span class="r"><button type="button" class="btn small danger" data-act="jr_del" data-date="' + esc(e.date) + '">' + esc(t('jr_del')) + '</button></span></li>';
-    }).join('') + '</ul>' : '<p class="muted small">' + esc(t('jr_hist_none')) + '</p>');
+    };
+    if (!list.length) return '<h3 style="margin:16px 0 6px">' + esc(t('jr_hist')) + '</h3><p class="muted small">' + esc(t('jr_hist_none')) + '</p>';
+    return '<h3 style="margin:16px 0 6px">' + esc(t('jr_hist')) + '</h3><ul class="list jr-hist">' + list.slice(0, 5).map(row).join('') + '</ul>' +
+      (list.length > 5 ? '<details class="more"><summary>' + esc(t('jr_more', { n: list.length })) + '</summary><ul class="list jr-hist">' + list.slice(5).map(row).join('') + '</ul></details>' : '');
   }
 
   /* ---------- pre-visit summary ---------- */
@@ -201,11 +204,14 @@
   }
   function nextCard(I) {
     const xs = arr(I && I.preventive); if (!xs.length) return '';
-    return '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('nx_title')) + '</h2><ul class="list cross">' + xs.map(x => {
+    const item = x => {
       const kind = ['repeat_test', 'screening', 'follow_up'].indexOf(x.kind) >= 0 ? '<span class="tag">' + esc(t('nx_' + x.kind)) + '</span> ' : '';
       const due = x.due ? (x.overdue ? '<span class="tag amber">' + esc(t('nx_over', { d: fmtDate(x.due) })) + '</span>' : '<span class="muted small">' + esc(t('nx_due', { d: fmtDate(x.due) })) + '</span>') : '';
       return '<li><span class="l">' + kind + '<strong>' + esc(x.title) + '</strong>' + (x.why ? '<br><span class="small">' + esc(x.why) + '</span>' : '') + (due ? '<br>' + due : '') + recLinks(x.records) + '</span></li>';
-    }).join('') + '</ul></div>';
+    };
+    // the most pressing few first; the rest one tap away
+    return '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('nx_title')) + '</h2><ul class="list cross">' + xs.slice(0, 4).map(item).join('') + '</ul>' +
+      (xs.length > 4 ? '<details class="more"><summary>' + esc(t('jr_more', { n: xs.length })) + '</summary><ul class="list cross">' + xs.slice(4).map(item).join('') + '</ul></details>' : '') + '</div>';
   }
   function wellnessRecCard(I) {
     const xs = arr(I && I.wellness); if (!xs.length) return '';

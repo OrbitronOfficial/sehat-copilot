@@ -150,10 +150,15 @@
 
   /* ---------- appointments & follow-ups ---------- */
   const apStore = () => { const s = jget('sehat_appts', {}); return { items: Array.isArray(s.items) ? s.items : [], done: s.done || {} }; };
+  // a follow-up is settled once any record is dated on or after the day it was due
+  function fuSettled(r, due) {
+    const until = due || r.date;
+    return (S.records || []).some(o => o !== r && o.date && (due ? o.date >= until : o.date > until));
+  }
   function appts() {
     const st = apStore(), out = st.items.map(a => Object.assign({ src: 'm' }, a));
     (S.records || []).forEach(r => {
-      if (!r.follow_up || st.done[r.id]) return;
+      if (!r.follow_up || st.done[r.id] || fuSettled(r, parseFU(r.follow_up, r.date))) return;
       out.push({ id: 'fu:' + r.id, src: 'r', title: r.follow_up, date: parseFU(r.follow_up, r.date), rec: r.id, rdate: r.date });
     });
     const key = a => a.date ? a.date + ' ' + (a.time || '09:00') : '9999';
@@ -199,7 +204,7 @@
   function scan() {
     if (!S || !S.records || !S.records.length) return;
     const st = apStore(), today = todayKey();
-    S.records.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).filter(r => r.follow_up && !st.done[r.id]).filter(r => { const d = parseFU(r.follow_up, r.date); return d && d < today; })
+    S.records.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).filter(r => r.follow_up && !st.done[r.id]).filter(r => { const d = parseFU(r.follow_up, r.date); return d && d < today && !fuSettled(r, d); })
       .slice(0, 2).forEach(r => addAct({ id: 'fu:' + r.id, type: 'fu', rec: r.id, text: r.follow_up, date: r.date }));
     const pv = S.insights && S.insights.data && Array.isArray(S.insights.data.preventive) ? S.insights.data.preventive : [];
     pv.filter(p => p && p.kind === 'repeat_test' && p.overdue && p.title).forEach(p => addAct({ id: 'rp:' + String(p.kind || '') + ':' + String(p.title).toLowerCase(), type: 'rp', title: p.title, why: p.why || '', records: arr(p.records) }));

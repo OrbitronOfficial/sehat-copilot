@@ -181,7 +181,7 @@ const STR = {
     vit_caveat: 'Home readings vary with time of day, posture and the device. One reading is not a diagnosis. If a reading worries you, contact your doctor.',
     vit_crit: 'This reading is far outside the usual range. If you feel unwell, call 112 or see a doctor now.',
     vit_all: 'All readings ({n})', vit_lower: 'lower: {v}', vit_home: 'Home readings', qa_reading: 'Add a reading', kick_wellness: 'Wellness',
-    kick_today: 'Today', kick_results: 'Results', kick_meds: 'Medicines', kick_doctor: 'For your doctor', kick_about: 'About you'
+    kick_today: 'Today', kick_journal: 'Journal and next visit', kick_habits: 'Everyday habits', kick_results: 'Results', kick_meds: 'Medicines', kick_doctor: 'For your doctor', kick_about: 'About you'
   },
   hi: {
     app_name: 'सेहत कोपायलट',
@@ -362,7 +362,7 @@ const STR = {
     vit_caveat: 'घर पर लिए गए माप दिन के समय, बैठने के ढंग और उपकरण के साथ बदलते हैं। एक माप निदान नहीं है। कोई माप चिंता दे तो अपने डॉक्टर से संपर्क करें।',
     vit_crit: 'यह माप सामान्य सीमा से बहुत दूर है। अगर आपको बेचैनी हो तो 112 पर कॉल करें या अभी डॉक्टर को दिखाएँ।',
     vit_all: 'सभी माप ({n})', vit_lower: 'निचला: {v}', vit_home: 'घर पर लिए गए माप', qa_reading: 'माप जोड़ें', kick_wellness: 'सेहत की डायरी',
-    kick_today: 'आज', kick_results: 'नतीजे', kick_meds: 'दवाइयाँ', kick_doctor: 'डॉक्टर के लिए', kick_about: 'आपके बारे में'
+    kick_today: 'आज', kick_journal: 'डायरी और अगली मुलाक़ात', kick_habits: 'रोज़ की आदतें', kick_results: 'नतीजे', kick_meds: 'दवाइयाँ', kick_doctor: 'डॉक्टर के लिए', kick_about: 'आपके बारे में'
   }
 };
 
@@ -1489,6 +1489,8 @@ function medsRecordedCard(I) {
     }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') +
     '<p class="muted small" style="margin:10px 0 0">' + esc(t('med_note')) + '</p></div>';
 }
+// remember which dashboard sections the user folded or opened
+document.addEventListener('toggle', e => { const d = e.target; if (d && d.matches && d.matches('details.hsec[data-k]')) (S.secOpen = S.secOpen || {})[d.dataset.k] = d.open; }, true);
 function jrH(I, w) { return typeof journalHTML === 'function' ? journalHTML(I, w) : ''; } /* journal.js hook */
 function viewHealth() {
   const head = '<div class="page-head"><h1>' + esc(t('health_title')) + '</h1><p>' + esc(t('health_sub')) + '</p></div>';
@@ -1531,13 +1533,17 @@ function viewHealth() {
         (ms.length ? '<details class="mentions"><summary>' + esc(t('ment_title', { n: ms.length })) + '</summary><ul>' + ms.map(m => '<li>“' + esc(m.text) + '”' + (m.date ? ' <span class="muted small">' + esc(fmtDate(m.date)) + '</span>' : '') + ' ' + recLink(m.record, t('ment_open')) + '</li>').join('') + '</ul></details>' : '') + '</li>';
     }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>';
   const patientCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab ? ab + ' (' + t('mock_tag') + ')' : t('not_linked')) + '</dd></dl></div>';
-  const sec = (k, body) => '<section class="hsec"><div class="kicker">' + esc(t(k)) + '</div>' + body + '</section>';
-  return headV + (window.SehatRem ? SehatRem.actionsCard() : '') /* reminders.js */ + dashHTML(I) + jrH(I, 'top') + sec('kick_wellness', wellnessCard(I)) + tiles +
-    sec('kick_results', '<div class="stack">' + attn + jrH(I, 'risk') + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>') +
-    sec('kick_meds', '<div class="stack">' + medsRecordedCard(I) + confirmMedsCard() + medsTodayCard(schedMeds()) + (window.SehatRem ? SehatRem.apptCard() : '') /* reminders.js */ + pharmacistCard(sched) + '</div>') +
-    jrH(I, 'habits') +
-    sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>') +
-    sec('kick_about', '<div class="health-grid">' + patientCard + condCard + '</div>');
+  // Folding sections keep a long dashboard readable; the first ones start open and a choice is kept across re-renders.
+  const sec = (k, body, open) => '<details class="hsec" data-k="' + k + '"' + ((S.secOpen && k in S.secOpen ? S.secOpen[k] : open) ? ' open' : '') +
+    '><summary class="kicker">' + esc(t(k)) + '</summary>' + body + '</details>';
+  return headV + dashHTML(I) + tiles + (window.SehatRem ? SehatRem.actionsCard() : '') /* reminders.js */ +
+    sec('kick_results', '<div class="stack">' + attn + jrH(I, 'risk') + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>', true) +
+    sec('kick_meds', '<div class="stack">' + medsTodayCard(schedMeds()) + confirmMedsCard() + (window.SehatRem ? SehatRem.apptCard() : '') /* reminders.js */ + medsRecordedCard(I) + pharmacistCard(sched) + '</div>', true) +
+    sec('kick_journal', jrH(I, 'top'), true) +
+    sec('kick_habits', jrH(I, 'habits'), false) +
+    sec('kick_wellness', wellnessCard(I), false) +
+    sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>', false) +
+    sec('kick_about', '<div class="health-grid">' + patientCard + condCard + '</div>', false);
 }
 async function genOverview() {
   if (S.busy.overview) return;
@@ -2248,6 +2254,8 @@ document.addEventListener('click', e => {
   if (el.dataset.act === 'vitdel') delVital(el.dataset.id);
   else {
     const c = document.getElementById('wellness');
+    const fold = c && c.closest('details');
+    if (fold) { fold.open = true; (S.secOpen = S.secOpen || {})[fold.dataset.k] = true; }
     if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); const i = document.getElementById('vitV'); if (i) setTimeout(() => i.focus({ preventScroll: true }), 350); }
   }
 });
