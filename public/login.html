@@ -7,10 +7,10 @@
   <title>Sign in · Sehat Copilot</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("sehat_theme")}catch(e){}if(t!=="dark"&&t!=="light"){t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=t;d.classList.add("js");setTimeout(function(){if(!window.SehatSite)d.classList.remove("js")},3000)})();</script>
-  <link rel="stylesheet" href="/site.css">
+  <link rel="stylesheet" href="/site.css?v=3g">
   <link rel="prefetch" href="/app">
   <link rel="prefetch" href="/app.js" as="script">
-  <link rel="prefetch" href="/styles.css" as="style">
+  <link rel="prefetch" href="/styles.css?v=3f" as="style">
   <link rel="prefetch" href="/faq.js" as="script">
   <script src="/faq.js"></script>
   <script src="/site.js" defer></script>
@@ -25,30 +25,38 @@
   <main class="login-main">
     <div class="formbox">
       <h1>Welcome</h1>
-      <div class="tabs" role="tablist" id="roleTabs" style="margin-bottom:14px">
-        <button type="button" role="tab" id="r-pat" aria-selected="true">I am a patient</button>
-        <button type="button" role="tab" id="r-doc" aria-selected="false">I am a doctor</button>
+      <div class="tabs roles" role="tablist" id="roleTabs" style="margin-bottom:14px">
+        <button type="button" role="tab" id="r-pat" aria-selected="true">Patient</button>
+        <button type="button" role="tab" id="r-doc" aria-selected="false">Doctor</button>
+        <button type="button" role="tab" id="r-staff" aria-selected="false">Nurse / staff</button>
       </div>
-      <div id="docBox" hidden>
-        <p class="sub">Record a consultation, check the AI draft, approve it, and it reaches the patient's app.</p>
-        <button class="btn primary lg block demo-btn" type="button" id="docDemo"><span>Continue with doctor demo</span><span class="s">Opens the doctor workspace, no sign-in.</span></button>
+      <p class="sub" id="roleSub">Sign in to see your health records explained in plain words.</p>
+      <div id="emailBox">
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" id="t-in" aria-selected="true">Sign in</button>
+          <button type="button" role="tab" id="t-up" aria-selected="false">Create account</button>
+        </div>
+        <form id="f" novalidate autocomplete="on">
+          <div id="nameRow" hidden><label for="name">Name</label><input id="name" autocomplete="name"><div class="msg" id="e-name"></div></div>
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="username" placeholder="you@example.com" data-noi18n><div class="msg" id="e-email"></div>
+          <label for="pw">Password</label>
+          <input id="pw" type="password" autocomplete="current-password" placeholder="At least 6 characters"><div class="msg" id="e-pw"></div>
+          <div class="msg" id="e-form" role="alert"></div>
+          <button class="btn block" type="submit" id="submit">Sign in</button>
+        </form>
+        <div class="or">or try it first</div>
+        <button class="btn secondary lg block demo-btn" type="button" id="demo"><span id="demoT">Continue with demo account</span><span class="s" id="demoS">One click. Opens a sample record, no typing.</span></button>
       </div>
-      <p class="sub">Try the demo in one click, or use an email.</p>
-      <button class="btn primary lg block demo-btn" type="button" id="demo"><span>Continue with demo account</span><span class="s">One click. Opens a sample record, no typing.</span></button>
-      <div class="or">or use an email</div>
-      <div class="tabs" role="tablist">
-        <button type="button" role="tab" id="t-in" aria-selected="true">Sign in</button>
-        <button type="button" role="tab" id="t-up" aria-selected="false">Create account</button>
+      <div id="staffBox" hidden>
+        <form id="sf" novalidate>
+          <label for="code">Access code from your doctor</label>
+          <input id="code" placeholder="e.g. 4F9A2C" maxlength="12" autocomplete="off" style="text-transform:uppercase;letter-spacing:.25em" data-noi18n>
+          <div class="msg" id="e-code" role="alert"></div>
+          <button class="btn block" type="submit" id="sJoin">Open the to-do list</button>
+        </form>
+        <p class="sub" style="margin-top:12px">Your doctor creates the code in their To-do page. It works once. You will only see the to-do list: no patients, prescriptions or recordings.</p>
       </div>
-      <form id="f" novalidate autocomplete="on">
-        <div id="nameRow" hidden><label for="name">Name</label><input id="name" autocomplete="name"><div class="msg" id="e-name"></div></div>
-        <label for="email">Email</label>
-        <input id="email" type="email" autocomplete="username" placeholder="you@example.com" data-noi18n><div class="msg" id="e-email"></div>
-        <label for="pw">Password</label>
-        <input id="pw" type="password" autocomplete="current-password" placeholder="At least 6 characters"><div class="msg" id="e-pw"></div>
-        <div class="msg" id="e-form" role="alert"></div>
-        <button class="btn block" type="submit" id="submit">Sign in</button>
-      </form>
       <a class="guest" href="/app" id="guest">Continue as guest</a>
       <div class="info" role="note">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
@@ -93,6 +101,15 @@
         var label = $("submit").textContent;
         $("submit").textContent = "Opening your records…";
         try {
+          if (role === "doc") {  // doctor accounts: kept on this device, like patient accounts
+            var docs = JSON.parse(localStorage.getItem("sehat_doctors") || "{}"), key = email.toLowerCase();
+            var hash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("sehat-doc:" + key + ":" + pw))), function (x) { return x.toString(16).padStart(2, "0"); }).join("");
+            if (signup) { if (docs[key]) throw new Error("A doctor account with this email already exists. Sign in instead."); docs[key] = { name: name, hash: hash }; localStorage.setItem("sehat_doctors", JSON.stringify(docs)); }
+            else if (!docs[key] || docs[key].hash !== hash) throw new Error(docs[key] ? "Wrong password." : "No doctor account with this email on this device. Create one first.");
+            localStorage.setItem("sehat_doctor", JSON.stringify({ name: docs[key].name, email: key }));
+            location.assign("/doctor.html");
+            return;
+          }
           if (signup) await SehatAuth.signUp(name, email, pw); else await SehatAuth.signIn(email, pw);
           location.assign("/app");
         } catch (err) {
@@ -102,17 +119,42 @@
           tr();
         }
       });
-      (function () {
-        var box = document.querySelector(".formbox"), doc = $("docBox");
-        function role(d) {
-          $("r-pat").setAttribute("aria-selected", String(!d)); $("r-doc").setAttribute("aria-selected", String(d));
-          Array.prototype.forEach.call(box.children, function (el) { if (el.id !== "roleTabs" && el.id !== "docBox" && el.tagName !== "H1") { if (d && el.dataset.h == null) el.dataset.h = el.hidden ? "1" : ""; el.hidden = d || el.dataset.h === "1"; } });
-          doc.hidden = !d;
-        }
-        $("r-pat").onclick = function () { role(false); }; $("r-doc").onclick = function () { role(true); };
-        $("docDemo").onclick = function () { location.assign("/doctor.html"); };
-      })();
-      $("demo").addEventListener("click", function () { this.disabled = true; SehatAuth.demo(); location.assign("/app?demo=1"); });
+      var role = "pat";
+      var SUB = { pat: "Sign in to see your health records explained in plain words.",
+                  doc: "Record or type a consultation, check the AI draft, approve it, and it reaches your patient's app.",
+                  staff: "For a doctor's PA, nurse or receptionist." };
+      function setRole(r) {
+        role = r;
+        ["pat", "doc", "staff"].forEach(function (k) { $("r-" + k).setAttribute("aria-selected", String(k === r)); });
+        $("roleSub").textContent = SUB[r];
+        $("emailBox").hidden = r === "staff"; $("staffBox").hidden = r !== "staff";
+        $("demoT").textContent = r === "doc" ? "Continue with doctor demo" : "Continue with demo account";
+        $("demoS").textContent = r === "doc" ? "Opens Dr. R. K. Bansal's sample clinic, no sign-in." : "One click. Opens a sample record, no typing.";
+        $("guest").hidden = r !== "pat";
+        tr();
+      }
+      ["pat", "doc", "staff"].forEach(function (k) { $("r-" + k).addEventListener("click", function () { setRole(k); }); });
+      if (/[?&]role=doctor/.test(location.search)) setRole("doc");
+      if (/[?&]role=staff/.test(location.search)) setRole("staff");
+      $("sf").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        $("e-code").textContent = "";
+        var code = $("code").value.trim();
+        if (!code) { $("e-code").textContent = "Enter the code your doctor gave you."; return; }
+        $("sJoin").disabled = true;
+        try {
+          var r = await fetch("/api/team", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "join", code: code }) });
+          var j = await r.json().catch(function () { return {}; });
+          if (!r.ok) throw new Error(j.error || "That code did not work.");
+          localStorage.setItem("sehat_staff_token", j.token);
+          location.assign("/staff.html");
+        } catch (err) { $("e-code").textContent = err.message; $("sJoin").disabled = false; }
+      });
+      $("demo").addEventListener("click", function () {
+        this.disabled = true;
+        if (role === "doc") { localStorage.removeItem("sehat_doctor"); location.assign("/doctor.html?demo=1"); return; }
+        SehatAuth.demo(); location.assign("/app?demo=1");
+      });
       try { fetch("/api/health"); } catch (e) { /* only a warm-up */ }
       $("guest").addEventListener("click", function () { SehatAuth.guest(); });
     })();
