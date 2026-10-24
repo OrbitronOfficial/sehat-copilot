@@ -14,6 +14,7 @@ const STR = {
     samples_title: 'Try a sample', samples_none: 'No samples available right now.',
     demo_btn: 'Load full demo profile', demo_hint: 'Adds a sample patient with several records and opens the timeline.',
     processing_title: 'Reading your document',
+    err_unread: 'We could not read any medicines, tests or diagnoses in this document. Try a clearer, well-lit photo with the whole page in view, or a PDF.',
     warn_hdate: 'The date was read as {date}. Handwritten dates are easy to misread; please confirm it.',
     med_conf: 'You confirmed you take this', warn_ocr: 'This document was read with the backup on-device reader, which is less accurate. Please check every value.',
     warn_hand: 'This document is handwritten. Please check every medicine name and dose against the original.',
@@ -195,6 +196,7 @@ const STR = {
     samples_title: 'नमूना आज़माएँ', samples_none: 'अभी कोई नमूना उपलब्ध नहीं है।',
     demo_btn: 'पूरी डेमो प्रोफ़ाइल लोड करें', demo_hint: 'एक नमूना मरीज़ और कई रिकॉर्ड जोड़कर टाइमलाइन खोलता है।',
     processing_title: 'आपका दस्तावेज़ पढ़ा जा रहा है',
+    err_unread: 'इस दस्तावेज़ में कोई दवा, जाँच या निदान पढ़ा नहीं जा सका। पूरा पन्ना दिखाते हुए, अच्छी रोशनी में साफ़ फ़ोटो या PDF आज़माएँ।',
     warn_hdate: 'तारीख़ {date} पढ़ी गई। हाथ से लिखी तारीख़ें आसानी से ग़लत पढ़ी जाती हैं; कृपया इसकी पुष्टि करें।',
     med_conf: 'आपने पुष्टि की है कि आप यह लेते हैं', warn_ocr: 'यह दस्तावेज़ डिवाइस पर चलने वाले बैकअप रीडर से पढ़ा गया, जो कम सटीक है। कृपया हर मान जाँचें।',
     warn_hand: 'यह दस्तावेज़ हाथ से लिखा है। कृपया हर दवा का नाम और खुराक मूल दस्तावेज़ से मिलाएँ।',
@@ -731,6 +733,8 @@ function textToBase64(text) {
   return btoa(bin);
 }
 
+/* A reading with no medicines, tests or diagnoses is not shown as an empty record. */
+function unreadable(r) { return !arr(r && r.tests).length && !arr(r && r.medicines).length && !arr(r && r.diagnoses).length; }
 async function handleFile(file, sampleId) {
   if (!file) return;
   const mime = file.type || guessMime(file.name);
@@ -760,7 +764,9 @@ async function handleFile(file, sampleId) {
       res = await api('/api/extract', { filename: name, mime: 'text/plain', data: textToBase64(text), lang, ocr: 'tesseract' });
     }
     stopStepper();
-    S.draft = normalizeRecord(res.record);
+    const read = normalizeRecord(res.record);
+    if (unreadable(read)) throw new Error(t('err_unread'));  // nothing usable: say so instead of an empty review
+    S.draft = read;
     S.pendingFile = fileObj; S.previewFile = null;
     S.dirty = false; S.reflag = false;
     S.stage = 'review';
@@ -1617,6 +1623,7 @@ async function chatFile(file) {
       skipSet(res.resting);
     } catch (e) { if (e.code === 'vision_unavailable') throw new Error(t('err_busy')); throw e; }
     const rec = normalizeRecord(res.record);
+    if (unreadable(rec)) throw new Error(t('err_unread'));
     S.draft = rec; S.pendingFile = { mime: outMime, dataUrl }; S.previewFile = null;
     S.dirty = false; S.reflag = false; S.stage = 'review'; S.editingId = null;
     let ex = {};

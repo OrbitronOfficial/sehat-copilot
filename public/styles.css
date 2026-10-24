@@ -971,3 +971,6 @@ details.more > summary { cursor: pointer; color: var(--teal); font-weight: 600; 
 .fam-plus { width: 40px; height: 40px; border-radius: 50%; background: var(--teal-tint); color: var(--teal-dark); display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; line-height: 1; }
 .fam-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--crit); color: #fff; font-size: .72rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
 .fam-act[data-fam="view"] { font-weight: 600; }
+
+/* the More sheet is for the phone bar only; the desktop sidebar lists every view */
+@media (min-width: 821px) { [data-act="more"] { display: none !important; } }

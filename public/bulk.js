@@ -60,7 +60,9 @@ const SehatBulk = (function () {
       if (text.replace(/\s/g, '').length < 20) throw new Error(t('err_busy'));
       res = await api('/api/extract', { filename: name, mime: 'text/plain', data: textToBase64(text), lang, ocr: 'tesseract' });
     }
-    return { draft: normalizeRecord(res.record), pending: { mime: outMime, dataUrl } };
+    const draft = normalizeRecord(res.record);
+    if (typeof unreadable === 'function' && unreadable(draft)) throw new Error(t('err_unread'));  // listed as failed, with retry
+    return { draft, pending: { mime: outMime, dataUrl } };
   }
   async function run() {
     const B = S.bulk;
