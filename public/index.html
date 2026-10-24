@@ -10,7 +10,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -19,6 +19,11 @@
     <span class="brand-mark" aria-hidden="true"></span>
     <span class="brand-name" id="brandName">Sehat Copilot</span>
   </a>
+  <div class="demo-switch-bar" id="demoModeBar" role="tablist" aria-label="Demo perspective selector">
+    <a href="/app?demo=1" class="demo-pill active" data-demo="1" id="demoPill1"><span class="dp-dot p-dot"></span><span>3D Patient (Demo 1)</span></a>
+    <a href="/app?demo=2" class="demo-pill" data-demo="2" id="demoPill2"><span class="dp-dot av-dot"></span><span>Avanade Copilot (Demo 2)</span></a>
+    <a href="/app?demo=3" class="demo-pill" data-demo="3" id="demoPill3"><span class="dp-dot ai-dot"></span><span>Conversational AI (Demo 3)</span></a>
+  </div>
   <div class="top-right">
     <span class="local-note" id="localNote">Stored on this device</span>
     <span class="famchip" id="famChip"></span>
@@ -52,7 +57,7 @@
 <div id="pet"></div>
 <footer class="disclaimer" id="disclaimer" role="note">Sehat Copilot explains your records. It is not a diagnosis. Always confirm with your doctor.</footer>
 
-<input type="file" id="fileInput" accept="image/*,application/pdf,text/plain" multiple hidden>
+<input type="file" id="fileInput" accept="image/*,application/pdf,text/plain,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden>
 <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
 <script src="/faq.js"></script>
 <script src="/family.js"></script>
@@ -63,5 +68,7 @@
 <script src="/sync.js"></script>
 <script src="/wellness.js"></script>
 <script src="/bulk.js"></script>
+<script src="inbox.js" defer></script>
+<script src="fx.js" defer></script>
 </body>
 </html>

@@ -18,7 +18,7 @@ function start() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x0b3b37, 1.6));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x0a2a4a, 1.6));
   const light = new THREE.DirectionalLight(0xffffff, 1.8);
   light.position.set(3, 4, 6);
   scene.add(light);
@@ -27,9 +27,9 @@ function start() {
   const helix = new THREE.Group();
   const PAIRS = 22, HEIGHT = 6.4, RADIUS = 1, TURNS = 2;
   const bead = new THREE.SphereGeometry(0.17, 20, 16);
-  const strandA = new THREE.MeshStandardMaterial({ color: 0x14a394, roughness: 0.35, metalness: 0.1 });
-  const strandB = new THREE.MeshStandardMaterial({ color: 0x7fd6cb, roughness: 0.35, metalness: 0.1 });
-  const rungMat = new THREE.MeshStandardMaterial({ color: 0xb8cfcb, roughness: 0.6, transparent: true, opacity: 0.75 });
+  const strandA = new THREE.MeshStandardMaterial({ color: 0x0774c4, roughness: 0.35, metalness: 0.1 });
+  const strandB = new THREE.MeshStandardMaterial({ color: 0x8ebef9, roughness: 0.35, metalness: 0.1 });
+  const rungMat = new THREE.MeshStandardMaterial({ color: 0xc9defa, roughness: 0.6, transparent: true, opacity: 0.75 });
   const rung = new THREE.CylinderGeometry(0.035, 0.035, RADIUS * 2, 8);
   for (let i = 0; i < PAIRS; i++) {
     const f = i / (PAIRS - 1);

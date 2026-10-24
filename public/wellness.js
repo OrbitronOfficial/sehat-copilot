@@ -539,3 +539,6 @@ function viewWellness() {
 function viewFamily() {
   return viewHead('nav_family', 'family_sub') + (window.SehatFamily && SehatFamily.view ? SehatFamily.view() : '');
 }
+
+// labels above arrive after app.js first paints the nav; paint again so they show at once
+if (typeof render === "function") render();
