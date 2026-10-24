@@ -75,7 +75,7 @@ def save(vault_id, token, vault, at):
         return {"ok": True}
     old = _blob_list(path)
     name = f"{path}/{int(time.time() * 1000)}.json"
-    _request("PUT", API + "/" + name, data=body, headers=dict(_auth(), **{
+    _request("PUT", API + "/?pathname=" + urllib.request.quote(name), data=body, headers=dict(_auth(), **{
         "x-content-type": "application/json", "x-add-random-suffix": "1", "x-vercel-blob-access": "private"}))
     if old:  # earlier versions are no longer needed
         try:
