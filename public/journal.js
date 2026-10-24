@@ -58,6 +58,7 @@
     try { const a = JSON.parse(localStorage.getItem(pk(JKEY)) || '[]'); return Array.isArray(a) ? a.filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date)).map(e => Object.assign(blank(e.date), e, { symptoms: arr(e.symptoms) })) : []; } catch (e) { return []; }
   }
   function save(a) { try { localStorage.setItem(pk(JKEY), JSON.stringify(a)); } catch (e) { /* ignore */ } }
+  window.SehatJournal = { load: () => load() };
   const byDate = a => a.slice().sort((x, y) => (x.date < y.date ? 1 : -1));
   function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return ymd(d); }
@@ -214,16 +215,18 @@
       (xs.length > 4 ? '<details class="more"><summary>' + esc(t('jr_more', { n: xs.length })) + '</summary><ul class="list cross">' + xs.slice(4).map(item).join('') + '</ul></details>' : '') + '</div>';
   }
   function wellnessRecCard(I) {
-    const xs = arr(I && I.wellness); if (!xs.length) return '';
+    // tips from the person's own logged data come first; they replace server tips for the same sleep / activity area
+    const dt = window.SehatWell && SehatWell.dataTips ? SehatWell.dataTips() : [], own = dt.map(x => x.area).filter(a => a === 'sleep' || a === 'activity');
+    const xs = dt.concat(arr(I && I.wellness).filter(x => own.indexOf(x.area) < 0)); if (!xs.length) return '';
     const known = ['diet', 'activity', 'sleep', 'habits'];
     const areas = known.filter(a => xs.some(x => x.area === a)).concat(Array.from(new Set(xs.map(x => x.area))).filter(a => known.indexOf(a) < 0));
     return '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('wl_title')) + '</h2>' + areas.map(a => '<div class="jr-area"><h3><span aria-hidden="true">' + (AREA_ICON[a] || '🌿') + '</span> ' + esc(STR.en['wl_' + a] ? t('wl_' + a) : a) + '</h3><ul class="list cross">' +
-      xs.filter(x => x.area === a).map(x => '<li><span class="l"><strong>' + esc(x.tip) + '</strong>' + (x.why ? '<br><span class="small">' + esc(t('wl_why', { w: x.why })) + '</span>' : '') + recLinks(x.records) + '</span></li>').join('') + '</ul></div>').join('') +
+      xs.filter(x => x.area === a).map(x => '<li><span class="l">' + (x.own ? '<span class="tag">' + esc(t('wl_own')) + '</span> ' : '') + '<strong>' + esc(x.tip) + '</strong>' + (x.why ? '<br><span class="small">' + esc(t('wl_why', { w: x.why })) + '</span>' : '') + recLinks(x.records) + '</span></li>').join('') + '</ul></div>').join('') +
       '<p class="muted small" style="margin:10px 0 0">' + esc(t('wl_foot')) + '</p></div>';
   }
   const sec = (k, body) => '<section class="hsec"><div class="kicker">' + esc(t(k)) + '</div>' + body + '</section>';
   window.journalHTML = function (I, where) {
-    if (where === 'top') return sec('jr_kick', '<div class="stack">' + journalCard() + previsitCard() + '</div>');
+    if (where === 'top') return sec('jr_kick', '<div class="stack">' + journalCard() + (window.SehatWell && SehatWell.trendCard ? SehatWell.trendCard() : '') + previsitCard() + '</div>');
     if (where === 'risk') return persistentCard(I) + nextCard(I);
     if (where === 'habits') { const h = wellnessRecCard(I); return h ? '<section class="hsec">' + h + '</section>' : ''; }
     return '';

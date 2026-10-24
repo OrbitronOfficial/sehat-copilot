@@ -113,6 +113,57 @@ Object.assign(STR.hi, {
   sg_foot: 'यह डॉक्टर से बातचीत में मदद के लिए है। यह निदान नहीं है। गर्भावस्था या किसी ख़ास स्थिति में लक्ष्य अलग हो सकते हैं।'
 });
 
+Object.assign(STR.en, {
+  wl_90: '90 days', wl_365: '1 year', wl_noperiod: 'No data in this period', wl_agg_w: 'Each point is a weekly average.', wl_agg_m: 'Each point is a monthly average.',
+  wl_wk: 'Week of {d}', wl_own: 'From your log',
+  jt_title: 'How you\'ve been', jt_sub: 'From your journal entries. Averages are for the period shown.', jt_none: 'No journal entries in this period. Add a few days above.',
+  jt_avg_sleep: 'Average sleep {a} / 5', jt_avg_mood: 'Average mood {a} / 5', jt_avg_energy: 'Average energy {a} / 5', jt_avg_pain: 'Average pain {a} / 10',
+  jt_meds: 'Medicines', jt_taken: 'Taken', jt_missed: 'Missed', jt_unsure: 'Not sure', jt_meds_sum: 'Taken {a}, missed {b}, not sure {c}',
+  wd_sleep_tip: 'Try a regular bedtime, a dark and quiet room, and keeping screens away for the last hour before bed.',
+  wd_sleep_why: 'Your sleep has averaged {a} / 5 over the last 30 days ({n} entries).',
+  wd_steps_tip: 'Short walks add up. Try an extra 10 minutes after a meal and build up slowly.',
+  wd_steps_why: 'Your steps averaged {a} a day over the last 30 days ({n} days entered).',
+  wd_bp_tip: 'Going easy on salt (pickles, papad, packaged snacks), staying active and keeping a regular routine can help. Take your readings along to your doctor.',
+  wd_bp_why: 'Your home blood pressure averaged {a} over the last 30 days ({n} readings).',
+  wd_sugar_tip: 'Choosing whole grains and vegetables, and fewer sweet drinks and sweets, may help. Share these readings with your doctor.',
+  wd_sugar_why: 'Your fasting sugar averaged {a} mg/dL over the last 30 days ({n} readings).',
+  wd_energy_tip: 'Drink water through the day, keep regular meal times and take short rests. If tiredness stays, mention it to your doctor.',
+  wd_energy_why: 'Your energy has averaged {a} / 5 over the last 30 days ({n} entries).',
+  wd_pain_tip: 'Pain that keeps coming back is worth mentioning to your doctor. Note when it happens and what you were doing.',
+  wd_pain_why: 'You noted pain of 6 or more on {n} days in the last 30 days.',
+  wd_missed_tip: 'A phone alarm or a pill box can help you remember. If the timing is hard for you, ask your doctor whether it can be changed.',
+  wd_missed_why: 'You marked your medicines as missed on {n} days in the last 30 days.',
+  wd_walk_tip: 'You walked over 8,000 steps on {n} of the last 7 days. Keep it up!',
+  wd_walk_why: 'Steps entered: over 8,000 on {n} of the last 7 days.',
+  wd_meds_tip: 'You took your medicines on every day you made a note in the last 7 days. Keep it up!',
+  wd_meds_why: '{n} journal entries in the last 7 days, all marked "Yes".'
+});
+Object.assign(STR.hi, {
+  wl_90: '90 दिन', wl_365: '1 साल', wl_noperiod: 'इस अवधि में कोई डेटा नहीं', wl_agg_w: 'हर बिंदु एक हफ़्ते का औसत है।', wl_agg_m: 'हर बिंदु एक महीने का औसत है।',
+  wl_wk: '{d} वाला हफ़्ता', wl_own: 'आपके रिकॉर्ड से',
+  jt_title: 'आप कैसे रहे हैं', jt_sub: 'आपकी डायरी की एंट्री से। औसत दिखाई गई अवधि का है।', jt_none: 'इस अवधि में डायरी की कोई एंट्री नहीं। ऊपर कुछ दिन जोड़ें।',
+  jt_avg_sleep: 'औसत नींद {a} / 5', jt_avg_mood: 'औसत मूड {a} / 5', jt_avg_energy: 'औसत ऊर्जा {a} / 5', jt_avg_pain: 'औसत दर्द {a} / 10',
+  jt_meds: 'दवाइयाँ', jt_taken: 'ली', jt_missed: 'छूटी', jt_unsure: 'पक्का नहीं', jt_meds_sum: 'ली {a}, छूटी {b}, पक्का नहीं {c}',
+  wd_sleep_tip: 'सोने का समय तय रखें, कमरा अँधेरा और शांत रखें, और सोने से पहले आख़िरी घंटे में स्क्रीन से दूर रहें।',
+  wd_sleep_why: 'पिछले 30 दिनों में आपकी नींद का औसत {a} / 5 रहा ({n} एंट्री)।',
+  wd_steps_tip: 'छोटी सैर भी जुड़ती जाती है। खाने के बाद 10 मिनट और चलें और धीरे-धीरे बढ़ाएँ।',
+  wd_steps_why: 'पिछले 30 दिनों में आपके क़दम औसतन {a} रोज़ रहे ({n} दिन दर्ज)।',
+  wd_bp_tip: 'नमक कम लें (अचार, पापड़, पैकेट वाले नमकीन), सक्रिय रहें और दिनचर्या नियमित रखें। अपने माप डॉक्टर के पास ले जाएँ।',
+  wd_bp_why: 'पिछले 30 दिनों में घर पर आपका ब्लड प्रेशर औसतन {a} रहा ({n} माप)।',
+  wd_sugar_tip: 'साबुत अनाज और सब्ज़ियाँ चुनें, मीठे पेय और मिठाई कम लें। ये माप अपने डॉक्टर को दिखाएँ।',
+  wd_sugar_why: 'पिछले 30 दिनों में आपकी खाली पेट शुगर औसतन {a} mg/dL रही ({n} माप)।',
+  wd_energy_tip: 'दिन भर पानी पिएँ, खाने का समय नियमित रखें और बीच-बीच में थोड़ा आराम करें। थकान बनी रहे तो डॉक्टर को बताएँ।',
+  wd_energy_why: 'पिछले 30 दिनों में आपकी ऊर्जा का औसत {a} / 5 रहा ({n} एंट्री)।',
+  wd_pain_tip: 'बार-बार लौटने वाला दर्द डॉक्टर को बताने लायक है। लिखें कि यह कब होता है और तब आप क्या कर रहे थे।',
+  wd_pain_why: 'आपने पिछले 30 दिनों में {n} दिन 6 या उससे ज़्यादा दर्द लिखा।',
+  wd_missed_tip: 'फ़ोन का अलार्म या दवा का डिब्बा याद रखने में मदद करता है। अगर समय निभाना मुश्किल है तो डॉक्टर से पूछें कि क्या समय बदला जा सकता है।',
+  wd_missed_why: 'आपने पिछले 30 दिनों में {n} दिन दवाइयाँ छूटी लिखीं।',
+  wd_walk_tip: 'आप पिछले 7 में से {n} दिन 8,000 से ज़्यादा क़दम चले। ऐसे ही चलते रहें!',
+  wd_walk_why: 'दर्ज क़दम: पिछले 7 में से {n} दिन 8,000 से ज़्यादा।',
+  wd_meds_tip: 'पिछले 7 दिनों में जिस भी दिन आपने नोट लिखा, उस दिन दवाइयाँ ली। ऐसे ही चलते रहें!',
+  wd_meds_why: 'पिछले 7 दिनों में {n} डायरी एंट्री, सभी में "हाँ"।'
+});
+
 const SehatWell = (function () {
   const W = { period: 7, justId: null, sform: null, guide: false, rem: {} };
 
@@ -201,13 +252,48 @@ const SehatWell = (function () {
   /* ---------- date helpers for the period graphs ---------- */
   const dayMs = 864e5;
   const parseDay = d => { const p = String(d).split('-'); return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getTime(); };
-  function period() {
-    const n = W.period, end = parseDay(todayKey());
-    return { n, start: end - (n - 1) * dayMs, end };
-  }
-  const dayIdx = (d, P) => Math.round((parseDay(d) - P.start) / dayMs);
+  const dayKey = ms => new Date(ms).toLocaleDateString('en-CA');
   const shortDate = d => fmtDate(d, { day: 'numeric', month: 'short' });
-  const dayLabel = (P, i) => shortDate(new Date(P.start + i * dayMs).toLocaleDateString('en-CA'));
+  const RANGES = [7, 30, 90, 365];
+  const curRange = () => (RANGES.indexOf(S.wlRange) >= 0 ? S.wlRange : 7);
+  const r1 = x => Math.round(x * 10) / 10;
+  const mean = xs => xs.reduce((a, b) => a + b, 0) / xs.length;
+  /* 7 / 30 days: one point per day. 90 days: weekly averages. 1 year: monthly averages. */
+  function period() {
+    const n = curRange(), end = parseDay(todayKey()), start = end - (n - 1) * dayMs;
+    const mode = n <= 30 ? 'd' : (n === 90 ? 'w' : 'm');
+    const sd = new Date(start), ed = new Date(end), mBase = sd.getFullYear() * 12 + sd.getMonth();
+    const nb = mode === 'd' ? n : (mode === 'w' ? Math.ceil(n / 7) : ed.getFullYear() * 12 + ed.getMonth() - mBase + 1);
+    const startKey = dayKey(start), endKey = todayKey();
+    const idx = d => {
+      if (!d || d < startKey || d > endKey) return -1;
+      const di = Math.round((parseDay(d) - start) / dayMs);
+      if (mode === 'd') return di;
+      if (mode === 'w') return Math.floor(di / 7);
+      const x = new Date(parseDay(d)); return x.getFullYear() * 12 + x.getMonth() - mBase;
+    };
+    const mStart = i => dayKey(new Date(sd.getFullYear(), sd.getMonth() + i, 1).getTime());
+    const label = i => mode === 'd' ? shortDate(dayKey(start + i * dayMs))
+      : (mode === 'w' ? shortDate(dayKey(start + i * 7 * dayMs)) : fmtDate(mStart(i), { month: 'short', year: '2-digit' }));
+    const tip = i => mode === 'w' ? t('wl_wk', { d: label(i) }) : (mode === 'm' ? fmtDate(mStart(i), { month: 'long', year: 'numeric' }) : label(i));
+    return { n, start, end, mode, nb, startKey, endKey, idx, label, tip };
+  }
+  /* rows [{date, v}] -> points [{i, v, tip}], averaged per week / month when the range is long */
+  function bucketAvg(rows, P) {
+    if (P.mode === 'd') return rows.map(r => ({ i: P.idx(r.date), v: r.v, tip: fmtDate(r.date) })).filter(p => p.i >= 0).sort((a, b) => a.i - b.i);
+    const m = {};
+    rows.forEach(r => { const i = P.idx(r.date); if (i >= 0) (m[i] = m[i] || []).push(r.v); });
+    return Object.keys(m).map(Number).sort((a, b) => a - b).map(i => ({ i, v: r1(mean(m[i])), tip: P.tip(i) }));
+  }
+  function xTicks(P, xc, H, pl, Wd, pr) {
+    const last = P.nb - 1;
+    const ix = P.nb <= 1 ? [0] : (P.mode === 'd' ? [0, last] : Array.from(new Set([0, Math.round(last / 3), Math.round(2 * last / 3), last])));
+    return ix.map(i => {
+      const first = i === 0, end = i === last && last > 0;
+      return '<text x="' + (first ? pl : (end ? Wd - pr : xc(i).toFixed(1))) + '" y="' + (H - 9) + '" text-anchor="' + (first ? 'start' : (end ? 'end' : 'middle')) + '">' + esc(P.label(i)) + '</text>';
+    }).join('');
+  }
+  const aggNote = P => (P.mode === 'w' ? '<p class="muted small" style="margin:6px 0 0">' + esc(t('wl_agg_w')) + '</p>' : (P.mode === 'm' ? '<p class="muted small" style="margin:6px 0 0">' + esc(t('wl_agg_m')) + '</p>' : ''));
 
   /* ---------- SVG line chart (one per reading type) ---------- */
   function lineChart(c, P) {
@@ -216,8 +302,8 @@ const SehatWell = (function () {
     c.lines.forEach(l => { all = all.concat(l.pts.map(p => p.v)); });
     c.bands.forEach(b => { all.push(b[0], b[1]); });
     let mn = Math.min.apply(null, all), mx = Math.max.apply(null, all);
-    const padv = (mx - mn) * 0.1 || 1; mn -= padv; mx += padv;
-    const X = i => pl + (P.n === 1 ? 0.5 : i / (P.n - 1)) * (Wd - pl - pr);
+    if (c.fixed) { mn = c.fixed[0]; mx = c.fixed[1]; } else { const padv = (mx - mn) * 0.1 || 1; mn -= padv; mx += padv; }
+    const X = i => pl + (P.nb === 1 ? 0.5 : i / (P.nb - 1)) * (Wd - pl - pr);
     const Y = v => pt + (1 - (v - mn) / (mx - mn)) * (H - pt - pb);
     let g = '';
     c.bands.forEach(b => {
@@ -230,31 +316,30 @@ const SehatWell = (function () {
       const labelAll = l.pts.length <= 9;
       l.pts.forEach((p, k) => {
         const x = X(p.i).toFixed(1), y = Y(p.v);
-        g += '<circle cx="' + x + '" cy="' + y.toFixed(1) + '" r="4.5" fill="' + (p.out ? '#B45309' : l.color) + '" stroke="var(--card)" stroke-width="1.5"><title>' + esc(t('wl_pt', { d: fmtDate(p.date), v: fmtNum(p.v), u: c.unit }) + (l.label ? ' (' + l.label + ')' : '')) + '</title></circle>';
+        g += '<circle cx="' + x + '" cy="' + y.toFixed(1) + '" r="' + (l.pts.length > 40 ? 3 : 4.5) + '" fill="' + (p.out ? '#B45309' : l.color) + '" stroke="var(--card)" stroke-width="1.5"><title>' + esc(t('wl_pt', { d: p.tip, v: fmtNum(p.v), u: c.unit }) + (l.label ? ' (' + l.label + ')' : '')) + '</title></circle>';
         if (labelAll || k === l.pts.length - 1) g += '<text class="' + (k === l.pts.length - 1 ? 'last' : '') + '" x="' + x + '" y="' + (y + (l.below ? 15 : -8)).toFixed(1) + '" text-anchor="middle">' + esc(fmtNum(p.v)) + '</text>';
       });
     });
     g += '<text x="' + (pl - 5) + '" y="' + (pt + 4) + '" text-anchor="end">' + esc(fmtNum(mx)) + '</text>';
     g += '<text x="' + (pl - 5) + '" y="' + (H - pb) + '" text-anchor="end">' + esc(fmtNum(mn)) + '</text>';
-    g += '<text x="' + pl + '" y="' + (H - 9) + '" text-anchor="start">' + esc(dayLabel(P, 0)) + '</text>';
-    g += '<text x="' + (Wd - pr) + '" y="' + (H - 9) + '" text-anchor="end">' + esc(dayLabel(P, P.n - 1)) + '</text>';
+    g += xTicks(P, X, H, pl, Wd, pr);
     return '<svg viewBox="0 0 ' + Wd + ' ' + H + '" role="img" aria-label="' + esc(c.name) + '">' + g + '</svg>';
   }
   function readingCharts(P) {
     const out = [];
-    const inP = ty => S.vitals.filter(e => e.type === ty && e.date >= new Date(P.start).toLocaleDateString('en-CA') && e.date <= todayKey()).sort((a, b) => a.date.localeCompare(b.date));
+    const inP = ty => S.vitals.filter(e => e.type === ty && e.date >= P.startKey && e.date <= P.endKey).sort((a, b) => a.date.localeCompare(b.date));
     VIT_TYPES.forEach(ty => {
       const es = inP(ty);
       if (!es.length) return;
-      const pt = (e, v, band) => ({ i: dayIdx(e.date, P), date: e.date, v, out: band ? (v < band[0] || v > band[1]) : false });
+      const mk = (rows, band) => bucketAvg(rows, P).map(p => Object.assign(p, { out: band ? (p.v < band[0] || p.v > band[1]) : false }));
       let c;
       if (ty === 'bp') {
         c = { name: t('vit_bp'), unit: 'mmHg', bands: [WL_USUAL.bp_up, WL_USUAL.bp_lo], lines: [
-          { label: t('wl_upper'), color: '#0F766E', pts: es.map(e => pt(e, e.value, WL_USUAL.bp_up)) },
-          { label: t('wl_lower'), color: '#475569', below: true, pts: es.filter(e => e.value2 != null).map(e => pt(e, e.value2, WL_USUAL.bp_lo)) }], range: WL_USUAL.bp_up[0] + '/' + WL_USUAL.bp_lo[0] + ' to ' + WL_USUAL.bp_up[1] + '/' + WL_USUAL.bp_lo[1], legend: true };
+          { label: t('wl_upper'), color: '#0F766E', pts: mk(es.map(e => ({ date: e.date, v: e.value })), WL_USUAL.bp_up) },
+          { label: t('wl_lower'), color: '#475569', below: true, pts: mk(es.filter(e => e.value2 != null).map(e => ({ date: e.date, v: e.value2 })), WL_USUAL.bp_lo) }], range: WL_USUAL.bp_up[0] + '/' + WL_USUAL.bp_lo[0] + ' to ' + WL_USUAL.bp_up[1] + '/' + WL_USUAL.bp_lo[1], legend: true };
       } else {
         const b = WL_USUAL[ty] || null;
-        c = { name: t('vit_' + ty), unit: VIT_UNIT[ty], bands: b ? [b] : [], lines: [{ label: '', color: '#0F766E', pts: es.map(e => pt(e, e.value, b)) }], range: b ? b[0] + ' to ' + b[1] : '' };
+        c = { name: t('vit_' + ty), unit: VIT_UNIT[ty], bands: b ? [b] : [], lines: [{ label: '', color: '#0F766E', pts: mk(es.map(e => ({ date: e.date, v: e.value })), b) }], range: b ? b[0] + ' to ' + b[1] : '' };
       }
       out.push('<div class="trend wl-chart"><h4><span>' + esc(c.name) + '</span><span class="mono muted small">' + esc(c.unit) + '</span></h4>' + lineChart(c, P) +
         (c.legend ? '<p class="wl-legend small"><span class="wl-key u"></span>' + esc(t('wl_upper')) + ' <span class="wl-key l"></span>' + esc(t('wl_lower')) + '</p>' : '') +
@@ -263,34 +348,99 @@ const SehatWell = (function () {
     return out;
   }
   function toggleHTML() {
-    return '<div class="wl-toggle" role="group" aria-label="' + esc(t('wl_period')) + '">' + [7, 30].map(n => '<button type="button" class="chip" data-wl="p' + n + '" aria-pressed="' + (W.period === n) + '">' + esc(t('wl_' + n)) + '</button>').join('') + '</div>';
+    return '<div class="wl-toggle" role="group" aria-label="' + esc(t('wl_period')) + '">' + RANGES.map(n => '<button type="button" class="chip" data-wl="r' + n + '" aria-pressed="' + (curRange() === n) + '">' + esc(t('wl_' + n)) + '</button>').join('') + '</div>';
   }
   function graphCard() {
     const P = period(), cs = readingCharts(P);
-    return '<div class="card" id="wlGraph"><div class="row between"><h2>' + esc(t('wl_graph')) + '</h2>' + toggleHTML() + '</div>' +
+    return '<div class="card" id="wlGraph"><div class="row between"><h2>' + esc(t('wl_graph')) + '</h2>' + toggleHTML() + '</div>' + aggNote(P) +
       (cs.length ? '<div class="trends wl-charts" style="margin-top:12px">' + cs.join('') + '</div><p class="muted small" style="margin:10px 0 0">' + esc(t('wl_usual')) + '</p>'
-        : '<p class="muted" style="margin:10px 0 0">' + esc(t('wl_nodata', { n: P.n })) + '</p>') + '</div>';
+        : '<p class="muted" style="margin:10px 0 0">' + esc(t('wl_noperiod')) + '</p>') + '</div>';
+  }
+
+  /* ---------- journal graphs ("How you've been") ---------- */
+  function trendCard() {
+    const J = window.SehatJournal; if (!J) return '';
+    const P = period(), ents = J.load().filter(e => P.idx(e.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
+    const head = '<div class="row between"><h2>' + esc(t('jt_title')) + '</h2>' + toggleHTML() + '</div><p class="muted small" style="margin:4px 0 0">' + esc(t('jt_sub')) + '</p>' + aggNote(P);
+    if (!ents.length) return '<div class="card" id="jrTrend">' + head + '<p class="muted" style="margin:10px 0 0">' + esc(t('jt_none')) + '</p></div>';
+    const defs = [['sleep', [1, 5], '/ 5', '#0F766E'], ['mood', [1, 5], '/ 5', '#0F766E'], ['energy', [1, 5], '/ 5', '#0F766E'], ['pain', [0, 10], '/ 10', '#475569']];
+    const charts = defs.map(d => {
+      const k = d[0], rows = ents.filter(e => typeof e[k] === 'number' && e[k] >= d[1][0] && (k === 'pain' || e[k] > 0)).map(e => ({ date: e.date, v: e[k] }));
+      const h = '<h4><span>' + esc(t('jr_' + k)) + '</span>' + (rows.length ? '<span class="mono small">' + esc(t('jt_avg_' + k, { a: mean(rows.map(r => r.v)).toFixed(1) })) + '</span>' : '') + '</h4>';
+      if (!rows.length) return '<div class="trend wl-chart">' + h + '<p class="muted small" style="margin:6px 0 0">' + esc(t('wl_noperiod')) + '</p></div>';
+      const c = { name: t('jr_' + k), unit: d[2], bands: [], fixed: d[1], lines: [{ label: '', color: d[3], pts: bucketAvg(rows, P) }] };
+      return '<div class="trend wl-chart">' + h + lineChart(c, P) + '</div>';
+    });
+    return '<div class="card" id="jrTrend">' + head + '<div class="trends wl-charts" style="margin-top:12px">' + charts.join('') + medsStrip(ents, P) + '</div></div>';
+  }
+  function medsStrip(ents, P) {
+    const rows = ents.filter(e => e.meds_taken === 'yes' || e.meds_taken === 'no' || e.meds_taken === 'unsure');
+    const h = '<h4><span>' + esc(t('jt_meds')) + '</span></h4>';
+    if (!rows.length) return '<div class="trend wl-chart">' + h + '<p class="muted small" style="margin:6px 0 0">' + esc(t('wl_noperiod')) + '</p></div>';
+    const b = {}, tot = { yes: 0, no: 0, unsure: 0 };
+    rows.forEach(e => { const i = P.idx(e.date); const o = b[i] || (b[i] = { yes: 0, no: 0, unsure: 0 }); o[e.meds_taken]++; tot[e.meds_taken]++; });
+    const keys = Object.keys(b).map(Number), mx = Math.max.apply(null, keys.map(i => b[i].yes + b[i].no + b[i].unsure));
+    const Wd = 360, H = 110, pl = 38, pr = 10, pt = 10, pb = 28, slot = (Wd - pl - pr) / P.nb, bw = Math.max(3, slot * 0.7), hh = H - pt - pb;
+    const COL = { yes: '#0F766E', unsure: '#94A3B8', no: '#B45309' };
+    let g = '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (Wd - pr) + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
+    keys.forEach(i => {
+      const x = pl + i * slot + (slot - bw) / 2; let y = H - pb;
+      ['yes', 'unsure', 'no'].forEach(k => {
+        if (!b[i][k]) return;
+        const h2 = b[i][k] / mx * hh; y -= h2;
+        g += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h2.toFixed(1) + '" fill="' + COL[k] + '"><title>' + esc((P.mode === 'd' ? fmtDate(rows.find(e => P.idx(e.date) === i).date) : P.tip(i)) + ': ' + t(k === 'yes' ? 'jt_taken' : (k === 'no' ? 'jt_missed' : 'jt_unsure')) + ' ' + b[i][k]) + '</title></rect>';
+      });
+    });
+    g += '<text x="' + (pl - 5) + '" y="' + (pt + 8) + '" text-anchor="end">' + mx + '</text><text x="' + (pl - 5) + '" y="' + (H - pb) + '" text-anchor="end">0</text>';
+    g += xTicks(P, i => pl + (i + 0.5) * slot, H, pl, Wd, pr);
+    const key = (k, lbl) => '<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + COL[k] + ';margin:0 4px -1px 8px"></span>' + esc(lbl);
+    return '<div class="trend wl-chart">' + h + '<svg viewBox="0 0 ' + Wd + ' ' + H + '" role="img" aria-label="' + esc(t('jt_meds')) + '">' + g + '</svg><p class="small" style="margin:4px 0 0">' + key('yes', t('jt_taken')) + key('no', t('jt_missed')) + key('unsure', t('jt_unsure')) + '</p>' +
+      '<p class="muted small" style="margin:2px 0 0">' + esc(t('jt_meds_sum', { a: tot.yes, b: tot.no, c: tot.unsure })) + '</p></div>';
+  }
+
+  /* ---------- tips that follow the person's own logged data (last 30 days) ---------- */
+  function dataTips() {
+    const out = [], today = todayKey(), lo30 = dayKey(parseDay(today) - 29 * dayMs), lo7 = dayKey(parseDay(today) - 6 * dayMs);
+    const J = window.SehatJournal, ents = (J ? J.load() : []).filter(e => e.date >= lo30 && e.date <= today);
+    const steps = stepsGet().filter(x => x.date >= lo30 && x.date <= today);
+    const vit = ty => S.vitals.filter(e => e.type === ty && e.date >= lo30 && e.date <= today && isNum(e.value));
+    const add = (area, k, p) => out.push({ area, tip: t('wd_' + k + '_tip', p), why: t('wd_' + k + '_why', p), records: [], own: true });
+    const num = k => ents.filter(e => typeof e[k] === 'number' && e[k] > 0).map(e => e[k]);
+    const sl = num('sleep'); if (sl.length >= 5 && mean(sl) < 3) add('sleep', 'sleep', { a: mean(sl).toFixed(1), n: sl.length });
+    if (steps.length >= 5) { const a = mean(steps.map(x => x.steps)); if (a < 5000) add('activity', 'steps', { a: Math.round(a).toLocaleString(), n: steps.length }); }
+    const walk = steps.filter(x => x.date >= lo7 && x.steps > 8000).length; if (walk >= 5) add('activity', 'walk', { n: walk });
+    const bp = vit('bp');
+    if (bp.length >= 3) {
+      const sy = mean(bp.map(e => Number(e.value))), dv = bp.filter(e => e.value2 != null).map(e => Number(e.value2)), di = dv.length ? mean(dv) : null;
+      if (sy >= 135 || (di != null && di >= 85)) add('diet', 'bp', { a: Math.round(sy) + '/' + (di == null ? '-' : Math.round(di)), n: bp.length });
+    }
+    const sg = vit('sugar_fasting'); if (sg.length >= 3) { const a = mean(sg.map(e => Number(e.value))); if (a >= 100) add('diet', 'sugar', { a: Math.round(a), n: sg.length }); }
+    const en = num('energy'); if (en.length >= 5 && mean(en) < 3) add('habits', 'energy', { a: mean(en).toFixed(1), n: en.length });
+    const pn = ents.filter(e => typeof e.pain === 'number' && e.pain >= 6).length; if (pn >= 3) add('habits', 'pain', { n: pn });
+    const ms = ents.filter(e => e.meds_taken === 'no').length; if (ms >= 3) add('habits', 'missed', { n: ms });
+    const w7 = ents.filter(e => e.date >= lo7 && e.meds_taken); if (w7.length >= 5 && w7.every(e => e.meds_taken === 'yes')) add('habits', 'meds', { n: w7.length });
+    return out;
   }
 
   /* ---------- steps bar chart ---------- */
   function stepsChart(P) {
-    const byDay = {};
-    stepsGet().forEach(x => { const i = dayIdx(x.date, P); if (i >= 0 && i < P.n) byDay[i] = x; });
-    const days = Object.keys(byDay).map(Number);
-    if (!days.length) return { html: '', n: 0 };
-    const Wd = 360, H = 176, pl = 40, pr = 10, pt = 18, pb = 28, mx = Math.max.apply(null, days.map(i => byDay[i].steps)) * 1.1 || 1;
-    const slot = (Wd - pl - pr) / P.n, bw = Math.max(3, slot * 0.7);
+    const rows = stepsGet().filter(x => P.idx(x.date) >= 0);
+    if (!rows.length) return { html: '', n: 0 };
+    const bars = bucketAvg(rows.map(x => ({ date: x.date, v: x.steps })), P).map(p => ({ i: p.i, steps: Math.round(p.v), tip: p.tip }));
+    const Wd = 360, H = 176, pl = 40, pr = 10, pt = 18, pb = 28, mx = Math.max.apply(null, bars.map(b => b.steps)) * 1.1 || 1;
+    const slot = (Wd - pl - pr) / P.nb, bw = Math.max(3, slot * 0.7);
     let g = '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (Wd - pr) + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
-    days.forEach(i => {
-      const x = pl + i * slot + (slot - bw) / 2, h = byDay[i].steps / mx * (H - pt - pb), y = H - pb - h;
-      g += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, h).toFixed(1) + '" rx="2" fill="#0F766E"><title>' + esc(t('wl_pt', { d: fmtDate(byDay[i].date), v: byDay[i].steps.toLocaleString(), u: t('st_unit') })) + '</title></rect>';
-      if (P.n <= 7) g += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 4).toFixed(1) + '" text-anchor="middle">' + esc(byDay[i].steps >= 10000 ? (byDay[i].steps / 1000).toFixed(1) + 'k' : byDay[i].steps) + '</text>';
+    bars.forEach(b => {
+      const x = pl + b.i * slot + (slot - bw) / 2, h = b.steps / mx * (H - pt - pb), y = H - pb - h;
+      g += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, h).toFixed(1) + '" rx="2" fill="#0F766E"><title>' + esc(t('wl_pt', { d: b.tip, v: b.steps.toLocaleString(), u: t('st_unit') })) + '</title></rect>';
+      if (P.n <= 7) g += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 4).toFixed(1) + '" text-anchor="middle">' + esc(b.steps >= 10000 ? (b.steps / 1000).toFixed(1) + 'k' : b.steps) + '</text>';
     });
     g += '<text x="' + (pl - 5) + '" y="' + (pt + 4) + '" text-anchor="end">' + esc(Math.round(mx).toLocaleString()) + '</text><text x="' + (pl - 5) + '" y="' + (H - pb) + '" text-anchor="end">0</text>';
-    g += '<text x="' + pl + '" y="' + (H - 9) + '" text-anchor="start">' + esc(dayLabel(P, 0)) + '</text><text x="' + (Wd - pr) + '" y="' + (H - 9) + '" text-anchor="end">' + esc(dayLabel(P, P.n - 1)) + '</text>';
-    const total = days.reduce((a, i) => a + byDay[i].steps, 0);
-    return { n: days.length, total, avg: Math.round(total / days.length), html: '<div class="trend wl-chart"><svg viewBox="0 0 ' + Wd + ' ' + H + '" role="img" aria-label="' + esc(t('st_title')) + '">' + g + '</svg></div>' };
+    g += xTicks(P, i => pl + (i + 0.5) * slot, H, pl, Wd, pr);
+    const total = rows.reduce((a, x) => a + x.steps, 0);
+    return { n: rows.length, total, avg: Math.round(total / rows.length), html: '<div class="trend wl-chart"><svg viewBox="0 0 ' + Wd + ' ' + H + '" role="img" aria-label="' + esc(t('st_title')) + '">' + g + '</svg></div>' };
   }
+
   function stepsCard() {
     const f = sf(), P = period(), ch = stepsChart(P), list = stepsGet().slice().reverse();
     const form = '<form id="stepForm" class="vit-form" novalidate>' +
@@ -300,7 +450,7 @@ const SehatWell = (function () {
       '<p class="vit-err" role="alert"' + (f.err ? '' : ' hidden') + '>' + esc(f.err ? t(f.err) : '') + '</p></form>';
     return '<div class="card" id="wlSteps"><div class="row between"><h2>' + esc(t('st_title')) + '</h2>' + toggleHTML() + '</div>' +
       '<p class="muted small" style="margin:6px 0 10px">' + esc(t('st_note')) + '</p>' + form + (f.ok ? '<p class="small" role="status" style="color:var(--ok);margin:6px 0 0">' + esc(t('st_saved')) + '</p>' : '') +
-      (ch.n ? '<div style="margin-top:12px">' + ch.html + '<p class="small" style="margin:8px 0 0"><strong>' + esc(t('st_avg', { n: ch.avg.toLocaleString() })) + '</strong> · ' + esc(t('st_total', { n: ch.total.toLocaleString() })) + '</p></div>' : '<p class="muted" style="margin:12px 0 0">' + esc(t('st_empty')) + '</p>') +
+      aggNote(P) + (ch.n ? '<div style="margin-top:12px">' + ch.html + '<p class="small" style="margin:8px 0 0"><strong>' + esc(t('st_avg', { n: ch.avg.toLocaleString() })) + '</strong> · ' + esc(t('st_total', { n: ch.total.toLocaleString() })) + '</p></div>' : '<p class="muted" style="margin:12px 0 0">' + esc(list.length ? t('wl_noperiod') : t('st_empty')) + '</p>') +
       (list.length ? '<details class="vit-all" style="margin-top:10px"><summary>' + esc(t('st_list', { n: list.length })) + '</summary><ul class="list">' + list.map(x => '<li><span class="l"><span class="mono">' + esc(x.steps.toLocaleString()) + '</span> ' + esc(t('st_unit')) + '<br><span class="muted small">' + esc(fmtDate(x.date)) + '</span></span><span class="r"><button type="button" class="btn small danger" data-wl="stepdel" data-date="' + esc(x.date) + '">' + esc(t('st_del')) + '</button></span></li>').join('') + '</ul></details>' : '') + '</div>';
   }
 
@@ -326,7 +476,7 @@ const SehatWell = (function () {
     if (e.target && e.target.closest && e.target.closest('[data-act="nav"]')) W.justId = null;
     if (!el) return;
     const a = el.getAttribute('data-wl');
-    if (a === 'p7' || a === 'p30') { W.period = a === 'p7' ? 7 : 30; render(); }
+    if (/^r(7|30|90|365)$/.test(a)) { S.wlRange = Number(a.slice(1)); render(); }
     else if (a === 'sgguide') { W.guide = !W.guide; render(); }
     else if (a === 'sgrem') sugarRemind(el.getAttribute('data-id'), Number(el.getAttribute('data-d')));
     else if (a === 'sgask') sugarAsk(el.getAttribute('data-id'));
@@ -340,7 +490,7 @@ const SehatWell = (function () {
   document.addEventListener('change', e => { if (e.target && e.target.id === 'stDate') sf().date = e.target.value; });
   document.addEventListener('sehat:profile', () => { W.justId = null; W.sform = null; W.rem = {}; });
 
-  return { onSaved, savedBox, latestBox, graphCard, stepsCard, guideKind };
+  return { onSaved, savedBox, latestBox, graphCard, stepsCard, guideKind, trendCard, dataTips };
 })();
 window.SehatWell = SehatWell;
 

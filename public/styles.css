@@ -949,7 +949,8 @@ details.more > summary { cursor: pointer; color: var(--teal); font-weight: 600; 
 .wl-guide h4 { font-size: 1rem; margin-bottom: 4px; }
 .wl-guide p { margin: 4px 0 0; }
 .wl-danger { color: var(--crit); font-weight: 700; }
-.wl-toggle { display: inline-flex; gap: 6px; }
+.wl-toggle { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.wl-toggle .chip { padding-left: 10px; padding-right: 10px; }
 .wl-charts { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
 .wl-legend { margin: 2px 0 0; color: var(--muted); }
 .wl-key { display: inline-block; width: 14px; height: 3px; margin: 0 4px 3px 8px; border-radius: 2px; background: #0F766E; }
