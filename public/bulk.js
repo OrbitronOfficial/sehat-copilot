@@ -49,17 +49,7 @@ const SehatBulk = (function () {
     let dataUrl, outMime = mime;
     if (isImg) { dataUrl = await downscale(file); outMime = 'image/jpeg'; } else dataUrl = await readAsDataURL(file);
     const data = String(dataUrl).split(',')[1] || '', name = file.name || 'upload';
-    let res;
-    try {
-      res = await api('/api/extract', { filename: name, mime: outMime, data, lang, sample_id: null, skip: skipGet() });
-      skipSet(res.resting);
-    } catch (e) {
-      if (e.code !== 'vision_unavailable' || !isImg) throw e;
-      let text = '';
-      try { text = await ocrOnDevice(dataUrl); } catch (e2) { throw new Error(t('err_busy')); }
-      if (text.replace(/\s/g, '').length < 20) throw new Error(t('err_busy'));
-      res = await api('/api/extract', { filename: name, mime: 'text/plain', data: textToBase64(text), lang, ocr: 'tesseract' });
-    }
+    const res = await extractLimited({ ctl: new AbortController() }, name, outMime, data, dataUrl, isImg, null);  // app.js: 75 s per read, 60 s on-device backup
     const draft = normalizeRecord(res.record);
     if (typeof unreadable === 'function' && unreadable(draft)) throw new Error(t('err_unread'));  // listed as failed, with retry
     return { draft, pending: { mime: outMime, dataUrl } };

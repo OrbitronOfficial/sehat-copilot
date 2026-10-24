@@ -59,7 +59,7 @@ function famReset() {
 }
 
 const SehatFamily = (function () {
-  const RELS = ['self', 'father', 'mother', 'spouse', 'child', 'other'];
+  const RELS = ['self', 'father', 'mother', 'spouse', 'child', 'brother', 'sister', 'other'];
   const LOCK_SVG = '<svg class="fam-lock" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 
   function strings() {
@@ -67,7 +67,7 @@ const SehatFamily = (function () {
       fam_switch: 'Switch family profile', fam_add: 'Add family member', fam_edit: 'Edit', fam_remove: 'Remove member',
       fam_title_add: 'Add a family member', fam_title_edit: 'Edit profile', fam_name: 'Name', fam_relation: 'Relation', fam_age: 'Age', fam_sex: 'Sex',
       fam_sex_m: 'Male', fam_sex_f: 'Female', fam_sex_o: 'Other', fam_sex_none: 'Not set',
-      rel_self: 'Me', rel_father: 'Father', rel_mother: 'Mother', rel_spouse: 'Spouse', rel_child: 'Child', rel_other: 'Other',
+      rel_self: 'Me', rel_father: 'Father', rel_mother: 'Mother', rel_spouse: 'Spouse', rel_child: 'Child', rel_brother: 'Brother', rel_sister: 'Sister', rel_other: 'Other',
       fam_save: 'Save', fam_cancel: 'Cancel', fam_me: 'Me', fam_records: '{n} records',
       fam_lock: 'Profile lock', fam_lock_note: 'Profile lock keeps this profile private inside the app on this device. It does not encrypt the records.',
       fam_pin_new: 'New 4-digit PIN (leave empty to keep)', fam_pin_set: 'Set a 4-digit PIN', fam_hidden: 'Hide from child profiles',
@@ -87,7 +87,7 @@ const SehatFamily = (function () {
       fam_switch: 'परिवार प्रोफ़ाइल बदलें', fam_add: 'परिवार का सदस्य जोड़ें', fam_edit: 'बदलें', fam_remove: 'सदस्य हटाएँ',
       fam_title_add: 'परिवार का सदस्य जोड़ें', fam_title_edit: 'प्रोफ़ाइल बदलें', fam_name: 'नाम', fam_relation: 'रिश्ता', fam_age: 'उम्र', fam_sex: 'लिंग',
       fam_sex_m: 'पुरुष', fam_sex_f: 'महिला', fam_sex_o: 'अन्य', fam_sex_none: 'नहीं बताया',
-      rel_self: 'मैं', rel_father: 'पिता', rel_mother: 'माता', rel_spouse: 'जीवनसाथी', rel_child: 'बच्चा', rel_other: 'अन्य',
+      rel_self: 'मैं', rel_father: 'पिता', rel_mother: 'माता', rel_spouse: 'जीवनसाथी', rel_child: 'बच्चा', rel_brother: 'भाई', rel_sister: 'बहन', rel_other: 'अन्य',
       fam_save: 'सहेजें', fam_cancel: 'रद्द करें', fam_me: 'मैं', fam_records: '{n} रिकॉर्ड',
       fam_lock: 'प्रोफ़ाइल लॉक', fam_lock_note: 'प्रोफ़ाइल लॉक इस डिवाइस पर ऐप के अंदर इस प्रोफ़ाइल को निजी रखता है। यह रिकॉर्ड को एन्क्रिप्ट नहीं करता।',
       fam_pin_new: 'नया 4 अंकों का पिन (वही रखने के लिए खाली छोड़ें)', fam_pin_set: '4 अंकों का पिन रखें', fam_hidden: 'बच्चों की प्रोफ़ाइल से छिपाएँ',
@@ -245,6 +245,35 @@ const SehatFamily = (function () {
       '<p class="fam-err" role="alert"></p><div class="row fam-btns"><button type="submit" class="btn">' + esc(t('fam_save')) + '</button><button type="button" class="btn secondary" data-fam="close">' + esc(t('fam_cancel')) + '</button>' +
       (p && p.id !== 'self' && FAM.active === 'self' ? '<button type="button" class="btn danger" data-fam="remove" data-id="' + esc(p.id) + '">' + esc(t('fam_remove')) + '</button>' : '') + '</div></form>');
   }
+  /* shared by the member form and addMember(): store the profile and its patient details */
+  async function persist(p, isNew) {
+    if (isNew) FAM.list.push(p);
+    FAM.list = norm(FAM.list);
+    await save();
+    // the profile's patient details feed the insights and the doctor visit page
+    const key = profKeyFor('patient', p.id);
+    const pt = (await dbGet('meta', key)) || { abha: null };
+    Object.assign(pt, { name: p.name, age: p.age == null ? null : String(p.age), sex: p.sex === 'O' ? 'Other' : p.sex });
+    await dbPut('meta', pt, key);
+    if (p.id === FAM.active) S.patient = pt;
+    if (p.id === FAM.active) S.insights = null;
+  }
+  /* for other modules (the "who is this document for" dialog): same rules as the form; a child profile cannot add members */
+  const canAdd = () => !isChild(FAM.active);
+  async function addMember(o) {
+    if (!canAdd()) return null;
+    const name = String((o && o.name) || '').trim().slice(0, 60);
+    if (!name) return null;
+    const ageN = o && o.age != null && o.age !== '' ? Number(o.age) : null;
+    const age = ageN !== null && Number.isInteger(ageN) && ageN >= 0 && ageN <= 120 ? ageN : null;
+    const relation = RELS.indexOf(o && o.relation) > 0 ? o.relation : 'other';
+    const sex = ['M', 'F', 'O'].indexOf(o && o.sex) >= 0 ? o.sex : null;
+    const p = { id: 'p' + Math.random().toString(36).slice(2, 9), name, relation, age, sex, pin: null, hidden: false };
+    await persist(p, true);
+    return p.id;
+  }
+  /* profiles a document may be saved into from the active one: not locked behind a PIN, not hidden from a child */
+  const targets = () => (FAM.list || []).filter(p => p.id !== FAM.active && !needsPin(p) && visible(p)).map(p => ({ id: p.id, name: nameOf(p), relation: p.relation }));
   async function submitForm(form) {
     const err = msg => { const e = form.querySelector('.fam-err'); if (e) e.textContent = msg; };
     const f = form.elements, id = FAM.modal && FAM.modal.id;
@@ -261,16 +290,7 @@ const SehatFamily = (function () {
     if (f.hidden.checked && !lock) return err(t('fam_err_hidden'));
     const p = old || { id: 'p' + Math.random().toString(36).slice(2, 9) };
     Object.assign(p, { name, relation: p.id === 'self' ? 'self' : f.relation.value, age, sex: f.sex.value || null, pin: lock, hidden: !!(lock && f.hidden.checked) });
-    if (!old) FAM.list.push(p);
-    FAM.list = norm(FAM.list);
-    await save();
-    // the profile's patient details feed the insights and the doctor visit page
-    const key = profKeyFor('patient', p.id);
-    const pt = (await dbGet('meta', key)) || { abha: null };
-    Object.assign(pt, { name, age: age == null ? null : String(age), sex: p.sex === 'O' ? 'Other' : p.sex });
-    await dbPut('meta', pt, key);
-    if (p.id === FAM.active) S.patient = pt;
-    if (p.id === FAM.active) S.insights = null;
+    await persist(p, !old);
     closeModal();
     render();
   }
@@ -315,10 +335,13 @@ const SehatFamily = (function () {
   /* --- family overview: one card per member --- */
   /* reminders.js (if present): number of caregiver alerts, optionally for one profile id */
   function alerts(id) {
+    if (isChild(FAM.active)) return 0;  // the caregiver feed belongs to the account owner
+    const mp = id && byId(id); if (mp && !visible(mp)) return 0;
     try { const R = window.SehatRem; if (R && typeof R.caregiverCount === 'function') { const n = Number(id ? R.caregiverCount(id) : R.caregiverCount()); return isFinite(n) && n > 0 ? n : 0; } } catch (e) { /* ignore */ }
     return 0;
   }
-  const alertBadge = () => { const n = alerts(); return n ? '<span class="fam-badge" title="' + esc(t('fam_alerts', { n })) + '"><span aria-hidden="true">' + n + '</span><span class="sr-only">' + esc(t('fam_alerts', { n })) + '</span></span>' : ''; };
+  const alertTxt = n => n === 1 ? t('fam_alert_one') : t('fam_alerts', { n });
+  const alertBadge = () => { const n = alerts(); return n ? '<span class="fam-badge" title="' + esc(alertTxt(n)) + '"><span aria-hidden="true">' + n + '</span><span class="sr-only">' + esc(alertTxt(n)) + '</span></span>' : ''; };
   /* today's doses taken / due. The active profile uses the live schedule; for the others it is worked out from their
      records and their own "I take this" and "taken" keys (approximate: an ended course is not detected). */
   function medProgress(p) {
@@ -444,7 +467,7 @@ const SehatFamily = (function () {
   return {
     _norm: norm, _split: split, _loadProfileMeta: loadProfileMeta, _demo: demo, _bootPin: bootPin,
     active: () => FAM.active, list: () => (FAM.list || []).map(p => ({ id: p.id, name: nameOf(p), relation: p.relation, age: p.age, sex: p.sex, locked: !!p.pin, hidden: p.hidden })),
-    switchTo: id => pick(id), view, profKey, profKeyFor
+    switchTo: id => pick(id), view, profKey, profKeyFor, addMember, canAdd, targets
   };
 })();
 window.SehatFamily = SehatFamily;

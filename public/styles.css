@@ -840,6 +840,9 @@ img.pet-svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
 .rm-two { display: flex; gap: 10px; }
 .rm-toast { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 1100; background: var(--teal-dark); color: #fff; padding: 12px 16px; border-radius: 12px; max-width: 420px; margin: 0 auto; box-shadow: 0 6px 24px rgba(0, 0, 0, .3); }
 .rm-toast[hidden] { display: none; }
+body:has(.nav.more-open) .pet { display: none; }  /* the floating guide must not cover the More sheet */
+:root[data-theme="dark"] .rm-toast { background: #0B3F3B; color: #fff; border: 1px solid #2A6F68; }
+:root[data-theme="dark"] .rm-toast .btn, :root[data-theme="dark"] .rm-toast .btn.secondary { background: #fff; color: #0B3F3B; }
 @media (max-width: 480px) { .remctl { margin-left: 0; } .rm-two { flex-direction: column; gap: 0; } }
 
 /* ================= Family profiles (family.js) ================= */
@@ -849,10 +852,16 @@ img.pet-svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
 .fam-btn svg { fill: none; stroke: currentColor; stroke-width: 2; flex: none; }
 .fam-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fam-av { width: 28px; height: 28px; font-size: .74rem; }
-.fam-av.rel-father, .fam-av.rel-mother { background: #7C3AED; }
-.fam-av.rel-child { background: #D97706; }
+.fam-av.rel-father, .fam-av.rel-mother { background: #5B21B6; }
+.fam-av.rel-child { background: #B45309; }
 .fam-av.rel-spouse { background: #DB2777; }
+.fam-av.rel-brother, .fam-av.rel-sister { background: #0E7490; }
 .fam-av.rel-other { background: #475569; }
+.read-time { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 14px 0 0; }
+.read-time .mono { font-size: 1.1rem; }
+.who-list { display: grid; gap: 8px; margin: 10px 0; }
+.who-list .btn { justify-content: flex-start; text-align: left; }
+.moved-note { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .fam-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 80; width: min(320px, calc(100vw - 24px)); background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, .18); padding: 6px; }
 .fam-row { display: flex; align-items: center; gap: 6px; border-radius: 9px; }
 .fam-row.on { background: var(--teal-tint); }

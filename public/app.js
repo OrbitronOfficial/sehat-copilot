@@ -122,6 +122,8 @@ const STR = {
     cur_yes: 'Yes, I take this', cur_undo: 'Remove from schedule', cur_empty: 'Confirm a medicine above to see it in a schedule.',
     err_network: 'Could not reach the server. Check your connection and try again.',
     err_busy: 'The document reader is busy right now. Nothing was lost. Please try again in a minute.',
+    read_time: 'Time so far', read_cancel: 'Cancel', who_title: 'This document is for {a}', who_q: 'Who is {a}?', who_me: 'This is me', who_pick: 'Save to this profile', who_likely: 'Looks like someone in your family', who_all: 'Or save it to', who_add: 'Add {a} to my family', who_add_t: 'Add {a} to your family', who_add_hint: 'Check the details, then save the document into this new profile.', who_none: 'No other profiles to choose from.', who_back: 'Back', who_err: 'Could not save to that profile. Please try again.',
+    moved_to: "Saved to {name}'s records", moved_switch: 'Switch to {name}',
     err_server: 'The server returned an error ({code}).',
     err_type: 'This file type is not supported. Please use a photo, PDF or text file.',
     err_size: 'This file is larger than 3 MB. Please choose a smaller file.',
@@ -305,6 +307,8 @@ const STR = {
     cur_yes: 'हाँ, मैं यह लेता/लेती हूँ', cur_undo: 'समय-सारणी से हटाएँ', cur_empty: 'समय-सारणी देखने के लिए ऊपर किसी दवा की पुष्टि करें।',
     err_network: 'सर्वर से संपर्क नहीं हो सका। कनेक्शन जाँचकर फिर कोशिश करें।',
     err_busy: 'दस्तावेज़ पढ़ने वाली सेवा अभी व्यस्त है। कुछ खोया नहीं है। कृपया एक मिनट बाद फिर कोशिश करें।',
+    read_time: 'अब तक का समय', read_cancel: 'रद्द करें', who_title: 'यह दस्तावेज़ {a} का है', who_q: '{a} कौन हैं?', who_me: 'यह मैं हूँ', who_pick: 'इस प्रोफ़ाइल में सहेजें', who_likely: 'आपके परिवार में से कोई लगता है', who_all: 'या इसमें सहेजें', who_add: '{a} को मेरे परिवार में जोड़ें', who_add_t: '{a} को अपने परिवार में जोड़ें', who_add_hint: 'जानकारी जाँचें, फिर दस्तावेज़ इस नई प्रोफ़ाइल में सहेजें।', who_none: 'चुनने के लिए कोई और प्रोफ़ाइल नहीं है।', who_back: 'पीछे', who_err: 'उस प्रोफ़ाइल में सहेजा नहीं जा सका। कृपया फिर कोशिश करें।',
+    moved_to: '{name} के रिकॉर्ड में सहेजा गया', moved_switch: '{name} की प्रोफ़ाइल खोलें',
     err_server: 'सर्वर में त्रुटि हुई ({code})।',
     err_type: 'यह फ़ाइल प्रकार समर्थित नहीं है। कृपया फोटो, PDF या टेक्स्ट फ़ाइल चुनें।',
     err_size: 'यह फ़ाइल 3 MB से बड़ी है। कृपया छोटी फ़ाइल चुनें।',
@@ -469,12 +473,16 @@ const isLow = c => c !== null && c !== undefined && c !== '' && isFinite(Number(
 const normFlag = f => (FLAGS.indexOf(f) >= 0 ? f : 'unknown');
 const isAbn = f => f === 'low' || f === 'high' || f === 'critical';
 
+function dateLocale() {  // the app language's own month names where the browser has them, else English (India)
+  try { const l = lang + '-IN'; if (lang !== 'en' && Intl.DateTimeFormat.supportedLocalesOf(l).length) return l; } catch (e) { /* ignore */ }
+  return 'en-IN';
+}
 function fmtDate(d, opts) {
   if (!d) return t('undated');
   const s = String(d).slice(0, 10);
   const dt = new Date(s + 'T00:00:00');
   if (isNaN(dt)) return String(d);
-  return dt.toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-IN', opts || { day: 'numeric', month: 'short', year: 'numeric' });
+  return dt.toLocaleDateString(dateLocale(), opts || { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function typeLabel(ty) { return TYPES.indexOf(ty) >= 0 ? t('type_' + ty) : t('type_other'); }
 function badge(flag) { const f = normFlag(flag); return '<span class="flag f-' + f + '">' + esc(t('flag_' + f)) + '</span>'; }
@@ -588,12 +596,14 @@ const S = {
 const getRec = id => S.records.find(r => r.id === id) || null;
 
 /* ================= API ================= */
-async function api(path, body) {
+async function api(path, body, signal) {
   const opt = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+  if (signal) opt.signal = signal;
   let r;
   try { r = await fetch(path, opt); } catch (e) {
+    if (signal && signal.aborted) throw new Error(t('err_busy'));  // timed out or cancelled: do not retry
     await new Promise(ok => setTimeout(ok, 1200));
-    try { r = await fetch(path, opt); } catch (e2) { throw new Error(t('err_network')); }
+    try { r = await fetch(path, opt); } catch (e2) { throw new Error(signal && signal.aborted ? t('err_busy') : t('err_network')); }
   }
   let j = null;
   try { j = await r.json(); } catch (e) { /* not json */ }
@@ -703,6 +713,16 @@ function startStepper() {
   }, 1600);
 }
 function stopStepper() { if (stepTimer) { clearInterval(stepTimer); stepTimer = null; } }
+/* elapsed clock on the reading screen ("0:23"); updates the one element, no re-render */
+let elapsedTimer = null;
+const fmtElapsed = ms => { const n = Math.max(0, Math.floor(ms / 1000)); return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); };
+function startElapsed(run) {
+  stopElapsed();
+  elapsedTimer = setInterval(() => { const el = document.getElementById('rdTimer'); if (el) el.textContent = fmtElapsed(Date.now() - run.t0); }, 500);
+}
+function stopElapsed() { if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; } }
+function stopRead() { stopStepper(); stopElapsed(); }
+const READ_LIMIT_MS = 75000, OCR_LIMIT_MS = 60000;
 
 /* Backup reader: when no vision model is free, read the image on this device
    with Tesseract and let the server structure the text. */
@@ -720,13 +740,50 @@ function loadTesseract() {
   }
   return tesseractLoading;
 }
-async function ocrOnDevice(dataUrl) {
-  await loadTesseract();
-  const worker = await window.Tesseract.createWorker('eng+hin');
-  try {
+async function ocrOnDevice(dataUrl, signal) {
+  let worker = null, tm = null, onAbort = null;
+  const limit = new Promise((_, reject) => {
+    tm = setTimeout(() => reject(new Error(t('err_busy'))), OCR_LIMIT_MS);  // 60 s cap on a slow phone
+    onAbort = () => reject(new Error(t('err_busy')));
+    if (signal) { if (signal.aborted) onAbort(); else signal.addEventListener('abort', onAbort); }
+  });
+  const work = (async () => {
+    await loadTesseract();
+    worker = await window.Tesseract.createWorker('eng+hin');
     const out = await worker.recognize(dataUrl);
     return (out && out.data && out.data.text) || '';
-  } finally { await worker.terminate(); }
+  })();
+  work.catch(() => { /* the limit already reported it */ });
+  try { return await Promise.race([limit, work]); }
+  finally {
+    clearTimeout(tm);
+    if (signal && onAbort) signal.removeEventListener('abort', onAbort);
+    Promise.resolve(work).then(() => worker && worker.terminate(), () => worker && worker.terminate()).catch(() => {});
+    if (worker) { try { worker.terminate().catch(() => {}); } catch (e) { /* ignore */ } }
+  }
+}
+/* One read with the time limits: 75 s for each /api/extract call, 60 s for the on-device backup reader.
+   run = { ctl: AbortController }. Shared with bulk.js. */
+async function extractLimited(run, name, outMime, data, dataUrl, isImg, sampleId) {
+  const sig = run.ctl.signal;
+  const lim = ms => { clearTimeout(run.tm); run.tm = setTimeout(() => run.ctl.abort(), ms); };
+  lim(READ_LIMIT_MS);
+  try {
+    let res;
+    try {
+      res = await api('/api/extract', { filename: name, mime: outMime, data, lang, sample_id: sampleId || null, skip: skipGet() }, sig);
+      skipSet(res.resting);
+    } catch (e) {
+      if (e.code !== 'vision_unavailable' || !isImg) throw e;
+      clearTimeout(run.tm);
+      let text = '';
+      try { text = await ocrOnDevice(dataUrl, sig); } catch (e2) { throw new Error(t('err_busy')); }
+      if (text.replace(/\s/g, '').length < 20) throw new Error(t('err_busy'));
+      lim(READ_LIMIT_MS);
+      res = await api('/api/extract', { filename: name, mime: 'text/plain', data: textToBase64(text), lang, ocr: 'tesseract' }, sig);
+    }
+    return res;
+  } finally { clearTimeout(run.tm); }
 }
 function textToBase64(text) {
   const bytes = new TextEncoder().encode(text);
@@ -744,28 +801,22 @@ async function handleFile(file, sampleId) {
   if (!(isImg || mime === 'application/pdf' || mime === 'text/plain')) return showError(t('err_type'));
   if (!isImg && file.size > 3 * 1024 * 1024) return showError(t('err_size'));
   clearError();
+  if (S.readRun) { S.readRun.cancelled = true; S.readRun.ctl.abort(); clearTimeout(S.readRun.tm); }
+  const run = S.readRun = { ctl: new AbortController(), t0: Date.now(), tm: null };
   S.view = 'add'; S.stage = 'processing'; S.step = 0; S.editingId = null;
   render();
+  startElapsed(run);
   try {
     let dataUrl, outMime = mime;
     if (isImg) { dataUrl = await downscale(file); outMime = 'image/jpeg'; }
     else dataUrl = await readAsDataURL(file);
+    if (S.readRun !== run) return;  // cancelled
     const data = String(dataUrl).split(',')[1] || '';
     const fileObj = { mime: outMime, dataUrl };
     startStepper();
-    const name = file.name || 'upload';
-    let res;
-    try {
-      res = await api('/api/extract', { filename: name, mime: outMime, data, lang, sample_id: sampleId || null, skip: skipGet() });
-      skipSet(res.resting);
-    } catch (e) {
-      if (e.code !== 'vision_unavailable' || !isImg) throw e;
-      let text = '';
-      try { text = await ocrOnDevice(dataUrl); } catch (e2) { throw new Error(t('err_busy')); }
-      if (text.replace(/\s/g, '').length < 20) throw new Error(t('err_busy'));
-      res = await api('/api/extract', { filename: name, mime: 'text/plain', data: textToBase64(text), lang, ocr: 'tesseract' });
-    }
-    stopStepper();
+    const res = await extractLimited(run, file.name || 'upload', outMime, data, dataUrl, isImg, sampleId);
+    if (S.readRun !== run) return;
+    stopRead(); S.readRun = null;
     const read = normalizeRecord(res.record);
     if (unreadable(read)) throw new Error(t('err_unread'));  // nothing usable: say so instead of an empty review
     S.draft = read;
@@ -775,11 +826,18 @@ async function handleFile(file, sampleId) {
     render();
     window.scrollTo(0, 0);
   } catch (e) {
-    stopStepper();
+    if (run.cancelled || (S.readRun && S.readRun !== run)) return;  // cancelled, or a newer read took over
+    stopRead(); S.readRun = null;
     S.stage = 'idle';
     render();
     showError(e.message, () => handleFile(file, sampleId));
   }
+}
+function cancelRead() {
+  const run = S.readRun;
+  if (run) { run.cancelled = true; clearTimeout(run.tm); run.ctl.abort(); }
+  S.readRun = null; stopRead();
+  S.stage = 'idle'; S.view = 'add'; clearError(); render();
 }
 
 async function runSample(id) {
@@ -874,12 +932,13 @@ function delRow(kind, i) {
 }
 function emptyToNull(o, keys) { keys.forEach(k => { if (o[k] === '' || o[k] === undefined) o[k] = null; }); }
 
-async function saveDraft() {
+async function saveDraft(target) {
   if (!S.draft || S.busy.save) return;
   const first = v => String(v || '').trim().toLowerCase().replace(/^(mr|mrs|ms|smt|shri|sri|dr)\.?\s+/, '').split(/\s+/)[0];
   const docName = (S.draft.patient || {}).name, myName = (S.patient || {}).name;
-  if (!S.editingId && first(docName) && first(myName) && first(docName) !== first(myName) &&
-      !confirm(t('confirm_other', { a: docName, b: myName }))) return;
+  if (typeof target !== 'string') target = null;
+  if (!S.editingId && !target && first(docName) && first(myName) && first(docName) !== first(myName)) { askWho(); return; }  // in-page "whose document is it?" dialog
+  const toOther = !!(target && window.SehatFamily && target !== SehatFamily.active());
   S.busy.save = true; clearError(); render();
   try {
     let rec = clone(S.draft);
@@ -902,16 +961,23 @@ async function saveDraft() {
     if (S.dirty || S.reflag) rec.explanation = {};
     rec = normalizeRecord(rec);
     if (S.editingId && S.editingId !== rec.id) rec.id = S.editingId;
+    if (toOther) rec.profile = target;  // family.js famStamp keeps it out of this profile's S.records
     await saveRecordLocal(rec);
-    if (!S.editingId && window.SehatRem) { try { SehatRem.onSaved(rec); } catch (x) { /* reminders.js: copilot actions */ } }
+    if (!S.editingId && !toOther && window.SehatRem) { try { SehatRem.onSaved(rec); } catch (x) { /* reminders.js: copilot actions */ } }
     if (S.pendingFile) await dbPut('files', { id: rec.id, mime: S.pendingFile.mime, dataUrl: S.pendingFile.dataUrl });
     const p = rec.patient || {};
-    if ((!S.patient || !S.patient.name) && (p.name || p.age || p.sex)) {
+    if (!toOther && (!S.patient || !S.patient.name) && (p.name || p.age || p.sex)) {
       S.patient = { name: p.name || null, age: p.age || null, sex: p.sex || null, abha: S.patient ? S.patient.abha || null : null };
       await dbPut('meta', S.patient, profKey('patient'));
     }
     S.draft = null; S.pendingFile = null; S.previewFile = null; S.stage = 'idle'; S.editingId = null;
     S.overview = {};
+    if (toOther) {
+      const who = (SehatFamily.targets().find(x => x.id === target) || {}).name || '';
+      S.moved = { id: target, name: who };
+      if (!(window.SehatBulk && SehatBulk.afterSave(rec))) { S.view = 'add'; S.stage = 'idle'; }
+      S.busy.save = false; render(); window.scrollTo(0, 0); return;
+    }
     if (window.SehatBulk && SehatBulk.afterSave(rec)) { S.busy.save = false; render(); window.scrollTo(0, 0); return; }  // bulk.js: back to the queue
     S.view = 'detail'; S.detailId = rec.id;
     S.busy.save = false;
@@ -920,10 +986,65 @@ async function saveDraft() {
   } catch (e) {
     S.busy.save = false;
     render();
-    showError(e.message, saveDraft);
+    showError(e.message, () => saveDraft(target));
   }
 }
 
+/* ---- "Whose document is it?" dialog (replaces the old confirm) ---- */
+const whoFirst = v => String(v || '').trim().toLowerCase().replace(/^(mr|mrs|ms|smt|shri|sri|dr)\.?\s+/, '').split(/\s+/)[0];
+function whoClose() { const m = document.getElementById('whoModal'); if (m) m.remove(); S.who = null; }
+function askWho() {
+  const pt = (S.draft && S.draft.patient) || {};
+  const ageM = String(pt.age == null ? '' : pt.age).match(/\d+/), sx = String(pt.sex || '');
+  S.who = { name: String(pt.name || '').trim(), age: ageM ? ageM[0] : '', sex: /^f/i.test(sx) ? 'F' : /^m/i.test(sx) ? 'M' : (sx ? 'O' : ''), step: 'ask', err: '' };
+  paintWho();
+}
+function paintWho() {
+  let m = document.getElementById('whoModal');
+  const w = S.who;
+  if (!w) { if (m) m.remove(); return; }
+  if (!m) { m = document.createElement('div'); m.id = 'whoModal'; m.className = 'fam-modal'; document.body.appendChild(m); }
+  const F = window.SehatFamily, a = w.name, esc2 = esc;
+  let h;
+  if (w.step === 'add') {
+    const opt = (v, l, cur) => '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(l) + '</option>';
+    h = '<form id="whoForm" novalidate><h2>' + esc(t('who_add_t', { a })) + '</h2><p class="muted small">' + esc(t('who_add_hint')) + '</p>' +
+      '<label>' + esc(t('fam_name')) + '<input name="name" maxlength="60" autocomplete="off" value="' + esc(w.name) + '" required></label>' +
+      '<div class="fam-2"><label>' + esc(t('fam_relation')) + '<select name="relation">' + ['father', 'mother', 'spouse', 'child', 'brother', 'sister', 'other'].map(r => opt(r, t('rel_' + r), w.rel || 'other')).join('') + '</select></label>' +
+      '<label>' + esc(t('fam_age')) + '<input name="age" type="number" inputmode="numeric" min="0" max="120" value="' + esc(w.age) + '"></label>' +
+      '<label>' + esc(t('fam_sex')) + '<select name="sex">' + opt('', t('fam_sex_none'), w.sex) + opt('M', t('fam_sex_m'), w.sex) + opt('F', t('fam_sex_f'), w.sex) + opt('O', t('fam_sex_o'), w.sex) + '</select></label></div>' +
+      '<p class="fam-err" role="alert">' + esc(w.err || '') + '</p><div class="row fam-btns"><button type="submit" class="btn">' + esc(t('fam_save')) + '</button>' +
+      '<button type="button" class="btn secondary" data-act="who_back">' + esc(t('who_back')) + '</button></div></form>';
+  } else {
+    const all = F ? F.targets() : [], f0 = whoFirst(a);
+    const likely = all.filter(p => f0 && String(p.name).toLowerCase().split(/\s+/).some(x => x === f0));
+    const list = likely.length ? likely : all.slice(0, 6);
+    const btn = p => '<button type="button" class="btn secondary" data-act="who_to" data-id="' + esc(p.id) + '">' + esc(p.name) + ' <span class="muted small">(' + esc(t('rel_' + p.relation)) + ')</span></button>';
+    h = '<div id="whoBox"><h2>' + esc(t('who_title', { a })) + '</h2><p>' + esc(t('who_q', { a })) + '</p><div class="who-list">' +
+      '<button type="button" class="btn" data-act="who_me">' + esc(t('who_me')) + '</button>' +
+      (list.length ? '<p class="muted small" style="margin:6px 0 0">' + esc(t(likely.length ? 'who_likely' : 'who_all')) + '</p>' + list.map(btn).join('') : '') +
+      (F && F.canAdd() ? '<button type="button" class="btn secondary" data-act="who_new">+ ' + esc(t('who_add', { a })) + '</button>' : '') +
+      '</div><p class="fam-err" role="alert">' + esc(w.err || '') + '</p><div class="row fam-btns"><button type="button" class="btn link" data-act="who_cancel">' + esc(t('cancel')) + '</button></div></div>';
+  }
+  m.innerHTML = '<div class="fam-dialog" role="dialog" aria-modal="true" aria-label="' + esc(t('who_title', { a })) + '">' + h + '</div>';
+  const f = m.querySelector('input,button'); if (f) f.focus();
+}
+async function whySave(id) { whoClose(); await saveDraft(id); }  // a failed save shows the normal error banner with Try again
+document.addEventListener('submit', async e => {
+  if (!e.target || e.target.id !== 'whoForm') return;
+  e.preventDefault();
+  const f = e.target.elements, w = S.who, F = window.SehatFamily;
+  if (!w || !F) return;
+  w.name = f.name.value.trim(); w.age = f.age.value.trim(); w.sex = f.sex.value; w.rel = f.relation.value;
+  const ageN = w.age === '' ? null : Number(w.age);
+  if (!w.name) { w.err = t('fam_err_name'); return paintWho(); }
+  if (ageN !== null && !(Number.isInteger(ageN) && ageN >= 0 && ageN <= 120)) { w.err = t('fam_err_age'); return paintWho(); }
+  let id = null;
+  try { id = await F.addMember({ name: w.name, relation: w.rel, age: ageN, sex: w.sex || null }); } catch (x) { /* shown below */ }
+  if (!id) { w.err = t('who_err'); return paintWho(); }
+  whySave(id);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.who) whoClose(); });
 function discardDraft() {
   const wasEdit = S.editingId;
   if (window.SehatBulk && !wasEdit) SehatBulk.onDiscard();  // bulk.js: a discarded batch draft counts as skipped
@@ -953,6 +1074,12 @@ async function deleteRecord(id) {
 }
 
 /* ================= View: Add ================= */
+function movedNote() {
+  const m = S.moved;
+  if (!m) return '';
+  return '<div class="notice info moved-note" role="status"><span>' + esc(t('moved_to', { name: m.name })) + '</span><span class="row"><button type="button" class="btn small" data-act="moved_switch" data-id="' + esc(m.id) + '">' + esc(t('moved_switch', { name: m.name })) + '</button>' +
+    '<button type="button" class="btn small link" data-act="moved_close">' + esc(t('dismiss')) + '</button></span></div>';
+}
 function viewAdd() {
   if (S.stage === 'processing') return viewProcessing();
   if (S.stage === 'review') return viewReview();
@@ -962,8 +1089,9 @@ function viewAdd() {
       ? '<div class="sample-row">' + S.samples.map(s =>
         '<button type="button" class="btn secondary small" data-act="sample" data-id="' + esc(s.id) + '">' + esc(s.title || s.id) + '</button>').join('') + '</div>'
       : '<p class="muted">' + esc(t('samples_none')) + '</p>');
-  if (window.SehatBulk && S.bulk) return '<div class="page-head"><h1>' + esc(t('add_title')) + '</h1><p>' + esc(t('add_sub')) + '</p></div>' + SehatBulk.queueHTML();  // bulk.js
+  if (window.SehatBulk && S.bulk) return '<div class="page-head"><h1>' + esc(t('add_title')) + '</h1><p>' + esc(t('add_sub')) + '</p></div>' + movedNote() + SehatBulk.queueHTML();  // bulk.js
   return '<div class="page-head"><h1>' + esc(t('add_title')) + '</h1><p>' + esc(t('add_sub')) + '</p></div>' +
+    movedNote() +
     (window.SehatRem ? SehatRem.actionsCard({ recent: true }) : '') /* reminders.js */ +
     '<div class="dropzone" id="drop">' +
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>' +
@@ -1011,7 +1139,9 @@ function viewProcessing() {
   const steps = ['step_read', 'step_extract', 'step_check', 'step_write'];
   return '<div class="page-head"><h1>' + esc(t('processing_title')) + '</h1></div><div class="card"><ol class="stepper">' +
     steps.map((k, i) => '<li class="' + (i < S.step ? 'done' : (i === S.step ? 'now' : '')) + '"><span class="dot"></span><span>' + esc(t(k)) + '</span></li>').join('') +
-    '</ol><p class="muted small" style="margin:14px 0 0">' + esc(t('wait_hint')) + '</p></div>';
+    '</ol><p class="muted small" style="margin:14px 0 0">' + esc(t('wait_hint')) + '</p>' +
+    '<div class="read-time"><span class="muted small">' + esc(t('read_time')) + '</span><strong class="mono" id="rdTimer" aria-live="off">' + fmtElapsed(S.readRun ? Date.now() - S.readRun.t0 : 0) + '</strong>' +
+    '<button type="button" class="btn small secondary" data-act="cancelread">' + esc(t('read_cancel')) + '</button></div></div>';
 }
 
 function fld(label, path, val, o) {
@@ -1454,7 +1584,8 @@ const ptUnit = p => (p.orig_value != null && p.orig_value !== '' ? (p.orig_unit 
 
 function greetingLine() {
   const u = currentUser(), p = S.patient || {};
-  const nm = String((u && u.name) || p.name || '').trim().split(/\s+/)[0];
+  const other = window.SehatFamily && SehatFamily.active() !== 'self';  // another profile is open: greet that person
+  const nm = String((other ? p.name : ((u && u.name) || p.name)) || '').trim().split(/\s+/)[0];
   if (!nm) return t('greet_guest');
   const h = new Date().getHours();
   return t(h < 12 ? 'greet_morning' : (h < 18 ? 'greet_afternoon' : 'greet_evening'), { name: nm });
@@ -1860,7 +1991,9 @@ async function wipeAll() {
   await dbClear('records'); await dbClear('files'); await dbClear('meta');
   famReset();  // family.js: forget every profile, back to a single 'self'
   try {
-    Object.keys(localStorage).filter(k => /^sehat_(insights|current|skip|taken_|notified_|actions|appts|rem)/.test(k)).forEach(k => localStorage.removeItem(k));
+    // every per-profile key (sehat_journal@id, sehat_steps, sehat_fired ...), the sign-in and the sync credentials; only language and theme stay
+    Object.keys(localStorage).filter(k => /^sehat_/.test(k) && k !== 'sehat_lang' && k !== 'sehat_theme').forEach(k => localStorage.removeItem(k));
+    Object.keys(sessionStorage).filter(k => /^sehat_/.test(k)).forEach(k => sessionStorage.removeItem(k));
   } catch (e) { /* storage blocked: nothing was cached there */ }
   S.visitNotes = ''; S.medcheck = null; S.abhaFlow = null; S.pendingFile = null; S.previewFile = null;
   if (typeof TAKEN_MEM === 'object' && TAKEN_MEM) Object.keys(TAKEN_MEM).forEach(k => delete TAKEN_MEM[k]);
@@ -2439,7 +2572,7 @@ function go(view) {
   if (S.view === 'add' && S.stage === 'review' && view !== 'add' && S.dirty && !confirm(t('discard') + '?')) return;
   S.chatUpload = false;
   if (view !== 'add' && S.stage === 'review' && S.view === 'add') { S.draft = null; S.pendingFile = null; S.previewFile = null; S.stage = 'idle'; S.editingId = null; }
-  S.view = view; S.notice = null; S.moreOpen = false;
+  S.view = view; S.notice = null; S.moved = null; S.moreOpen = false;
   clearError();
   render();
   window.scrollTo(0, 0);
@@ -2482,6 +2615,14 @@ document.addEventListener('click', e => {
     case 'fhir': exportFhir(); break;
     case 'wipe': wipeAll(); break;
     case 'dismiss': clearError(); break;
+    case 'cancelread': cancelRead(); break;
+    case 'who_me': whySave(window.SehatFamily ? SehatFamily.active() : 'self'); break;
+    case 'who_to': whySave(el.dataset.id); break;
+    case 'who_new': if (S.who) { S.who.step = 'add'; S.who.err = ''; paintWho(); } break;
+    case 'who_back': if (S.who) { S.who.step = 'ask'; S.who.err = ''; paintWho(); } break;
+    case 'who_cancel': whoClose(); break;
+    case 'moved_switch': { const id = el.dataset.id; S.moved = null; if (window.SehatFamily) SehatFamily.switchTo(id); break; }
+    case 'moved_close': S.moved = null; render(); break;
     case 'retry': { const fn = S.retry; clearError(); if (fn) fn(); break; }
   }
 });
