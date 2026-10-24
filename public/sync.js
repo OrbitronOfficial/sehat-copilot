@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   const CRED = 'sehat_sync', AT = 'sehat_sync_at';
-  const SKIP = /^sehat_(sync|accounts|user|theme|lang|i18n_|skip|pin_wait|insights|notified_)/;  // never synced
+  const SKIP = /^sehat_(sync|accounts|user|theme|lang|i18n_|skip|pin_wait|insights|notified_|profile)/;  // never synced
   const te = new TextEncoder(), td = new TextDecoder();
   const hex = b => Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, '0')).join('');
   const b64 = b => { let s = ''; const u = new Uint8Array(b); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };

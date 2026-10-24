@@ -25,6 +25,8 @@ async function famBoot() {
   let fam = null;
   try { fam = await dbGet('meta', 'family'); } catch (e) { /* none yet */ }
   FAM.list = SehatFamily._norm(fam && fam.profiles);
+  // the account holder is named by their own health profile, not by the login name
+  try { const me = await dbGet('meta', 'patient'); FAM.selfName = (me && me.name) || ''; } catch (e) { FAM.selfName = ''; }
   let a = null;
   try { a = localStorage.getItem('sehat_profile'); } catch (e) { /* ignore */ }
   FAM.active = FAM.list.some(p => p.id === a) ? a : 'self';
@@ -130,6 +132,7 @@ const SehatFamily = (function () {
     if (p.name) return p.name;
     if (p.id === 'self') {
       if (FAM.active === 'self' && S.patient && S.patient.name) return S.patient.name;
+      if (FAM.selfName) return FAM.selfName;
       const u = typeof currentUser === 'function' ? currentUser() : null;
       if (u && u.name && !u.demo) return u.name;
     }

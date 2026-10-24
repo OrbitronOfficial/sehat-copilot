@@ -1585,7 +1585,8 @@ const ptUnit = p => (p.orig_value != null && p.orig_value !== '' ? (p.orig_unit 
 function greetingLine() {
   const u = currentUser(), p = S.patient || {};
   const other = window.SehatFamily && SehatFamily.active() !== 'self';  // another profile is open: greet that person
-  const nm = String((other ? p.name : ((u && u.name) || p.name)) || '').trim().split(/\s+/)[0];
+  // greet the person whose health profile is open; the login name is only a fallback
+  const nm = String((other ? p.name : (p.name || (u && u.name))) || '').trim().split(/\s+/)[0];
   if (!nm) return t('greet_guest');
   const h = new Date().getHours();
   return t(h < 12 ? 'greet_morning' : (h < 18 ? 'greet_afternoon' : 'greet_evening'), { name: nm });
