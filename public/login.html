@@ -15,6 +15,7 @@
   <script src="/faq.js"></script>
   <script src="/site.js" defer></script>
   <script src="/sync.js" defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
 </head>
 <body class="login" data-page="login">
   <header class="site-nav" id="nav"><div class="nav-row">
@@ -24,6 +25,14 @@
   <main class="login-main">
     <div class="formbox">
       <h1>Welcome</h1>
+      <div class="tabs" role="tablist" id="roleTabs" style="margin-bottom:14px">
+        <button type="button" role="tab" id="r-pat" aria-selected="true">I am a patient</button>
+        <button type="button" role="tab" id="r-doc" aria-selected="false">I am a doctor</button>
+      </div>
+      <div id="docBox" hidden>
+        <p class="sub">Record a consultation, check the AI draft, approve it, and it reaches the patient's app.</p>
+        <button class="btn primary lg block demo-btn" type="button" id="docDemo"><span>Continue with doctor demo</span><span class="s">Opens the doctor workspace, no sign-in.</span></button>
+      </div>
       <p class="sub">Try the demo in one click, or use an email.</p>
       <button class="btn primary lg block demo-btn" type="button" id="demo"><span>Continue with demo account</span><span class="s">One click. Opens a sample record, no typing.</span></button>
       <div class="or">or use an email</div>
@@ -93,6 +102,16 @@
           tr();
         }
       });
+      (function () {
+        var box = document.querySelector(".formbox"), doc = $("docBox");
+        function role(d) {
+          $("r-pat").setAttribute("aria-selected", String(!d)); $("r-doc").setAttribute("aria-selected", String(d));
+          Array.prototype.forEach.call(box.children, function (el) { if (el.id !== "roleTabs" && el.id !== "docBox" && el.tagName !== "H1") { if (d && el.dataset.h == null) el.dataset.h = el.hidden ? "1" : ""; el.hidden = d || el.dataset.h === "1"; } });
+          doc.hidden = !d;
+        }
+        $("r-pat").onclick = function () { role(false); }; $("r-doc").onclick = function () { role(true); };
+        $("docDemo").onclick = function () { location.assign("/doctor.html"); };
+      })();
       $("demo").addEventListener("click", function () { this.disabled = true; SehatAuth.demo(); location.assign("/app?demo=1"); });
       try { fetch("/api/health"); } catch (e) { /* only a warm-up */ }
       $("guest").addEventListener("click", function () { SehatAuth.guest(); });
