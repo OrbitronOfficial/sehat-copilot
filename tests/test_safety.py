@@ -250,5 +250,3 @@ class ChangeIntentTests(Base):
         for q in ["What is Glycomet for?", "When do I take Glycomet?", "Which medicines am I taking?",
                   "Glycomet kab leni hai"]:
             self.assertIsNone(safety.classify(q, self.NAMES), q)
-
-

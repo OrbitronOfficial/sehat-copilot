@@ -293,7 +293,7 @@ class PreventiveTests(unittest.TestCase):
         self.assertRegex(item["why"], "[ऀ-ॿ]")
 
 
-class WellnessTests(unittest.TestCase):
+class WellnessGuidanceTests(unittest.TestCase):
     def tips(self, recs, **kw):
         return insights.build(recs, today=TODAY, **kw)["wellness"]
 
