@@ -38,6 +38,7 @@ const STR = {
     sec_tests: 'Tests', sec_meds: 'Medicines', sec_dx: 'Diagnoses', sec_advice: 'Advice',
     t_name: 'Test name', t_value: 'Value', t_unit: 'Unit', t_low: 'Range low', t_high: 'Range high', t_flag: 'Flag', t_range: 'Reference range',
     m_name: 'Medicine', m_generic: 'Generic name', m_strength: 'Strength', m_dose: 'Dose', m_freq: 'Frequency', m_timing: 'Timing', m_duration: 'Duration', m_instr: 'Instructions',
+    add_f: '+ {f}', t_ref_text: 'Reference text', m_name_ph: 'Not read - type the name', t_name_ph: 'Not read - type the test name',
     add_test: 'Add test', add_med: 'Add medicine', add_dx: 'Add diagnosis', add_advice: 'Add advice', remove: 'Remove',
     no_items: 'None found.',
     flag_normal: 'Normal', flag_low: 'Low', flag_high: 'High', flag_critical: 'Critical', flag_unknown: 'Unknown',
@@ -174,7 +175,7 @@ const STR = {
     dash_changed: 'What changed', dash_changed_none: 'Not enough repeat results yet.',
     dash_doctor: 'For your doctor', dash_doctor_n: '{n} question(s) from your records',
     qa_ask: 'Ask Saathi', qa_export: 'Export',
-    vit_title: 'Wellness log', vit_bp: 'Blood pressure', vit_sugar_fasting: 'Fasting sugar', vit_sugar_pp: 'Sugar after meal', vit_weight: 'Weight', vit_pulse: 'Pulse',
+    vit_title: 'Wellness log', vit_bp: 'Blood pressure', vit_sugar_fasting: 'Fasting sugar', vit_sugar_pp: 'Sugar after meal', vit_sugar_random: 'Random sugar', vit_weight: 'Weight', vit_pulse: 'Pulse',
     vit_type: 'Type', vit_value: 'Reading', vit_upper: 'Upper', vit_lower_in: 'Lower', vit_note: 'Note (optional)', vit_add: 'Add reading', vit_del: 'Delete',
     vit_err_num: 'Please enter numbers only.', vit_err_range: 'That value looks out of range. Please check it ({min} to {max}).',
     vit_err_date: 'Choose a date that is today or earlier.', vit_err_bp: 'The upper number should be higher than the lower one.',
@@ -220,6 +221,7 @@ const STR = {
     sec_tests: 'जाँचें', sec_meds: 'दवाइयाँ', sec_dx: 'निदान', sec_advice: 'सलाह',
     t_name: 'जाँच का नाम', t_value: 'मान', t_unit: 'इकाई', t_low: 'सामान्य सीमा (न्यूनतम)', t_high: 'सामान्य सीमा (अधिकतम)', t_flag: 'स्थिति', t_range: 'सामान्य सीमा',
     m_name: 'दवा', m_generic: 'जेनेरिक नाम', m_strength: 'मात्रा (ताकत)', m_dose: 'खुराक', m_freq: 'कितनी बार', m_timing: 'समय', m_duration: 'अवधि', m_instr: 'निर्देश',
+    add_f: '+ {f}', t_ref_text: 'सामान्य सीमा (लिखित)', m_name_ph: 'पढ़ा नहीं गया - नाम लिखें', t_name_ph: 'पढ़ा नहीं गया - जाँच का नाम लिखें',
     add_test: 'जाँच जोड़ें', add_med: 'दवा जोड़ें', add_dx: 'निदान जोड़ें', add_advice: 'सलाह जोड़ें', remove: 'हटाएँ',
     no_items: 'कुछ नहीं मिला।',
     flag_normal: 'सामान्य', flag_low: 'कम', flag_high: 'अधिक', flag_critical: 'गंभीर', flag_unknown: 'अज्ञात',
@@ -356,7 +358,7 @@ const STR = {
     dash_changed: 'क्या बदला', dash_changed_none: 'दोहराए गए नतीजे अभी पर्याप्त नहीं हैं।',
     dash_doctor: 'डॉक्टर के लिए', dash_doctor_n: 'आपके रिकॉर्ड से {n} सवाल',
     qa_ask: 'साथी से पूछें', qa_export: 'एक्सपोर्ट',
-    vit_title: 'सेहत की डायरी', vit_bp: 'ब्लड प्रेशर', vit_sugar_fasting: 'खाली पेट शुगर', vit_sugar_pp: 'खाने के बाद शुगर', vit_weight: 'वज़न', vit_pulse: 'नाड़ी',
+    vit_title: 'सेहत की डायरी', vit_bp: 'ब्लड प्रेशर', vit_sugar_fasting: 'खाली पेट शुगर', vit_sugar_pp: 'खाने के बाद शुगर', vit_sugar_random: 'किसी भी समय शुगर', vit_weight: 'वज़न', vit_pulse: 'नाड़ी',
     vit_type: 'प्रकार', vit_value: 'माप', vit_upper: 'ऊपरी', vit_lower_in: 'निचला', vit_note: 'नोट (वैकल्पिक)', vit_add: 'माप जोड़ें', vit_del: 'हटाएँ',
     vit_err_num: 'कृपया सिर्फ़ संख्याएँ लिखें।', vit_err_range: 'यह मान सीमा से बाहर लगता है। कृपया जाँचें ({min} से {max})।',
     vit_err_date: 'आज या उससे पहले की तारीख चुनें।', vit_err_bp: 'ऊपरी संख्या निचली से बड़ी होनी चाहिए।',
@@ -1015,7 +1017,7 @@ function viewProcessing() {
 function fld(label, path, val, o) {
   o = o || {};
   return '<label class="fld ' + (o.cls || '') + '"><span>' + esc(label) + '</span><input type="' + (o.type || 'text') + '" class="' + (o.mono ? 'mono' : '') +
-    '" data-path="' + esc(path) + '"' + (o.num ? ' data-num="' + o.num + '"' : '') + (o.inputmode ? ' inputmode="' + o.inputmode + '"' : '') +
+    '" data-path="' + esc(path) + '"' + (o.ph ? ' placeholder="' + esc(o.ph) + '"' : '') + (o.num ? ' data-num="' + o.num + '"' : '') + (o.inputmode ? ' inputmode="' + o.inputmode + '"' : '') +
     ' value="' + esc(val) + '"></label>';
 }
 function sel(label, path, val, opts, o) {
@@ -1026,32 +1028,53 @@ function sel(label, path, val, opts, o) {
 
 function srcAttr(x) { return x && x.source_text ? ' data-src="' + esc(x.source_text) + '"' + (x.page ? ' data-page="' + esc(x.page) + '"' : '') : ''; }
 function srcLine(x) { return x && x.source_text ? '<div class="srcline"><span class="muted">' + esc(t('src_from')) + ':</span> ' + esc(x.source_text) + '</div>' : ''; }
+/* Review screen: an empty optional field is not drawn as a blank box; it becomes a small "+ Field" chip that reveals the input.
+   Revealed fields are remembered per item (WeakMap), so re-renders and row deletes never mix them up. Saved data is unchanged. */
+const REVEALED = new WeakMap();
+const isBlank = v => v == null || String(v).trim() === '';
+const isRevealed = (x, f) => !!(REVEALED.get(x) || {})[f];
+function optFields(x, kind, i, defs) {
+  const p = kind + '.' + i + '.', shown = [], chips = [];
+  defs.forEach(d => {
+    if (!isBlank(x[d.f]) || isRevealed(x, d.f)) shown.push(fld(t(d.k), p + d.f, x[d.f], d.o));
+    else chips.push('<button type="button" class="chip add" data-act="reveal" data-kind="' + kind + '" data-i="' + i + '" data-f="' + d.f + '">' + esc(t('add_f', { f: t(d.k) })) + '</button>');
+  });
+  return { html: shown.join(''), chips: chips.length ? '<div class="addchips">' + chips.join('') + '</div>' : '' };
+}
+function revealField(kind, i, f) {
+  const x = S.draft && (S.draft[kind] || [])[i]; if (!x) return;
+  const m = REVEALED.get(x) || {}; m[f] = true; REVEALED.set(x, m);
+  render();
+  const el = document.querySelector('[data-path="' + kind + '.' + i + '.' + f + '"]');
+  if (el) el.focus();
+}
 function testRow(x, i) {
   const p = 'tests.' + i + '.';
   const src = x.ref_source === 'report' ? t('ref_report') : (x.ref_source === 'standard' ? t('ref_standard') : '');
+  const opt = optFields(x, 'tests', i, [
+    { f: 'unit', k: 't_unit', o: { mono: 1 } },
+    { f: 'ref_low', k: 't_low', o: { mono: 1, num: 'ref', inputmode: 'decimal' } },
+    { f: 'ref_high', k: 't_high', o: { mono: 1, num: 'ref', inputmode: 'decimal' } },
+    { f: 'ref_text', k: 't_ref_text', o: {} }]);
   return '<div class="rowcard"' + srcAttr(x) + '><div class="fields">' +
-    fld(t('t_name'), p + 'name', x.name, { cls: 'w2' }) +
+    fld(t('t_name'), p + 'name', x.name, { cls: 'w2', ph: isBlank(x.name) ? t('t_name_ph') : '' }) +
     fld(t('t_value'), p + 'value', x.value, { mono: 1, num: 'val' }) +
-    fld(t('t_unit'), p + 'unit', x.unit, { mono: 1 }) +
-    fld(t('t_low'), p + 'ref_low', x.ref_low, { mono: 1, num: 'ref', inputmode: 'decimal' }) +
-    fld(t('t_high'), p + 'ref_high', x.ref_high, { mono: 1, num: 'ref', inputmode: 'decimal' }) +
+    opt.html +
     sel(t('t_flag'), p + 'flag', normFlag(x.flag), FLAGS.map(f => [f, t('flag_' + f)])) +
-    '</div>' + srcLine(x) + '<div class="foot"><div class="tags">' + badge(x.flag) + reviewTag(x, 'tests', i) +
+    '</div>' + opt.chips + srcLine(x) + '<div class="foot"><div class="tags">' + badge(x.flag) + reviewTag(x, 'tests', i) +
     (src ? '<span class="muted small">' + esc(src) + '</span>' : '') +
     '</div><button type="button" class="xbtn" data-act="delrow" data-kind="tests" data-i="' + i + '">' + esc(t('remove')) + '</button></div></div>';
 }
 function medRow(x, i) {
   const p = 'medicines.' + i + '.';
+  const opt = optFields(x, 'medicines', i, [
+    { f: 'generic', k: 'm_generic', o: {} }, { f: 'strength', k: 'm_strength', o: { mono: 1 } }, { f: 'dose', k: 'm_dose', o: {} },
+    { f: 'frequency', k: 'm_freq', o: {} }, { f: 'timing', k: 'm_timing', o: {} }, { f: 'duration', k: 'm_duration', o: {} },
+    { f: 'instructions', k: 'm_instr', o: { cls: 'wide' } }]);
   return '<div class="rowcard"' + srcAttr(x) + '><div class="fields">' +
-    fld(t('m_name'), p + 'name', x.name, { cls: 'w2' }) +
-    fld(t('m_generic'), p + 'generic', x.generic) +
-    fld(t('m_strength'), p + 'strength', x.strength, { mono: 1 }) +
-    fld(t('m_dose'), p + 'dose', x.dose) +
-    fld(t('m_freq'), p + 'frequency', x.frequency) +
-    fld(t('m_timing'), p + 'timing', x.timing) +
-    fld(t('m_duration'), p + 'duration', x.duration) +
-    fld(t('m_instr'), p + 'instructions', x.instructions, { cls: 'wide' }) +
-    '</div>' + srcLine(x) + '<div class="foot"><div class="tags">' + reviewTag(x, 'medicines', i) +
+    fld(t('m_name'), p + 'name', x.name, { cls: 'w2', ph: isBlank(x.name) ? t('m_name_ph') : '' }) +
+    opt.html +
+    '</div>' + opt.chips + srcLine(x) + '<div class="foot"><div class="tags">' + reviewTag(x, 'medicines', i) +
     (x.known === false ? '<span class="tag amber">' + esc(t('unknown_med')) + '</span>' : '') +
     '</div><button type="button" class="xbtn" data-act="delrow" data-kind="medicines" data-i="' + i + '">' + esc(t('remove')) + '</button></div></div>';
 }
@@ -2123,18 +2146,21 @@ document.addEventListener('change', e => {
 });
 
 /* ================= Wellness log (home readings) ================= */
-const VIT_TYPES = ['bp', 'sugar_fasting', 'sugar_pp', 'weight', 'pulse'];
-const VIT_UNIT = { bp: 'mmHg', sugar_fasting: 'mg/dL', sugar_pp: 'mg/dL', weight: 'kg', pulse: 'beats/min' };
-const VIT_BOUNDS = { bp: [60, 260], sugar_fasting: [20, 800], sugar_pp: [20, 800], weight: [2, 400], pulse: [20, 250] };
+const VIT_TYPES = ['bp', 'sugar_fasting', 'sugar_pp', 'sugar_random', 'weight', 'pulse'];
+const VIT_SYMPTOMS = ['thirst', 'tired', 'blur'];  // optional symptoms ticked with a sugar reading (wellness.js shows them)
+const isSugar = ty => /^sugar_/.test(ty);
+const VIT_UNIT = { bp: 'mmHg', sugar_fasting: 'mg/dL', sugar_pp: 'mg/dL', sugar_random: 'mg/dL', weight: 'kg', pulse: 'beats/min' };
+const VIT_BOUNDS = { bp: [60, 260], sugar_fasting: [20, 800], sugar_pp: [20, 800], sugar_random: [20, 800], weight: [2, 400], pulse: [20, 250] };
 const VIT_BOUNDS2 = [30, 160];
 function cleanVital(e) {
   if (!e || typeof e !== 'object' || typeof e.id !== 'string' || !e.id) return null;
   if (VIT_TYPES.indexOf(e.type) < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(String(e.date || '')) || !isNum(e.value)) return null;
-  return { id: e.id, type: e.type, date: e.date, value: Number(e.value), value2: e.type === 'bp' && isNum(e.value2) ? Number(e.value2) : null, note: e.note ? String(e.note).slice(0, 200) : null };
+  return { id: e.id, type: e.type, date: e.date, value: Number(e.value), value2: e.type === 'bp' && isNum(e.value2) ? Number(e.value2) : null, note: e.note ? String(e.note).slice(0, 200) : null,
+    symptoms: isSugar(e.type) ? arr(e.symptoms).filter(k => VIT_SYMPTOMS.indexOf(k) >= 0) : [] };
 }
 async function saveVitals() { await dbPut('meta', S.vitals, profKey('vitals')); }  // family.js: per profile
 function vf() {
-  if (!S.vform) S.vform = { type: 'bp', date: '', v: '', v2: '', note: '', err: null };
+  if (!S.vform) S.vform = { type: 'bp', date: '', v: '', v2: '', note: '', sym: [], err: null };
   if (!S.vform.date) S.vform.date = todayKey();
   return S.vform;
 }
@@ -2172,6 +2198,7 @@ function wellnessCard(I) {
     '<input type="text" inputmode="decimal" id="vitV" class="mono" autocomplete="off" aria-label="' + esc(bp ? t('vit_upper') : t('vit_value')) + '" placeholder="' + esc(bp ? t('vit_upper') : '') + '" value="' + esc(f.v) + '">' +
     (bp ? '<span class="muted">/</span><input type="text" inputmode="decimal" id="vitV2" class="mono" autocomplete="off" aria-label="' + esc(t('vit_lower_in')) + '" placeholder="' + esc(t('vit_lower_in')) + '" value="' + esc(f.v2) + '">' : '') +
     '<span class="muted small vit-unit">' + esc(VIT_UNIT[f.type]) + '</span></div></div>' +
+    (isSugar(f.type) ? '<fieldset class="fld wide vit-sym"><legend>' + esc(t('sg_sym')) + '</legend>' + VIT_SYMPTOMS.map(k => '<label><input type="checkbox" data-sym="' + k + '"' + (arr(f.sym).indexOf(k) >= 0 ? ' checked' : '') + '> ' + esc(t('sg_sym_' + k)) + '</label>').join('') + '</fieldset>' : '') +
     '<label class="fld wide"><span>' + esc(t('vit_note')) + '</span><input type="text" id="vitNote" maxlength="120" autocomplete="off" value="' + esc(f.note) + '"></label>' +
     '<div class="vit-act"><button type="submit" class="btn">' + esc(t('vit_add')) + '</button></div>' +
     '<p class="vit-err" id="vitErr" role="alert"' + (errTxt ? '' : ' hidden') + '>' + esc(errTxt) + '</p></form>';
@@ -2213,8 +2240,8 @@ async function addVital() {
     if (v2 >= v) return bad('vit_err_bp');
   }
   const note = String(f.note || '').trim();
-  S.vitals.push({ id: 'vit_' + Math.random().toString(36).slice(2, 10), type: ty, date: f.date, value: v, value2: v2, note: note ? note.slice(0, 120) : null });
-  f.v = ''; f.v2 = ''; f.note = ''; f.err = null;
+  S.vitals.push({ id: 'vit_' + Math.random().toString(36).slice(2, 10), type: ty, date: f.date, value: v, value2: v2, note: note ? note.slice(0, 120) : null, symptoms: isSugar(ty) ? arr(f.sym).slice() : [] });
+  f.v = ''; f.v2 = ''; f.note = ''; f.sym = []; f.err = null;
   if (window.SehatWell) SehatWell.onSaved(S.vitals[S.vitals.length - 1]);  // wellness.js: guidance right after saving
   try { await saveVitals(); } catch (e) { /* kept in memory */ }
   render();
@@ -2239,6 +2266,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const el = e.target;
+  if (el && el.dataset && el.dataset.sym) { const f = vf(); f.sym = arr(f.sym).filter(x => x !== el.dataset.sym); if (el.checked) f.sym.push(el.dataset.sym); return; }
   if (!el || !el.id) return;
   if (el.id === 'vitType') { const f = vf(); f.type = VIT_TYPES.indexOf(el.value) >= 0 ? el.value : 'bp'; f.v = ''; f.v2 = ''; f.err = null; render(); }
   else if (el.id === 'vitDate') vf().date = el.value;
@@ -2436,6 +2464,7 @@ document.addEventListener('click', e => {
     case 'sample': runSample(el.dataset.id); break;
     case 'demo': loadDemo(); break;
     case 'addrow': addRow(el.dataset.kind); break;
+    case 'reveal': revealField(el.dataset.kind, Number(el.dataset.i), el.dataset.f); break;
     case 'delrow': delRow(el.dataset.kind, Number(el.dataset.i)); break;
     case 'okrow': if (S.draft && verifyItem((S.draft[el.dataset.kind] || [])[Number(el.dataset.i)])) { S.dirty = true; render(); } break;
     case 'save': saveDraft(); break;
