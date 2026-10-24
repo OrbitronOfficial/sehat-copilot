@@ -123,6 +123,10 @@
   function fill(d) {
     $('draftCard').hidden = false;
     $('dx').value = (d.diagnoses || []).map(x => x.name).join(', ');
+    const sug = (d.suggested_diagnoses || []).filter(Boolean);
+    let box = $('dxSug'); if (!box) { box = document.createElement('div'); box.id = 'dxSug'; box.className = 'd-row'; $('dx').parentNode.after(box); }
+    box.innerHTML = sug.length ? '<span class="d-status">Not said in the consultation. Suggested from the complaint, tap to use:</span>' + sug.map(n => '<button type="button" class="btn small secondary" data-sug="' + esc(n) + '">+ ' + esc(n) + '</button>').join('') : '';
+    box.onclick = e => { const b = e.target.closest('[data-sug]'); if (!b) return; const v = $('dx').value.trim(); $('dx').value = v ? v + ', ' + b.dataset.sug : b.dataset.sug; b.remove(); };
     $('meds').innerHTML = ''; (d.medicines || []).forEach(medRow);
     $('advice').value = (d.advice || []).join('\n'); $('fu').value = d.follow_up || '';
     if (!$('pName').value && d.patient && d.patient.name) $('pName').value = d.patient.name;

@@ -399,7 +399,10 @@ anything the doctor did not say; leave a field empty when it was not said. There
 unless the doctor reads out a result. Use the transcript sentence as source_text.
 Speech-to-text often misspells drug names (for example "telmezartin" for Telmisartan). When a word
 clearly sounds like a known medicine, write its standard generic name; if you are not sure, keep
-what was heard."""
+what was heard.
+Never add advice or a follow-up the doctor did not say. For diagnoses, list what the doctor named;
+if the doctor named none, you may list the single most likely condition from the patient's complaint
+(for example "Insomnia" for years of poor sleep). It will be shown to the doctor as a suggestion to confirm."""
 
 
 def _snap_medicine(m):
@@ -425,6 +428,18 @@ def _snap_medicine(m):
         m["confidence"] = min(m.get("confidence") or 1, 0.5)
 
 
+def _said(item, transcript):
+    """True when a drafted diagnosis, advice line or follow-up shares a real word with an English
+    (Latin-script) transcript. Other scripts are translated by the model, so they are not checked here."""
+    words = [w for w in re.findall(r"[a-z]{4,}", (item or "").lower()) if w not in _FILLER]
+    low = transcript.lower()
+    return any(w in low or w[:5] in low for w in words)
+
+
+_FILLER = {"with", "your", "after", "before", "days", "weeks", "week", "month", "months", "daily", "take", "then", "should",
+           "come", "back", "review", "visit", "follow", "patient", "doctor", "advised"}
+
+
 def from_consult(transcript, patient=None):
     """Draft a prescription from a consultation transcript. The doctor reviews and approves it."""
     text = str(transcript or "")[:20000]
@@ -442,6 +457,14 @@ def from_consult(transcript, patient=None):
     if not rec["medicines"] and not rec["diagnoses"]:
         raise ValueError("Prescription not made. This conversation does not seem to be a medical consultation. "
                          "Please keep the recording to the patient's symptoms, diagnosis and treatment.")
+    latin = len(re.findall(r"[A-Za-z]", text)) > 0.6 * max(1, len(re.findall(r"\w", text)))
+    if latin:  # keep only what was actually said; the rest is left for the doctor to fill in
+        # a diagnosis the doctor did not name is offered as a suggestion to confirm, never filled in
+        rec["suggested_diagnoses"] = [d.get("name") for d in rec["diagnoses"] if d.get("name") and not _said(d.get("name"), text)]
+        rec["diagnoses"] = [d for d in rec["diagnoses"] if _said(d.get("name"), text)]
+        rec["advice"] = [a for a in rec["advice"] if _said(a, text)]
+        if rec.get("follow_up") and not _said(rec["follow_up"], text) and not re.search(r"\b(follow|review|come back|after|next)\b", text, re.I):
+            rec["follow_up"] = None
     rec["extracted_by"] = provider
     rec["transcript"] = text
     return rec

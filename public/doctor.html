@@ -96,11 +96,11 @@
         <div class="card d-grid" id="draftCard" hidden>
           <h2>Check and approve</h2>
           <p class="d-note">Draft written by AI from your recording or notes. Check every line before approving.</p>
-          <label>Diagnosis <input class="d-in" id="dx" style="width:100%"></label>
+          <label>Diagnosis <input class="d-in" id="dx" style="width:100%" placeholder="Not said in the consultation: to be filled by the doctor"></label>
           <div class="d-scroll"><table class="d-table"><thead><tr><th>Medicine</th><th>Strength</th><th>Dose / frequency</th><th>Timing</th><th>Duration</th><th></th></tr></thead><tbody id="meds"></tbody></table></div>
           <div><button class="btn secondary" id="addMed">+ Add medicine</button></div>
-          <label>Advice (one per line)<textarea class="d-in" id="advice" style="min-height:80px"></textarea></label>
-          <label>Follow-up <input class="d-in" id="fu" style="width:100%"></label>
+          <label>Advice (one per line)<textarea class="d-in" id="advice" style="min-height:80px" placeholder="Not said in the consultation: to be filled by the doctor"></textarea></label>
+          <label>Follow-up <input class="d-in" id="fu" style="width:100%" placeholder="Not said in the consultation: to be filled by the doctor"></label>
           <div class="d-row"><button class="btn primary" id="approveBtn">Approve and send to patient</button><button class="btn secondary" id="discardBtn">Discard draft</button></div>
         </div>
       </div>
