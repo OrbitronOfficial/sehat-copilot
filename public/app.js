@@ -122,7 +122,7 @@ const STR = {
     cur_yes: 'Yes, I take this', cur_undo: 'Remove from schedule', cur_empty: 'Confirm a medicine above to see it in a schedule.',
     err_network: 'Could not reach the server. Check your connection and try again.',
     err_busy: 'The document reader is busy right now. Nothing was lost. Please try again in a minute.',
-    read_time: 'Time so far', read_cancel: 'Cancel', who_title: 'This document is for {a}', who_q: 'Who is {a}?', who_me: 'This is me', who_pick: 'Save to this profile', who_likely: 'Looks like someone in your family', who_all: 'Or save it to', who_add: 'Add {a} to my family', who_add_t: 'Add {a} to your family', who_add_hint: 'Check the details, then save the document into this new profile.', who_none: 'No other profiles to choose from.', who_back: 'Back', who_err: 'Could not save to that profile. Please try again.',
+    read_time: 'Time so far', read_cancel: 'Cancel', who_title: 'This document is for {a}', who_q: 'Who is {a}?', who_me: 'This is me', who_pick: 'Save to this profile', who_likely: 'Looks like someone in your family', who_all: 'Or save it to', who_add: 'Add {a} as family, a friend or someone I care for', who_add_t: 'Add {a} to your family', who_add_hint: 'Check the details, then save the document into this new profile.', who_none: 'No other profiles to choose from.', who_back: 'Back', who_err: 'Could not save to that profile. Please try again.',
     moved_to: "Saved to {name}'s records", moved_switch: 'Switch to {name}',
     err_server: 'The server returned an error ({code}).',
     err_type: 'This file type is not supported. Please use a photo, PDF or text file.',
@@ -307,7 +307,7 @@ const STR = {
     cur_yes: 'हाँ, मैं यह लेता/लेती हूँ', cur_undo: 'समय-सारणी से हटाएँ', cur_empty: 'समय-सारणी देखने के लिए ऊपर किसी दवा की पुष्टि करें।',
     err_network: 'सर्वर से संपर्क नहीं हो सका। कनेक्शन जाँचकर फिर कोशिश करें।',
     err_busy: 'दस्तावेज़ पढ़ने वाली सेवा अभी व्यस्त है। कुछ खोया नहीं है। कृपया एक मिनट बाद फिर कोशिश करें।',
-    read_time: 'अब तक का समय', read_cancel: 'रद्द करें', who_title: 'यह दस्तावेज़ {a} का है', who_q: '{a} कौन हैं?', who_me: 'यह मैं हूँ', who_pick: 'इस प्रोफ़ाइल में सहेजें', who_likely: 'आपके परिवार में से कोई लगता है', who_all: 'या इसमें सहेजें', who_add: '{a} को मेरे परिवार में जोड़ें', who_add_t: '{a} को अपने परिवार में जोड़ें', who_add_hint: 'जानकारी जाँचें, फिर दस्तावेज़ इस नई प्रोफ़ाइल में सहेजें।', who_none: 'चुनने के लिए कोई और प्रोफ़ाइल नहीं है।', who_back: 'पीछे', who_err: 'उस प्रोफ़ाइल में सहेजा नहीं जा सका। कृपया फिर कोशिश करें।',
+    read_time: 'अब तक का समय', read_cancel: 'रद्द करें', who_title: 'यह दस्तावेज़ {a} का है', who_q: '{a} कौन हैं?', who_me: 'यह मैं हूँ', who_pick: 'इस प्रोफ़ाइल में सहेजें', who_likely: 'आपके परिवार में से कोई लगता है', who_all: 'या इसमें सहेजें', who_add: '{a} को परिवार, दोस्त या जिनकी देखभाल करता/करती हूँ, उनमें जोड़ें', who_add_t: '{a} को अपने परिवार में जोड़ें', who_add_hint: 'जानकारी जाँचें, फिर दस्तावेज़ इस नई प्रोफ़ाइल में सहेजें।', who_none: 'चुनने के लिए कोई और प्रोफ़ाइल नहीं है।', who_back: 'पीछे', who_err: 'उस प्रोफ़ाइल में सहेजा नहीं जा सका। कृपया फिर कोशिश करें।',
     moved_to: '{name} के रिकॉर्ड में सहेजा गया', moved_switch: '{name} की प्रोफ़ाइल खोलें',
     err_server: 'सर्वर में त्रुटि हुई ({code})।',
     err_type: 'यह फ़ाइल प्रकार समर्थित नहीं है। कृपया फोटो, PDF या टेक्स्ट फ़ाइल चुनें।',
@@ -1010,7 +1010,7 @@ function paintWho() {
     const opt = (v, l, cur) => '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + '>' + esc(l) + '</option>';
     h = '<form id="whoForm" novalidate><h2>' + esc(t('who_add_t', { a })) + '</h2><p class="muted small">' + esc(t('who_add_hint')) + '</p>' +
       '<label>' + esc(t('fam_name')) + '<input name="name" maxlength="60" autocomplete="off" value="' + esc(w.name) + '" required></label>' +
-      '<div class="fam-2"><label>' + esc(t('fam_relation')) + '<select name="relation">' + ['father', 'mother', 'spouse', 'child', 'brother', 'sister', 'other'].map(r => opt(r, t('rel_' + r), w.rel || 'other')).join('') + '</select></label>' +
+      '<div class="fam-2"><label>' + esc(t('fam_relation')) + '<select name="relation">' + ['father', 'mother', 'spouse', 'child', 'brother', 'sister', 'grandparent', 'friend', 'other'].map(r => opt(r, t('rel_' + r), w.rel || 'other')).join('') + '</select></label>' +
       '<label>' + esc(t('fam_age')) + '<input name="age" type="number" inputmode="numeric" min="0" max="120" value="' + esc(w.age) + '"></label>' +
       '<label>' + esc(t('fam_sex')) + '<select name="sex">' + opt('', t('fam_sex_none'), w.sex) + opt('M', t('fam_sex_m'), w.sex) + opt('F', t('fam_sex_f'), w.sex) + opt('O', t('fam_sex_o'), w.sex) + '</select></label></div>' +
       '<p class="fam-err" role="alert">' + esc(w.err || '') + '</p><div class="row fam-btns"><button type="submit" class="btn">' + esc(t('fam_save')) + '</button>' +

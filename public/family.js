@@ -59,7 +59,7 @@ function famReset() {
 }
 
 const SehatFamily = (function () {
-  const RELS = ['self', 'father', 'mother', 'spouse', 'child', 'brother', 'sister', 'other'];
+  const RELS = ['self', 'father', 'mother', 'spouse', 'child', 'brother', 'sister', 'grandparent', 'friend', 'other'];
   const LOCK_SVG = '<svg class="fam-lock" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 
   function strings() {
@@ -67,7 +67,7 @@ const SehatFamily = (function () {
       fam_switch: 'Switch family profile', fam_add: 'Add family member', fam_edit: 'Edit', fam_remove: 'Remove member',
       fam_title_add: 'Add a family member', fam_title_edit: 'Edit profile', fam_name: 'Name', fam_relation: 'Relation', fam_age: 'Age', fam_sex: 'Sex',
       fam_sex_m: 'Male', fam_sex_f: 'Female', fam_sex_o: 'Other', fam_sex_none: 'Not set',
-      rel_self: 'Me', rel_father: 'Father', rel_mother: 'Mother', rel_spouse: 'Spouse', rel_child: 'Child', rel_brother: 'Brother', rel_sister: 'Sister', rel_other: 'Other',
+      rel_self: 'Me', rel_father: 'Father', rel_mother: 'Mother', rel_spouse: 'Spouse', rel_child: 'Child', rel_brother: 'Brother', rel_sister: 'Sister', rel_grandparent: 'Grandparent', rel_friend: 'Friend', rel_other: 'Someone else I care for',
       fam_save: 'Save', fam_cancel: 'Cancel', fam_me: 'Me', fam_records: '{n} records',
       fam_lock: 'Profile lock', fam_lock_note: 'Profile lock keeps this profile private inside the app on this device. It does not encrypt the records.',
       fam_pin_new: 'New 4-digit PIN (leave empty to keep)', fam_pin_set: 'Set a 4-digit PIN', fam_hidden: 'Hide from child profiles',
@@ -87,7 +87,7 @@ const SehatFamily = (function () {
       fam_switch: 'परिवार प्रोफ़ाइल बदलें', fam_add: 'परिवार का सदस्य जोड़ें', fam_edit: 'बदलें', fam_remove: 'सदस्य हटाएँ',
       fam_title_add: 'परिवार का सदस्य जोड़ें', fam_title_edit: 'प्रोफ़ाइल बदलें', fam_name: 'नाम', fam_relation: 'रिश्ता', fam_age: 'उम्र', fam_sex: 'लिंग',
       fam_sex_m: 'पुरुष', fam_sex_f: 'महिला', fam_sex_o: 'अन्य', fam_sex_none: 'नहीं बताया',
-      rel_self: 'मैं', rel_father: 'पिता', rel_mother: 'माता', rel_spouse: 'जीवनसाथी', rel_child: 'बच्चा', rel_brother: 'भाई', rel_sister: 'बहन', rel_other: 'अन्य',
+      rel_self: 'मैं', rel_father: 'पिता', rel_mother: 'माता', rel_spouse: 'जीवनसाथी', rel_child: 'बच्चा', rel_brother: 'भाई', rel_sister: 'बहन', rel_grandparent: 'दादा-दादी / नाना-नानी', rel_friend: 'दोस्त', rel_other: 'कोई और जिसकी देखभाल करता/करती हूँ',
       fam_save: 'सहेजें', fam_cancel: 'रद्द करें', fam_me: 'मैं', fam_records: '{n} रिकॉर्ड',
       fam_lock: 'प्रोफ़ाइल लॉक', fam_lock_note: 'प्रोफ़ाइल लॉक इस डिवाइस पर ऐप के अंदर इस प्रोफ़ाइल को निजी रखता है। यह रिकॉर्ड को एन्क्रिप्ट नहीं करता।',
       fam_pin_new: 'नया 4 अंकों का पिन (वही रखने के लिए खाली छोड़ें)', fam_pin_set: '4 अंकों का पिन रखें', fam_hidden: 'बच्चों की प्रोफ़ाइल से छिपाएँ',
