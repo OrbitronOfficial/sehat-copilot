@@ -10,7 +10,7 @@
     <!-- shoulders and white coat -->
     <path d="M12 124c0-24 18-38 48-38s48 14 48 38z" fill="url(#coat)" stroke="#C9D6D2" stroke-width="1.2"/>
     <!-- scrub top showing between the lapels -->
-    <path d="M46 86l14 22 14-22c-4 3-9 4.500-14 4.500S50 89 46 86z" fill="#0F766E"/>
+    <path d="M46 86l14 22 14-22c-4 3-9 4.500-14 4.500S50 89 46 86z" fill="#0774C4"/>
     <!-- lapels -->
     <path d="M46 86l-9 7 15 23 8-8z" fill="#FFFFFF" stroke="#C9D6D2" stroke-width="1.2" stroke-linejoin="round"/>
     <path d="M74 86l9 7-15 23-8-8z" fill="#FFFFFF" stroke="#C9D6D2" stroke-width="1.2" stroke-linejoin="round"/>
@@ -20,7 +20,7 @@
     <path d="M43 90c-3 12 1 22 9 25" fill="none" stroke="#2F3E46" stroke-width="2.600" stroke-linecap="round"/>
     <path d="M77 90c3 10 1 17-4 21" fill="none" stroke="#2F3E46" stroke-width="2.600" stroke-linecap="round"/>
     <circle cx="71" cy="113" r="5" fill="#E7ECEA" stroke="#2F3E46" stroke-width="2.200"/>
-    <circle cx="71" cy="113" r="1.800" fill="#0F766E"/>
+    <circle cx="71" cy="113" r="1.800" fill="#0774C4"/>
     <!-- ears -->
     <ellipse cx="37.500" cy="54" rx="4" ry="6" fill="#D99B72"/>
     <ellipse cx="82.500" cy="54" rx="4" ry="6" fill="#D99B72"/>
@@ -41,7 +41,7 @@
     <ellipse cx="45.500" cy="63" rx="3.500" ry="2.200" fill="#E58F74" opacity=".35"/>
     <ellipse cx="74.500" cy="63" rx="3.500" ry="2.200" fill="#E58F74" opacity=".35"/>
     <!-- name badge -->
-    <rect x="80" y="100" width="13" height="9" rx="1.800" fill="#0F766E"/>
+    <rect x="80" y="100" width="13" height="9" rx="1.800" fill="#0774C4"/>
     <path d="M83 104.500h7" stroke="#FFFFFF" stroke-width="1.400" stroke-linecap="round"/>
   </g>
   <circle cx="60" cy="60" r="58" fill="none" stroke="#9FCFC7" stroke-width="2"/>
