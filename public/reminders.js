@@ -227,6 +227,15 @@
     const key = a => a.date ? a.date + ' ' + (a.time || '09:00') : '9999';
     return out.sort((a, b) => key(a) < key(b) ? -1 : 1);
   }
+  /* Add an appointment-style reminder from code (e.g. a sugar recheck). Same shape as the manual form; the same title+date+time is not added twice. */
+  function addAppt(o) {
+    const title = String((o && o.title) || '').trim(), date = String((o && o.date) || '');
+    if (!title || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+    const st = apStore(), time = (o.time || '').slice(0, 5), note = String(o.note || '').trim();
+    let it = st.items.find(x => x.title === title && x.date === date && (x.time || '') === time);
+    if (!it) { it = { id: 'a' + Date.now() + Math.random().toString(36).slice(2, 5), title, date, time, note }; st.items.push(it); jset('sehat_appts', st); }
+    return it;
+  }
   const overdue = a => !!a.date && a.date < todayKey();
   /* "This visit happened": link one later record to the follow-up */
   function linkSel(rec, rdate) {
@@ -652,5 +661,5 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookRender); else hookRender();
 
-  window.SehatRem = { actionsCard, apptCard, visitsCard, todayCard, doseCtl, hide, onSaved, icsText, gcal, allEvents, parseFU, tick, caregiverCount, careScan, applyAction, medEvents };
+  window.SehatRem = { addAppt, actionsCard, apptCard, visitsCard, todayCard, doseCtl, hide, onSaved, icsText, gcal, allEvents, parseFU, tick, caregiverCount, careScan, applyAction, medEvents };
 })();

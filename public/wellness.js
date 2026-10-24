@@ -7,9 +7,15 @@
 /* ---- thresholds that trigger the "what to do now" guidance (mmHg and mg/dL) ---- */
 const WL_BP_LOW_UP = 90, WL_BP_LOW_LO = 60;      // low blood pressure: upper < 90 or lower < 60
 const WL_BP_HIGH_UP = 180, WL_BP_HIGH_LO = 120;  // very high blood pressure: 180/120 or more
-const WL_SUGAR_LOW = 70, WL_SUGAR_HIGH = 300;    // low sugar: < 70, very high sugar: > 300
+const WL_SUGAR_LOW = 70, WL_SUGAR_HIGH = 300;    // low sugar: < 70, "very high" at 300 or more (with a high reading)
+/* Sugar tiers follow the American Diabetes Association (ADA) diagnostic cut-offs in mg/dL, as [borderline from, high from]:
+   fasting <100 normal, 100-125 borderline (prediabetes range), >=126 high (diabetes range);
+   after a meal (2 h) and random: <140 normal, 140-199 borderline, >=200 high. Shown as a guide only, never as a diagnosis. */
+const WL_ADA = { sugar_fasting: [100, 126], sugar_pp: [140, 200], sugar_random: [140, 200] };
+const WL_SYM_VERY_HIGH = 2;                       // 2 or more ticked symptoms turn a high reading into "very high"
+const WL_RECHECK_TIME = '08:00';
 /* usual adult ranges drawn as the dashed band on the graphs (a general guide, not a personal target) */
-const WL_USUAL = { bp_up: [90, 120], bp_lo: [60, 80], sugar_fasting: [70, 100], sugar_pp: [70, 140], pulse: [60, 100] };
+const WL_USUAL = { bp_up: [90, 120], bp_lo: [60, 80], sugar_fasting: [70, 100], sugar_pp: [70, 140], sugar_random: [70, 140], pulse: [60, 100] };
 
 Object.assign(STR.en, {
   nav_meds: 'Medicines', nav_visits: 'Visits', nav_journal: 'Journal', nav_wellness: 'Wellness', nav_family: 'Family', nav_more: 'More',
@@ -61,8 +67,54 @@ Object.assign(STR.hi, {
   g_saved_h: 'माप सहेजा गया। अब क्या करें'
 });
 
+Object.assign(STR.en, {
+  sg_sym: 'Any of these today? (optional)', sg_sym_thirst: 'Thirsty or urinating often', sg_sym_tired: 'Unusually tired or weak', sg_sym_blur: 'Blurred vision or dizziness',
+  sg_badge_low: 'Low', sg_badge_normal: 'Normal', sg_badge_border: 'Borderline', sg_badge_high: 'High', sg_badge_vhigh: 'Very high',
+  sg_t_normal: 'In the usual range', sg_t_border: 'A little above the usual range', sg_t_high: 'High, please talk to your doctor', sg_t_vhigh: 'Very high, contact a doctor today',
+  sg_n_normal: 'This is in the usual range for this kind of test. The lower the number within the normal range, the better.',
+  sg_n_border: 'This is above the usual range but not very high. One reading is not a diagnosis; discuss it with your doctor, especially if it keeps showing up.',
+  sg_n_high: 'This is above the usual range. Please discuss it with your doctor soon and take your readings along. This is not a diagnosis.',
+  sg_n_vhigh: 'This is well above the usual range, or it comes with symptoms. Drink water, rest, and contact a doctor today. Do not wait for it to settle on its own.',
+  sg_rng_fasting: 'Fasting sugar: good below {a}, borderline {a} to {b}, high {c} or above. Your reading: {v} mg/dL.',
+  sg_rng_pp: 'Sugar after a meal: good below {a}, borderline {a} to {b}, high {c} or above. Your reading: {v} mg/dL.',
+  sg_rng_random: 'Random sugar: good below {a}, borderline {a} to {b}, high {c} or above. Your reading: {v} mg/dL.',
+  sg_rng_low: 'Low sugar is below {a} mg/dL. Your reading: {v} mg/dL.',
+  sg_rem1: 'Remind me to recheck in 1 day', sg_rem2: 'Remind me to recheck in 2 days', sg_ask: 'Ask Saathi about this',
+  sg_rem_set: 'Recheck reminder set for {date}, 8:00 AM', sg_rem_see: 'See it in Visits', sg_rem_title: 'Recheck blood sugar', sg_rem_note: 'Last reading: {type} {v} mg/dL on {d}.',
+  sg_q: 'My {type} was {v} mg/dL {when}. What does that mean?', sg_qt_fasting: 'fasting sugar', sg_qt_pp: 'sugar after a meal', sg_qt_random: 'random sugar', sg_today: 'today', sg_on: 'on {d}',
+  sg_guide_show: 'Show full sugar guide', sg_guide_hide: 'Hide full sugar guide',
+  sg_tbl_fasting: 'Fasting (no food for 8 hours)', sg_tbl_pp: 'After a meal (2 hours)', sg_tbl_random: 'Random (any time)',
+  sg_c_good: 'Good', sg_c_border: 'Borderline', sg_c_high: 'High, see a doctor', sg_below: 'below {a}', sg_between: '{a} to {b}', sg_above: '{c} or above',
+  sg_lower_better: 'The lower the number within the normal range, the better; under 100 fasting is the goal.',
+  sg_urgent: 'Get help right away if sugar is around 300 or above, or the person feels very weak or confused, is vomiting, or has trouble breathing. Call 112.',
+  sg_foot: 'This supports conversations with your doctor. It is not a diagnosis. Targets may differ in pregnancy or for specific conditions.'
+});
+
+Object.assign(STR.hi, {
+  sg_sym: 'आज इनमें से कुछ हुआ? (वैकल्पिक)', sg_sym_thirst: 'बहुत प्यास या बार-बार पेशाब', sg_sym_tired: 'असामान्य थकान या कमज़ोरी', sg_sym_blur: 'धुंधला दिखना या चक्कर',
+  sg_badge_low: 'कम', sg_badge_normal: 'सामान्य', sg_badge_border: 'सीमा पर', sg_badge_high: 'ज़्यादा', sg_badge_vhigh: 'बहुत ज़्यादा',
+  sg_t_normal: 'आम सीमा में', sg_t_border: 'आम सीमा से थोड़ा ऊपर', sg_t_high: 'ज़्यादा है, कृपया डॉक्टर से बात करें', sg_t_vhigh: 'बहुत ज़्यादा है, आज ही डॉक्टर से संपर्क करें',
+  sg_n_normal: 'इस तरह की जाँच के लिए यह आम सीमा में है। सामान्य सीमा के अंदर संख्या जितनी कम, उतना अच्छा।',
+  sg_n_border: 'यह आम सीमा से ऊपर है पर बहुत ज़्यादा नहीं। एक माप निदान नहीं है; डॉक्टर से बात करें, ख़ासकर अगर ऐसा बार-बार आए।',
+  sg_n_high: 'यह आम सीमा से ऊपर है। कृपया जल्द अपने डॉक्टर से बात करें और अपने माप साथ ले जाएँ। यह निदान नहीं है।',
+  sg_n_vhigh: 'यह आम सीमा से काफ़ी ऊपर है, या साथ में लक्षण हैं। पानी पिएँ, आराम करें और आज ही डॉक्टर से संपर्क करें। अपने आप ठीक होने का इंतज़ार न करें।',
+  sg_rng_fasting: 'खाली पेट शुगर: {a} से कम अच्छा, {a} से {b} सीमा पर, {c} या ऊपर ज़्यादा। आपका माप: {v} mg/dL।',
+  sg_rng_pp: 'खाने के बाद शुगर: {a} से कम अच्छा, {a} से {b} सीमा पर, {c} या ऊपर ज़्यादा। आपका माप: {v} mg/dL।',
+  sg_rng_random: 'किसी भी समय की शुगर: {a} से कम अच्छा, {a} से {b} सीमा पर, {c} या ऊपर ज़्यादा। आपका माप: {v} mg/dL।',
+  sg_rng_low: 'शुगर {a} mg/dL से कम हो तो कम मानी जाती है। आपका माप: {v} mg/dL।',
+  sg_rem1: '1 दिन बाद दोबारा जाँचने की याद दिलाएँ', sg_rem2: '2 दिन बाद दोबारा जाँचने की याद दिलाएँ', sg_ask: 'साथी से इस बारे में पूछें',
+  sg_rem_set: '{date} को सुबह 8:00 बजे दोबारा जाँच का रिमाइंडर लगा दिया गया', sg_rem_see: 'मुलाक़ातें में देखें', sg_rem_title: 'शुगर दोबारा जाँचें', sg_rem_note: 'पिछला माप: {type} {v} mg/dL, {d}।',
+  sg_q: '{when} मेरी {type} {v} mg/dL थी। इसका क्या मतलब है?', sg_qt_fasting: 'खाली पेट शुगर', sg_qt_pp: 'खाने के बाद की शुगर', sg_qt_random: 'किसी भी समय की शुगर', sg_today: 'आज', sg_on: '{d} को',
+  sg_guide_show: 'पूरी शुगर गाइड दिखाएँ', sg_guide_hide: 'शुगर गाइड छिपाएँ',
+  sg_tbl_fasting: 'खाली पेट (8 घंटे कुछ नहीं खाया)', sg_tbl_pp: 'खाने के बाद (2 घंटे)', sg_tbl_random: 'किसी भी समय',
+  sg_c_good: 'अच्छा', sg_c_border: 'सीमा पर', sg_c_high: 'ज़्यादा, डॉक्टर को दिखाएँ', sg_below: '{a} से कम', sg_between: '{a} से {b}', sg_above: '{c} या ऊपर',
+  sg_lower_better: 'सामान्य सीमा के अंदर संख्या जितनी कम, उतना अच्छा; खाली पेट 100 से कम लक्ष्य है।',
+  sg_urgent: 'अगर शुगर लगभग 300 या उससे ऊपर हो, या व्यक्ति बहुत कमज़ोर या भ्रमित हो, उल्टी हो रही हो, या साँस लेने में तकलीफ़ हो तो तुरंत मदद लें। 112 पर कॉल करें।',
+  sg_foot: 'यह डॉक्टर से बातचीत में मदद के लिए है। यह निदान नहीं है। गर्भावस्था या किसी ख़ास स्थिति में लक्ष्य अलग हो सकते हैं।'
+});
+
 const SehatWell = (function () {
-  const W = { period: 7, justId: null, sform: null };
+  const W = { period: 7, justId: null, sform: null, guide: false, rem: {} };
 
   /* ---------- guidance on a reading ---------- */
   function guideKind(e) {
@@ -70,20 +122,55 @@ const SehatWell = (function () {
     if (e.type === 'bp') {
       if (e.value >= WL_BP_HIGH_UP || (e.value2 != null && e.value2 >= WL_BP_HIGH_LO)) return 'high_bp';
       if (e.value < WL_BP_LOW_UP || (e.value2 != null && e.value2 < WL_BP_LOW_LO)) return 'low_bp';
-    } else if (e.type === 'sugar_fasting' || e.type === 'sugar_pp') {
-      if (e.value < WL_SUGAR_LOW) return 'low_sugar';
-      if (e.value > WL_SUGAR_HIGH) return 'high_sugar';
-    }
+    } else if (isSugar(e.type)) return 'sugar';   // the sugar result card (sugarCard) covers every tier
     return null;
+  }
+  /* ---------- sugar result card ---------- */
+  const SG_TYPE = { sugar_fasting: 'fasting', sugar_pp: 'pp', sugar_random: 'random' };
+  function sugarTier(e) {
+    const v = e.value, c = WL_ADA[e.type] || WL_ADA.sugar_random, n = arr(e.symptoms).length;
+    if (v < WL_SUGAR_LOW) return 'low';
+    if (v >= c[1]) return (v >= WL_SUGAR_HIGH || n >= WL_SYM_VERY_HIGH) ? 'vhigh' : 'high';
+    return v >= c[0] ? 'border' : 'normal';
+  }
+  function futureDay(n) { const d = new Date(parseDay(todayKey())); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA'); }
+  function sugarQuestion(e) {
+    return t('sg_q', { type: t('sg_qt_' + SG_TYPE[e.type]), v: fmtNum(e.value), when: e.date === todayKey() ? t('sg_today') : t('sg_on', { d: fmtDate(e.date) }) });
+  }
+  function sugarTable(ty) {
+    const c = WL_ADA[ty], a = c[0], b = c[1] - 1, h = c[1];
+    return '<table class="data sg-tbl"><caption>' + esc(t('sg_tbl_' + SG_TYPE[ty])) + '</caption><thead><tr><th>' + esc(t('sg_c_good')) + '</th><th>' + esc(t('sg_c_border')) + '</th><th>' + esc(t('sg_c_high')) + '</th></tr></thead><tbody><tr>' +
+      '<td>' + esc(t('sg_below', { a })) + '</td><td>' + esc(t('sg_between', { a, b })) + '</td><td>' + esc(t('sg_above', { c: h })) + '</td></tr></tbody></table>';
+  }
+  function sugarCard(e, saved) {
+    const tier = sugarTier(e), ty = SG_TYPE[e.type], c = WL_ADA[e.type], low = tier === 'low';
+    const rng = low ? t('sg_rng_low', { a: WL_SUGAR_LOW, v: fmtNum(e.value) }) : t('sg_rng_' + ty, { a: c[0], b: c[1] - 1, c: c[1], v: fmtNum(e.value) });
+    const rem = W.rem[e.id];
+    return '<div class="wl-sugar t-' + tier + '" role="region" aria-label="' + esc(t('vit_' + e.type)) + '" data-guide="' + esc(e.id) + '">' +
+      (saved ? '<div class="muted small">' + esc(t('g_saved_h')) + '</div>' : '') +
+      '<div class="sg-head"><span class="sg-badge">' + esc(t('sg_badge_' + tier)) + '</span><h4>' + esc(low ? t('g_low_sugar_t') : t('sg_t_' + tier)) + '</h4></div>' +
+      '<p class="sg-range">' + esc(rng) + '</p>' +
+      '<p>' + esc(low ? t('g_low_sugar') : t('sg_n_' + tier)) + '</p>' +
+      (low ? '<p><strong>' + esc(t('g_doctor')) + '</strong></p><p class="wl-danger">' + esc(t('g_112')) + '</p>' : '') +
+      (tier === 'vhigh' ? '<p class="wl-danger">' + esc(t('sg_urgent')) + '</p>' : '') +
+      '<div class="sg-btns"><button type="button" class="btn small secondary" data-wl="sgrem" data-d="1" data-id="' + esc(e.id) + '">' + esc(t('sg_rem1')) + '</button>' +
+      '<button type="button" class="btn small secondary" data-wl="sgrem" data-d="2" data-id="' + esc(e.id) + '">' + esc(t('sg_rem2')) + '</button>' +
+      '<button type="button" class="btn small" data-wl="sgask" data-id="' + esc(e.id) + '">' + esc(t('sg_ask')) + '</button></div>' +
+      (rem ? '<p class="small sg-ok" role="status">' + esc(t('sg_rem_set', { date: fmtDate(rem) })) + ' <button type="button" class="btn small link" data-act="nav" data-view="visits">' + esc(t('sg_rem_see')) + '</button></p>' : '') +
+      '<button type="button" class="chip" data-wl="sgguide" aria-expanded="' + W.guide + '">' + esc(t(W.guide ? 'sg_guide_hide' : 'sg_guide_show')) + '</button>' +
+      (W.guide ? '<div class="sg-guide">' + sugarTable('sugar_fasting') + sugarTable('sugar_pp') + sugarTable('sugar_random') +
+        '<p class="small">' + esc(t('sg_lower_better')) + '</p><p class="wl-danger sg-urgent">' + esc(t('sg_urgent')) + '</p></div>' : '') +
+      '<p class="muted small sg-foot">' + esc(t('sg_foot')) + '</p></div>';
   }
   function guideBox(e, heading) {
     const k = guideKind(e);
     if (!k) return '';
+    if (k === 'sugar') return sugarCard(e, !!heading);
     return '<div class="wl-guide' + (k.indexOf('high') === 0 ? ' hi' : '') + '" role="alert" data-guide="' + esc(e.id) + '"><h4>' + esc(heading || t('g_' + k + '_t')) + ' <span class="mono small">(' + esc(vitText(e)) + ' ' + esc(VIT_UNIT[e.type]) + ')</span></h4>' +
       '<p>' + esc(t('g_' + k)) + '</p><p><strong>' + esc(t('g_doctor')) + '</strong></p><p class="wl-danger">' + esc(t('g_112')) + '</p></div>';
   }
   function onSaved(e) {
-    W.justId = e && guideKind(e) ? e.id : null;
+    W.justId = e && guideKind(e) ? e.id : null;  // sugar always (result card), bp only when out of range
     if (W.justId) setTimeout(() => { const b = document.querySelector('.wl-guide[data-guide="' + W.justId + '"]'); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60);
   }
   function savedBox() {
@@ -217,6 +304,21 @@ const SehatWell = (function () {
       (list.length ? '<details class="vit-all" style="margin-top:10px"><summary>' + esc(t('st_list', { n: list.length })) + '</summary><ul class="list">' + list.map(x => '<li><span class="l"><span class="mono">' + esc(x.steps.toLocaleString()) + '</span> ' + esc(t('st_unit')) + '<br><span class="muted small">' + esc(fmtDate(x.date)) + '</span></span><span class="r"><button type="button" class="btn small danger" data-wl="stepdel" data-date="' + esc(x.date) + '">' + esc(t('st_del')) + '</button></span></li>').join('') + '</ul></details>' : '') + '</div>';
   }
 
+  function sugarRemind(id, days) {
+    const e = S.vitals.find(x => x.id === id), R = window.SehatRem;
+    if (!e || !R || !R.addAppt || (days !== 1 && days !== 2)) return;
+    const date = futureDay(days);
+    if (!R.addAppt({ title: t('sg_rem_title'), date, time: WL_RECHECK_TIME, note: t('sg_rem_note', { type: t('sg_qt_' + SG_TYPE[e.type]), v: fmtNum(e.value), d: fmtDate(e.date) }) })) return;
+    W.rem[id] = date;
+    render();
+  }
+  function sugarAsk(id) {
+    const e = S.vitals.find(x => x.id === id); if (!e) return;
+    PET.open = true; PET.seen[petScreen()] = true; renderPet();
+    const i = document.getElementById('petInput');
+    if (i) { i.value = sugarQuestion(e); i.focus(); }
+  }
+
   /* ---------- events ---------- */
   document.addEventListener('click', e => {
     const el = e.target && e.target.closest ? e.target.closest('[data-wl]') : null;
@@ -225,6 +327,9 @@ const SehatWell = (function () {
     if (!el) return;
     const a = el.getAttribute('data-wl');
     if (a === 'p7' || a === 'p30') { W.period = a === 'p7' ? 7 : 30; render(); }
+    else if (a === 'sgguide') { W.guide = !W.guide; render(); }
+    else if (a === 'sgrem') sugarRemind(el.getAttribute('data-id'), Number(el.getAttribute('data-d')));
+    else if (a === 'sgask') sugarAsk(el.getAttribute('data-id'));
     else if (a === 'stepdel') { stepsSave(stepsGet().filter(x => x.date !== el.getAttribute('data-date'))); render(); }
   });
   document.addEventListener('submit', e => { if (e.target && e.target.id === 'stepForm') { e.preventDefault(); addSteps(); } });
@@ -233,7 +338,7 @@ const SehatWell = (function () {
     if (el.id === 'stDate') W.sform.date = el.value; else if (el.id === 'stCount') W.sform.steps = el.value;
   });
   document.addEventListener('change', e => { if (e.target && e.target.id === 'stDate') sf().date = e.target.value; });
-  document.addEventListener('sehat:profile', () => { W.justId = null; W.sform = null; });
+  document.addEventListener('sehat:profile', () => { W.justId = null; W.sform = null; W.rem = {}; });
 
   return { onSaved, savedBox, latestBox, graphCard, stepsCard, guideKind };
 })();

@@ -318,12 +318,13 @@ VITALS = {
     "bp": ("Blood pressure", "mmHg", "85354-9", "below 140/90 mmHg"),
     "sugar_fasting": ("Fasting sugar", "mg/dL", "1558-6", "70 - 100 mg/dL"),
     "sugar_pp": ("Sugar after meal", "mg/dL", "1521-4", "70 - 140 mg/dL"),
+    "sugar_random": ("Random sugar", "mg/dL", "2339-0", "below 140 mg/dL"),
     "weight": ("Weight", "kg", "29463-7", None),
     "pulse": ("Pulse", "beats/min", "8867-4", "60 - 100 beats/min"),
 }
-VITAL_NAMES_HI = {"bp": "ब्लड प्रेशर", "sugar_fasting": "खाली पेट शुगर", "sugar_pp": "खाने के बाद शुगर",
+VITAL_NAMES_HI = {"bp": "ब्लड प्रेशर", "sugar_fasting": "खाली पेट शुगर", "sugar_pp": "खाने के बाद शुगर", "sugar_random": "किसी भी समय शुगर",
                   "weight": "वज़न", "pulse": "नब्ज़"}
-_BOUNDS = {"bp": (60, 260), "sugar_fasting": (20, 800), "sugar_pp": (20, 800), "weight": (2, 400), "pulse": (20, 250)}
+_BOUNDS = {"bp": (60, 260), "sugar_fasting": (20, 800), "sugar_pp": (20, 800), "sugar_random": (20, 800), "weight": (2, 400), "pulse": (20, 250)}
 
 
 def vital_flag(kind, value, value2=None):
@@ -338,7 +339,7 @@ def vital_flag(kind, value, value2=None):
         if value < 90 or value2 < 60:
             return "low"
         return "normal"
-    if kind in ("sugar_fasting", "sugar_pp"):
+    if kind in ("sugar_fasting", "sugar_pp", "sugar_random"):
         if value < 54 or value > 400:
             return "critical"
         if value < 70:
