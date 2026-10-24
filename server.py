@@ -39,6 +39,7 @@ def _load_env():
 
 _load_env()
 
+import cloud  # noqa: E402
 import fhir  # noqa: E402
 import insights  # noqa: E402
 import llm  # noqa: E402
@@ -164,6 +165,10 @@ class Handler(BaseHTTPRequestHandler):
                 out = insights.build(b.get("records") or [], lang, vitals=b.get("vitals"), patient=b.get("patient"))
             elif path == "/api/journal_summary":
                 out = insights.journal_summary(b.get("entries"), b.get("since"), lang)
+            elif path == "/api/sync":  # save this account's encrypted vault (ciphertext only)
+                out = cloud.save(b.get("id"), b.get("token"), b.get("vault"), b.get("at"))
+            elif path == "/api/sync/load":  # credentials in the body, never in the URL
+                out = {"vault": cloud.load(b.get("id"), b.get("token"))}
             elif path == "/api/transcribe":
                 out = {"text": _transcribe(b)}
             elif path == "/api/medcheck":
@@ -177,6 +182,8 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 return self._send(404, {"error": "Not found"})
             return self._send(200, out)
+        except cloud.SyncError as e:
+            return self._send(e.status, {"error": str(e)})
         except ValueError as e:
             return self._send(400, {"error": str(e)})
         except pipeline.VisionUnavailable as e:

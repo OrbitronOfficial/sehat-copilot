@@ -29,6 +29,9 @@
     if (!(window.crypto && crypto.subtle)) throw new Error("This browser cannot create accounts here (secure context needed). Try the demo account.");
     return hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + pw)));
   }
+  async function syncOn(email, password, name) {  // end-to-end encrypted sync; never blocks sign-in
+    if (window.SehatSync) { try { await SehatSync.enable(email, password, name); } catch (e) { /* stays device-only */ } }
+  }
   function cleanEmail(e) { return String(e || "").trim().toLowerCase(); }
   function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
@@ -46,15 +49,26 @@
       if (!write(ACC, accounts)) throw new Error("Could not save the account. Browser storage looks blocked.");
       var user = { name: name, email: email, demo: false };
       write(USR, user);
+      await syncOn(email, password, name);
       return user;
     },
     async signIn(email, password) {
       email = cleanEmail(email);
       var accounts = read(ACC) || {};
       var acc = accounts[email];
+      if (!acc && window.SehatSync) {
+        // not on this device yet: an account synced from another device opens with the same password
+        var found = await SehatSync.tryCloud(email, String(password || ""));
+        if (found) {
+          var salt = newSalt();
+          acc = accounts[email] = { name: found.name, salt: salt, hash: await hash(salt, String(password || "")) };
+          write(ACC, accounts);
+        }
+      }
       if (!acc || (await hash(acc.salt, String(password || ""))) !== acc.hash) throw new Error("Wrong email or password.");
       var user = { name: acc.name, email: email, demo: false };
       write(USR, user);
+      await syncOn(email, password, acc.name);
       return user;
     },
     demo: function () {
@@ -67,7 +81,7 @@
       var u = read(USR);
       return u && typeof u.name === "string" ? u : null;
     },
-    signOut: function () { remove(USR); },
+    signOut: function () { remove(USR); remove("sehat_sync"); },
     renderNav: renderNav
   };
   window.SehatAuth = SehatAuth;

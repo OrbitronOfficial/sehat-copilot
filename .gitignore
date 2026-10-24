@@ -9,3 +9,6 @@ docs/footage/*.mp4
 
 # raw screen recording for the intro video (re-create with tools/make_clips.py)
 docs/clips/
+
+# local stand-in for cloud sync vaults (encrypted)
+data/sync/

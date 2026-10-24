@@ -974,3 +974,10 @@ details.more > summary { cursor: pointer; color: var(--teal); font-weight: 600; 
 
 /* the More sheet is for the phone bar only; the desktop sidebar lists every view */
 @media (min-width: 821px) { [data-act="more"] { display: none !important; } }
+
+/* sync status beside the account name */
+.sync-badge { font-size: .72rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--teal-tint); color: var(--teal-dark); white-space: nowrap; margin-right: 6px; }
+.sync-badge[data-s="busy"] { opacity: .75; }
+.sync-badge[data-s="err"] { background: var(--warn-bg); color: var(--warn); }
+:root[data-theme="dark"] .sync-badge { background: rgba(45, 212, 191, .14); color: #99F6E4; }
+@media (max-width: 480px) { .sync-badge { font-size: 0; padding: 4px 6px; } .sync-badge::first-letter { font-size: .8rem; } }
