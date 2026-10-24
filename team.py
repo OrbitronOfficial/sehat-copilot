@@ -4,7 +4,7 @@ A doctor invites a staff member and gets a one-time code. The staff member joins
 can then only read and change the doctor's to-do list: never patients, prescriptions or
 recordings. Everything staff add or complete waits in the doctor's daily review.
 
-Local prototype storage in data/team.json. Keys and tokens are stored only as SHA-256 hashes.
+Stored with cloud.put_doc: a private Vercel Blob in production, data/team.json locally. Keys and tokens are stored only as SHA-256 hashes.
 """
 import hashlib
 import json
@@ -13,7 +13,8 @@ import secrets
 import threading
 import time
 
-PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "team.json")
+import cloud
+
 ROLES = ("pa", "nurse", "receptionist")
 _LOCK = threading.Lock()
 
@@ -23,19 +24,11 @@ def _h(s):
 
 
 def _load():
-    try:
-        with open(PATH, encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError):
-        return {}
+    return cloud.get_doc("team", {}) or {}
 
 
 def _save(d):
-    os.makedirs(os.path.dirname(PATH), exist_ok=True)
-    tmp = PATH + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(d, f)
-    os.replace(tmp, PATH)
+    cloud.put_doc("team", d)
 
 
 def _text(s, n=300):

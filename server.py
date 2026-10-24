@@ -231,19 +231,13 @@ def _extract(b):
         return rec
 
 
-INBOX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "doctor_inbox.json")
 
 
 def _inbox_rw(items=None):
+    """Approved prescriptions waiting for the patient's app (private blob on Vercel, data/ locally)."""
     if items is None:
-        try:
-            with open(INBOX, encoding="utf-8") as f:
-                return json.load(f)
-        except (OSError, ValueError):
-            return []
-    os.makedirs(os.path.dirname(INBOX), exist_ok=True)
-    with open(INBOX, "w", encoding="utf-8") as f:
-        json.dump(items, f)
+        return cloud.get_doc("doctor_inbox", []) or []
+    cloud.put_doc("doctor_inbox", items)
 
 
 def inbox_send(b):

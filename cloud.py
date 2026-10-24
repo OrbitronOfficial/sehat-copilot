@@ -100,3 +100,41 @@ def load(vault_id, token):
         return None
     # a private store: reading needs the token too, and the cache is skipped so the newest copy is read
     return json.loads(_request("GET", blobs[-1]["url"] + "?cache=0", headers={"authorization": "Bearer " + _blob_token()}))
+
+
+def get_doc(name, default=None):
+    """A small app document (doctor inbox, staff to-do lists). Private blob on Vercel, data/<name>.json locally."""
+    if not re.fullmatch(r"[a-z0-9_-]{1,40}", name):
+        raise SyncError(400, "Bad document name.")
+    if not _blob_token():
+        try:
+            with open(os.path.join(ROOT, "data", name + ".json"), encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            return default
+    blobs = _blob_list("app/" + name)
+    if not blobs:
+        return default
+    return json.loads(_request("GET", blobs[-1]["url"] + "?cache=0", headers={"authorization": "Bearer " + _blob_token()}))
+
+
+def put_doc(name, obj):
+    if not re.fullmatch(r"[a-z0-9_-]{1,40}", name):
+        raise SyncError(400, "Bad document name.")
+    body = json.dumps(obj).encode()
+    if not _blob_token():
+        path = os.path.join(ROOT, "data", name + ".json")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path + ".tmp", "wb") as f:
+            f.write(body)
+        os.replace(path + ".tmp", path)
+        return
+    old = _blob_list("app/" + name)
+    _request("PUT", API + "/?pathname=" + urllib.request.quote(f"app/{name}/{int(time.time() * 1000)}.json"), data=body, headers=dict(_auth(), **{
+        "x-content-type": "application/json", "x-add-random-suffix": "1", "x-vercel-blob-access": "private"}))
+    if old:
+        try:
+            _request("POST", API + "/delete", data=json.dumps({"urls": [b["url"] for b in old]}).encode(),
+                     headers=dict(_auth(), **{"content-type": "application/json"}))
+        except SyncError:
+            pass

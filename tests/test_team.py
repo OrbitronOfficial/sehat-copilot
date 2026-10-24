@@ -4,6 +4,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import cloud  # noqa: E402
 import team  # noqa: E402
 
 KEY = "k" * 48
@@ -12,9 +13,13 @@ KEY = "k" * 48
 class TeamAccessTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        team.PATH = os.path.join(self.tmp.name, "team.json")
+        self.root, cloud.ROOT = cloud.ROOT, self.tmp.name  # local document store in a scratch folder
+        self.env = os.environ.pop("BLOB_READ_WRITE_TOKEN", None)
 
     def tearDown(self):
+        cloud.ROOT = self.root
+        if self.env is not None:
+            os.environ["BLOB_READ_WRITE_TOKEN"] = self.env
         self.tmp.cleanup()
 
     def join(self, role="nurse"):
