@@ -1436,7 +1436,7 @@ function chartSVG(s) {
   let g = '';
   if (band) {
     const top = band.hi !== null ? Y(band.hi) : pt, bot = band.lo !== null ? Y(band.lo) : H - pb;
-    g += '<rect x="' + pl + '" y="' + top.toFixed(1) + '" width="' + (W - pl - pr) + '" height="' + Math.max(1, bot - top).toFixed(1) + '" fill="#0F766E" opacity="0.13"/>';
+    g += '<rect x="' + pl + '" y="' + top.toFixed(1) + '" width="' + (W - pl - pr) + '" height="' + Math.max(1, bot - top).toFixed(1) + '" fill="#055A99" opacity="0.13"/>';
   }
   g += '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (W - pr) + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
   g += '<polyline fill="none" stroke="var(--muted)" stroke-width="1.5" points="' + pts.map((p, i) => X(i).toFixed(1) + ',' + Y(p.v).toFixed(1)).join(' ') + '"/>';
@@ -1962,7 +1962,7 @@ function viewAvanadeCopilot(I) {
           </div>
 
           <div class="av-team-card">
-            <div class="av-team-avatar" style="background:linear-gradient(135deg, #06B6D4, #3B82F6)">SL</div>
+            <div class="av-team-avatar" style="background:linear-gradient(135deg, #4FA3F0, #3B82F6)">SL</div>
             <div style="flex:1">
               <strong>Dr. Sarah Lin, MD</strong>
               <div class="muted small">Endocrinologist · Sub-Specialist</div>
@@ -2023,7 +2023,7 @@ function viewAvanadeCopilot(I) {
   } else if (S.avTab === 'telemetry') {
     tabContent = `
       <div class="stack" style="gap:16px">
-        <div class="card" style="border-left: 4px solid #06B6D4">
+        <div class="card" style="border-left: 4px solid #4FA3F0">
           <div style="font-weight:700; font-size:1.05rem; color:var(--ink)">Real-time Diagnostic Biomarker Telemetry</div>
           <div class="muted small">Extracted from CityCare Diagnostic Pathology Report (22-Sep-2026) · Synthesized with historical records</div>
         </div>

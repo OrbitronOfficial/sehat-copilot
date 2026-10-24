@@ -307,7 +307,7 @@ const SehatWell = (function () {
     const Y = v => pt + (1 - (v - mn) / (mx - mn)) * (H - pt - pb);
     let g = '';
     c.bands.forEach(b => {
-      g += '<rect class="wl-band" x="' + pl + '" y="' + Y(b[1]).toFixed(1) + '" width="' + (Wd - pl - pr) + '" height="' + Math.max(1, Y(b[0]) - Y(b[1])).toFixed(1) + '" fill="#0F766E" fill-opacity="0.10" stroke="#0F766E" stroke-opacity="0.55" stroke-dasharray="4 3"/>';
+      g += '<rect class="wl-band" x="' + pl + '" y="' + Y(b[1]).toFixed(1) + '" width="' + (Wd - pl - pr) + '" height="' + Math.max(1, Y(b[0]) - Y(b[1])).toFixed(1) + '" fill="#055A99" fill-opacity="0.10" stroke="#055A99" stroke-opacity="0.55" stroke-dasharray="4 3"/>';
     });
     g += '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (Wd - pr) + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
     c.lines.forEach(l => {
@@ -335,11 +335,11 @@ const SehatWell = (function () {
       let c;
       if (ty === 'bp') {
         c = { name: t('vit_bp'), unit: 'mmHg', bands: [WL_USUAL.bp_up, WL_USUAL.bp_lo], lines: [
-          { label: t('wl_upper'), color: '#0F766E', pts: mk(es.map(e => ({ date: e.date, v: e.value })), WL_USUAL.bp_up) },
+          { label: t('wl_upper'), color: '#055A99', pts: mk(es.map(e => ({ date: e.date, v: e.value })), WL_USUAL.bp_up) },
           { label: t('wl_lower'), color: '#475569', below: true, pts: mk(es.filter(e => e.value2 != null).map(e => ({ date: e.date, v: e.value2 })), WL_USUAL.bp_lo) }], range: WL_USUAL.bp_up[0] + '/' + WL_USUAL.bp_lo[0] + ' to ' + WL_USUAL.bp_up[1] + '/' + WL_USUAL.bp_lo[1], legend: true };
       } else {
         const b = WL_USUAL[ty] || null;
-        c = { name: t('vit_' + ty), unit: VIT_UNIT[ty], bands: b ? [b] : [], lines: [{ label: '', color: '#0F766E', pts: mk(es.map(e => ({ date: e.date, v: e.value })), b) }], range: b ? b[0] + ' to ' + b[1] : '' };
+        c = { name: t('vit_' + ty), unit: VIT_UNIT[ty], bands: b ? [b] : [], lines: [{ label: '', color: '#055A99', pts: mk(es.map(e => ({ date: e.date, v: e.value })), b) }], range: b ? b[0] + ' to ' + b[1] : '' };
       }
       out.push('<div class="trend wl-chart"><h4><span>' + esc(c.name) + '</span><span class="mono muted small">' + esc(c.unit) + '</span></h4>' + lineChart(c, P) +
         (c.legend ? '<p class="wl-legend small"><span class="wl-key u"></span>' + esc(t('wl_upper')) + ' <span class="wl-key l"></span>' + esc(t('wl_lower')) + '</p>' : '') +
@@ -363,7 +363,7 @@ const SehatWell = (function () {
     const P = period(), ents = J.load().filter(e => P.idx(e.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
     const head = '<div class="row between"><h2>' + esc(t('jt_title')) + '</h2>' + toggleHTML() + '</div><p class="muted small" style="margin:4px 0 0">' + esc(t('jt_sub')) + '</p>' + aggNote(P);
     if (!ents.length) return '<div class="card" id="jrTrend">' + head + '<p class="muted" style="margin:10px 0 0">' + esc(t('jt_none')) + '</p></div>';
-    const defs = [['sleep', [1, 5], '/ 5', '#0F766E'], ['mood', [1, 5], '/ 5', '#0F766E'], ['energy', [1, 5], '/ 5', '#0F766E'], ['pain', [0, 10], '/ 10', '#475569']];
+    const defs = [['sleep', [1, 5], '/ 5', '#055A99'], ['mood', [1, 5], '/ 5', '#055A99'], ['energy', [1, 5], '/ 5', '#055A99'], ['pain', [0, 10], '/ 10', '#475569']];
     const charts = defs.map(d => {
       const k = d[0], rows = ents.filter(e => typeof e[k] === 'number' && e[k] >= d[1][0] && (k === 'pain' || e[k] > 0)).map(e => ({ date: e.date, v: e[k] }));
       const h = '<h4><span>' + esc(t('jr_' + k)) + '</span>' + (rows.length ? '<span class="mono small">' + esc(t('jt_avg_' + k, { a: mean(rows.map(r => r.v)).toFixed(1) })) + '</span>' : '') + '</h4>';
@@ -381,7 +381,7 @@ const SehatWell = (function () {
     rows.forEach(e => { const i = P.idx(e.date); const o = b[i] || (b[i] = { yes: 0, no: 0, unsure: 0 }); o[e.meds_taken]++; tot[e.meds_taken]++; });
     const keys = Object.keys(b).map(Number), mx = Math.max.apply(null, keys.map(i => b[i].yes + b[i].no + b[i].unsure));
     const Wd = 360, H = 110, pl = 38, pr = 10, pt = 10, pb = 28, slot = (Wd - pl - pr) / P.nb, bw = Math.max(3, slot * 0.7), hh = H - pt - pb;
-    const COL = { yes: '#0F766E', unsure: '#94A3B8', no: '#B45309' };
+    const COL = { yes: '#055A99', unsure: '#94A3B8', no: '#B45309' };
     let g = '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (Wd - pr) + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
     keys.forEach(i => {
       const x = pl + i * slot + (slot - bw) / 2; let y = H - pb;
@@ -432,7 +432,7 @@ const SehatWell = (function () {
     let g = '<line x1="' + pl + '" y1="' + (H - pb) + '" x2="' + (Wd - pr) + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
     bars.forEach(b => {
       const x = pl + b.i * slot + (slot - bw) / 2, h = b.steps / mx * (H - pt - pb), y = H - pb - h;
-      g += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, h).toFixed(1) + '" rx="2" fill="#0F766E"><title>' + esc(t('wl_pt', { d: b.tip, v: b.steps.toLocaleString(), u: t('st_unit') })) + '</title></rect>';
+      g += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, h).toFixed(1) + '" rx="2" fill="#055A99"><title>' + esc(t('wl_pt', { d: b.tip, v: b.steps.toLocaleString(), u: t('st_unit') })) + '</title></rect>';
       if (P.n <= 7) g += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 4).toFixed(1) + '" text-anchor="middle">' + esc(b.steps >= 10000 ? (b.steps / 1000).toFixed(1) + 'k' : b.steps) + '</text>';
     });
     g += '<text x="' + (pl - 5) + '" y="' + (pt + 4) + '" text-anchor="end">' + esc(Math.round(mx).toLocaleString()) + '</text><text x="' + (pl - 5) + '" y="' + (H - pb) + '" text-anchor="end">0</text>';

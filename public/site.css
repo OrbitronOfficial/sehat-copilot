@@ -453,3 +453,12 @@ h1 { font-weight: 800; }
 body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(70vw 50vw at 85% -10%, rgba(142, 190, 249, .45), transparent 60%), radial-gradient(50vw 40vw at -5% 105%, rgba(7, 116, 196, .10), transparent 60%); }
 :root[data-theme="dark"] body::before { background: radial-gradient(60vw 45vw at 85% -10%, rgba(7, 116, 196, .40), transparent 62%), radial-gradient(45vw 40vw at 0% 110%, rgba(142, 190, 249, .10), transparent 60%); }
+
+/* sign-in role switch: three equal segments on one line at every width */
+.tabs.roles { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; flex-wrap: nowrap; }
+.tabs.roles [role="tab"] { width: 100%; min-width: 0; padding: 10px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .95rem; text-align: center; }
+@media (max-width: 400px) { .tabs.roles [role="tab"] { font-size: .84rem; padding: 9px 4px; } }
+
+/* nav language picker sits on the same centre line as the other controls */
+.site-nav .langsel { display: inline-flex; align-items: center; margin: 0; padding: 0; line-height: 1; vertical-align: middle; }
+.site-nav .langsel select { margin: 0; height: 38px; }
