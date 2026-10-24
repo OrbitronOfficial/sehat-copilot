@@ -41,6 +41,7 @@ def _load_env():
 _load_env()
 
 import cloud  # noqa: E402
+import team  # noqa: E402
 import fhir  # noqa: E402
 import insights  # noqa: E402
 import llm  # noqa: E402
@@ -182,6 +183,8 @@ class Handler(BaseHTTPRequestHandler):
                 out = pipeline.from_consult(b.get("transcript"), b.get("patient"))
             elif path == "/api/consult/send":  # doctor approved: queue it for the patient's app
                 out = inbox_send(b)
+            elif path == "/api/team":  # doctor's staff: to-do list access only
+                out = team.handle(b)
             elif path == "/api/inbox":  # patient app collects prescriptions sent to its family names
                 out = {"records": inbox_pull(b.get("names"))}
             elif path == "/api/fhir":
@@ -191,6 +194,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, out)
         except cloud.SyncError as e:
             return self._send(e.status, {"error": str(e)})
+        except PermissionError as e:
+            return self._send(403, {"error": str(e)})
         except ValueError as e:
             return self._send(400, {"error": str(e)})
         except pipeline.VisionUnavailable as e:

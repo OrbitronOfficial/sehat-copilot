@@ -2,7 +2,7 @@
   "builds": [
     { "src": "api/index.py", "use": "@vercel/python",
       "config": { "maxDuration": 60,
-                  "includeFiles": ["server.py", "pipeline.py", "ranges.py", "fhir.py", "llm.py", "safety.py", "insights.py", "cloud.py", "data/**"] } },
+                  "includeFiles": ["server.py", "pipeline.py", "ranges.py", "fhir.py", "llm.py", "safety.py", "insights.py", "cloud.py", "team.py", "data/**"] } },
     { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [

@@ -231,17 +231,65 @@
   }
   $('histPeople').onclick = e => { const b = e.target.closest('[data-who]'); if (b) { histWho = norm(b.dataset.who); drawHistory(); } };
 
-  /* ---------- to-do ---------- */
-  const TK = 'sehat_doc_todo';
-  function drawTodo() {
-    const t = lsGet(TK, []);
-    $('todoList').innerHTML = t.length ? t.map((x, i) => '<label class="d-todo' + (x.done ? ' done' : '') + '"><input type="checkbox" data-i="' + i + '"' + (x.done ? ' checked' : '') + '><span>' + esc(x.text) + '</span><button class="btn small secondary x" data-del="' + i + '" aria-label="Remove">×</button></label>').join('') : '<p class="d-empty">Nothing to do. Add a task above.</p>';
+  /* ---------- to-do (old device-only version, replaced by the shared list below) ---------- */
+  /* Shared with staff through /api/team. The doctor's key stays on this device; staff get a
+     single-use code and can only touch this list. Older device-only tasks are moved up once. */
+  const TK = 'sehat_doc_todo', DK = 'sehat_doc_key';
+  let dkey = null;
+  try { dkey = localStorage.getItem(DK); if (!dkey) { dkey = Array.from(crypto.getRandomValues(new Uint8Array(24)), b => b.toString(16).padStart(2, '0')).join(''); localStorage.setItem(DK, dkey); } } catch (e) { /* private mode */ }
+  const DOC = () => ($('docName') && $('docName').textContent) || (document.querySelector('.userchip .who') || {}).textContent || 'Doctor';
+  const ROLE = { pa: 'PA', nurse: 'Nurse', receptionist: 'Receptionist' };
+  const team = body => api('/api/team', Object.assign({ key: dkey, doctor: DOC() }, body));
+  async function migrate() {
+    const old = lsGet(TK, []);
+    if (!old.length) return;
+    const have = new Set(((await team({ action: 'state' })).todos || []).map(t => norm(t.text)));
+    for (const t of old.slice().reverse()) if (!have.has(norm(t.text))) await team({ action: 'add', text: t.text });
+    lsSet(TK, []);
   }
-  const addTodo = () => { const v = $('todoIn').value.trim(); if (!v) return; const t = lsGet(TK, []); t.unshift({ text: v, done: false }); lsSet(TK, t); $('todoIn').value = ''; drawTodo(); };
+  const when = s => new Date(s * 1000).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  function paintTeam(j) {
+    const todos = j.todos || [], rev = todos.filter(t => t.review === 'pending');
+    $('reviewCard').hidden = !rev.length; $('reviewN').textContent = rev.length + ' to review';
+    $('reviewList').innerHTML = rev.map(t => '<div class="d-todo"><span><b>' + esc(t.text) + '</b><br><span class="d-status">' + (t.done ? 'Completed by ' + esc(t.done_by) + ' · ' + when(t.done_at) : 'Added by ' + esc(t.by) + ' (' + esc(ROLE[t.role] || t.role) + ') · ' + when(t.at)) + '</span></span>' +
+      '<span class="x d-row"><button class="btn small primary" data-rev="ok" data-id="' + t.id + '">Looks good</button><button class="btn small secondary" data-rev="redo" data-id="' + t.id + '">Redo</button></span></div>').join('');
+    $('todoList').innerHTML = todos.length ? todos.map(t => '<label class="d-todo' + (t.done ? ' done' : '') + '"><input type="checkbox" data-tid="' + t.id + '"' + (t.done ? ' checked' : '') + '><span>' + esc(t.text) +
+      (t.role !== 'doctor' ? ' <span class="d-tag">' + esc(t.by) + '</span>' : '') + (t.review === 'redo' ? ' <span class="d-note">sent back</span>' : '') + '</span><button class="btn small secondary x" data-del="' + t.id + '" aria-label="Remove">×</button></label>').join('') : '<p class="d-empty">Nothing to do. Add a task above.</p>';
+    const st = j.staff || [];
+    $('staffList').innerHTML = st.length ? st.map(s => '<div class="d-todo"><span><b>' + esc(s.name) + '</b> · ' + esc(ROLE[s.role] || s.role) + '<br><span class="d-status">' +
+      (!s.active ? 'Access removed' : s.joined ? 'Has access' : 'Code <b style="letter-spacing:.15em">' + esc(s.code) + '</b>, not used yet') + '</span></span>' +
+      (s.active ? '<button class="btn small secondary x" data-revoke="' + s.id + '">Remove access</button>' : '') + '</div>').join('') : '<p class="d-empty">No staff yet.</p>';
+  }
+  async function drawTodo(body) {
+    try { if (!body) await migrate(); paintTeam(await team(body || { action: 'state' })); }
+    catch (e) { $('todoList').innerHTML = '<p class="d-empty">' + esc(e.message) + '</p>'; }
+  }
+  const addTodo = () => { const v = $('todoIn').value.trim(); if (!v) return; $('todoIn').value = ''; drawTodo({ action: 'add', text: v }); };
   $('todoAdd').onclick = addTodo;
   $('todoIn').onkeydown = e => { if (e.key === 'Enter') addTodo(); };
-  $('todoList').onchange = e => { const i = e.target.dataset.i; if (i == null) return; const t = lsGet(TK, []); t[i].done = e.target.checked; lsSet(TK, t); drawTodo(); };
-  $('todoList').onclick = e => { const i = e.target.dataset.del; if (i == null) return; e.preventDefault(); const t = lsGet(TK, []); t.splice(i, 1); lsSet(TK, t); drawTodo(); };
+  $('todoList').onchange = e => { const id = e.target.dataset.tid; if (id) drawTodo({ action: 'done', id, done: e.target.checked }); };
+  $('todoList').onclick = e => { const id = e.target.dataset.del; if (id) { e.preventDefault(); drawTodo({ action: 'delete', id }); } };
+  $('reviewList').onclick = e => { const b = e.target.closest('[data-rev]'); if (b) drawTodo({ action: 'review', id: b.dataset.id, verdict: b.dataset.rev }); };
+  $('stInvite').onclick = async () => {
+    const name = $('stName').value.trim(); if (!name) return $('stName').focus();
+    const role = $('stRole').value;
+    try {
+      const j = await team({ action: 'invite', name, role }); $('stName').value = '';
+      paintTeam(await team({ action: 'state' }));
+      const link = location.origin + '/login?role=staff';
+      $('stNew').hidden = false;
+      $('stNew').innerHTML = '<div class="st-new"><div class="d-row"><b>' + esc(name) + '</b><span class="d-tag">' + esc(ROLE[role] || role) + '</span><span class="d-status">New code, works once</span></div>' +
+        '<div class="st-code">' + esc(j.code) + '</div><div class="st-link">They sign in at <b>' + esc(link) + '</b>, choose Nurse / staff, and enter this code.</div>' +
+        '<div class="d-row"><button class="btn small primary" id="stCopy">Copy code and link</button><button class="btn small secondary" id="stHide">Done</button></div></div>';
+      $('stCopy').onclick = async () => {
+        try { await navigator.clipboard.writeText('Your Sehat to-do access code: ' + j.code + '\nSign in at ' + link + ' (Nurse / staff)'); $('stCopy').textContent = 'Copied'; }
+        catch (e) { $('stCopy').textContent = 'Copy blocked: select the code'; }
+      };
+      $('stHide').onclick = () => { $('stNew').hidden = true; };
+    } catch (e) { $('stNew').hidden = false; $('stNew').innerHTML = '<p class="d-note">' + esc(e.message) + '</p>'; }
+  };
+  $('staffList').onclick = e => { const id = e.target.dataset.revoke; if (id && confirm('Remove this person\'s access to your to-do list?')) drawTodo({ action: 'revoke', id }); };
+  setInterval(() => { if (view === 'todo' && document.visibilityState === 'visible') drawTodo({ action: 'state' }); }, 20000);
 
   go(NAV.some(n => n[0] === view) ? view : 'today');
 })();
