@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles.css?v=3f">
 </head>
 <body>
 <header class="topbar">
@@ -70,5 +70,6 @@
 <script src="/bulk.js"></script>
 <script src="inbox.js" defer></script>
 <script src="fx.js" defer></script>
+<script>if(/[?&]seed=/.test(location.search)&&/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){window.addEventListener("load",function(){var s=document.createElement("script");s.src="/seed-year.js";document.body.appendChild(s)})}</script>
 </body>
 </html>
