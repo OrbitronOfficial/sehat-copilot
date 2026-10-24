@@ -163,7 +163,7 @@ const STR = {
     med_presc: 'prescribed {d}', med_dur: 'duration {x}',
     visit_presc: 'Prescribed', visit_status: 'Status',
     ment_title: 'Mentions ({n})', ment_open: 'Open record',
-    attn_title: 'Out of range in your latest results', attn_none: 'Everything in your latest results is within range.',
+    attn_title: 'Out of range in your latest results', attn_none: 'Everything in your latest results is within range.', attn_nolabs: 'No lab results yet. Upload a lab report to see your values here.', attn_late: '{n} doses today are not marked as taken yet.', attn_late_one: '1 dose today is not marked as taken yet.',
     trend_hist: 'Earlier results stay in each test\'s history above.',
     cross_title: 'Things to discuss with your doctor', q_title: 'Questions for your doctor, from your records',
     ins_loading: 'Putting your records together...',
@@ -348,7 +348,7 @@ const STR = {
     med_presc: '{d} को लिखी गई', med_dur: 'अवधि {x}',
     visit_presc: 'कब लिखी गई', visit_status: 'स्थिति',
     ment_title: 'उल्लेख ({n})', ment_open: 'रिकॉर्ड खोलें',
-    attn_title: 'अभी ध्यान देने योग्य', attn_none: 'आपके ताज़ा नतीजों में सब कुछ सामान्य सीमा के भीतर है।',
+    attn_title: 'अभी ध्यान देने योग्य', attn_none: 'आपके ताज़ा नतीजों में सब कुछ सामान्य सीमा के भीतर है।', attn_nolabs: 'अभी कोई लैब रिपोर्ट नहीं है। अपने मान यहाँ देखने के लिए लैब रिपोर्ट अपलोड करें।', attn_late: 'आज की {n} खुराकें अभी ली गई के रूप में दर्ज नहीं हैं।', attn_late_one: 'आज की 1 खुराक अभी ली गई के रूप में दर्ज नहीं है।',
     trend_hist: 'पुराने नतीजे हर जाँच के इतिहास में ऊपर बने रहते हैं।',
     cross_title: 'डॉक्टर से चर्चा के लिए बातें', q_title: 'आपके रिकॉर्ड से डॉक्टर के लिए सवाल',
     ins_loading: 'आपके रिकॉर्ड एक साथ जोड़े जा रहे हैं...',
@@ -1616,6 +1616,13 @@ const QA_ICON = {
 function quickTile(icon, label, attrs) {
   return '<button type="button" class="qa" ' + attrs + '><svg viewBox="0 0 24 24" aria-hidden="true">' + QA_ICON[icon] + '</svg><span>' + esc(label) + '</span></button>';
 }
+/* "All clear" only when there is something to be clear about: no lab results is said plainly,
+   and doses not marked today are not hidden behind a green tick. */
+function okLine(I) {
+  const late = window.SehatRem && SehatRem.caregiverCount && window.SehatFamily ? SehatRem.caregiverCount(SehatFamily.active()) : 0;
+  const base = arr(I.tests).length ? t('attn_none') : t('attn_nolabs');
+  return { text: late ? base + ' ' + t(late === 1 ? 'attn_late_one' : 'attn_late', { n: late }) : base, warn: !arr(I.tests).length || late > 0 };
+}
 function dashHTML(I) {
   const n = I.attention.length, latest = sortedRecords()[0], series = trendSeries(I), best = biggestChange(series);
   const chips = I.attention.slice(0, 3).map(a => '<span class="chip static">' + esc(a.name + ' ' + (a.value == null ? '' : a.value) + (a.unit ? ' ' + a.unit : '')) + ' ' + badge(a.flag) + '</span>').join('');
@@ -1623,7 +1630,7 @@ function dashHTML(I) {
     (n ? '<div class="dash-big"><span class="dash-num">' + n + '</span><span class="dash-lbl">' + esc(t(n === 1 ? 'dash_attn_one' : 'dash_attn_many')) + '</span></div>' +
       '<div class="chips" style="margin:10px 0 14px">' + chips + '</div>' +
       (latest ? '<button type="button" class="btn" data-act="openrec" data-id="' + esc(latest.id) + '">' + esc(t('dash_see')) + '</button>' : '')
-      : '<div class="dash-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>' + esc(t('attn_none')) + '</span></div>') + '</div>';
+      : '<div class="dash-ok' + (okLine(I).warn ? ' muted' : '') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>' + esc(okLine(I).text) + '</span></div>') + '</div>';
   const side = '<div class="dash-side">' +
     '<div class="card mini"><div class="kicker">' + esc(t('dash_next')) + '</div>' + nextUpHTML() + '</div>' +
     '<div class="card mini"><div class="kicker">' + esc(t('dash_changed')) + '</div>' +
@@ -1680,7 +1687,7 @@ function viewHealth() {
   const series = trendSeries(I);
   const attn = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('attn_title')) + '</h2>' +
     (I.attention.length ? '<ul class="list">' + I.attention.map(a => '<li><span class="l"><strong>' + esc(a.name) + '</strong><br><span class="muted small">' + esc(fmtDate(a.date)) + (a.ref_text ? ' · ' + esc(t('t_range')) + ': ' + esc(a.ref_text) : '') + '</span>' + attnAge(a.date) + recLinks([a.record]) + '</span><span class="r"><span class="mono">' + esc(a.value == null ? '' : a.value) + ' ' + esc(a.unit || '') + '</span><br>' + badge(a.flag) + '</span></li>').join('') + '</ul>'
-      : '<p class="dash-okline">' + esc(t('attn_none')) + '</p>') + '</div>';
+      : '<p class="dash-okline">' + esc(okLine(I).text) + '</p>') + '</div>';
   const latestCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_latest')) + '</h2>' +
     (I.tests.length ? '<ul class="list">' + I.tests.map(x => { const l = x.latest; return '<li><span class="l">' + esc(x.name) + '<br><span class="muted small">' + esc(fmtDate(l.date)) + '</span></span><span class="r"><span class="mono">' + esc(l.value == null ? ptVal(l) : l.value) + ' ' + esc(l.unit || x.unit || '') + '</span><br>' + badge(l.flag) + '</span></li>'; }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>';
   const trendsCard = '<div class="card full"><h2 style="margin-bottom:10px">' + esc(t('h_trends')) + '</h2>' +
@@ -2809,7 +2816,9 @@ function renderUser() {
   el.textContent = '';
   const who = document.createElement('span');
   who.className = 'who';
-  who.textContent = u ? (u.demo ? t('demo_user') : String(u.name).split(' ')[0]) : t('guest');
+  // the account holder's health-profile name, so the header never shows a different person from the family chip
+  const selfName = window.SehatFamily ? ((SehatFamily.list().find(p => p.id === 'self') || {}).name || '') : '';
+  who.textContent = u ? (u.demo ? t('demo_user') : String(selfName || u.name).split(' ')[0]) : t('guest');
   const link = document.createElement('a');
   link.href = '/login';
   link.textContent = u ? t('sign_out') : t('sign_in');
@@ -2817,7 +2826,7 @@ function renderUser() {
   if (u) {
     const av = document.createElement('span');
     av.className = 'avatar'; av.setAttribute('aria-hidden', 'true');
-    av.textContent = String(u.name).trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase();
+    av.textContent = String(selfName || u.name).trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0)).join('').toUpperCase();
     el.appendChild(av);
   }
   el.appendChild(who); el.appendChild(link);
