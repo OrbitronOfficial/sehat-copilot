@@ -82,7 +82,7 @@ const SehatFamily = (function () {
       fam_busy: 'Please finish or discard the record you are reviewing, or wait for the answer, before switching profiles.',
       fam_viewing: 'Viewing {name}',
       fam_view: 'Family overview', fam_active: 'Open now', fam_open_m: 'Open', fam_meds_n: 'Medicines today: {x} of {y} taken', fam_meds_none: 'No medicines being tracked',
-      fam_alerts: '{n} alerts', fam_alert_one: '1 alert', fam_add_card: 'Add a family member', fam_add_hint: 'Keep a parent, partner or child\'s records here too.',
+      fam_alerts: '{n} doses not marked yet (2+ hours late or skipped)', fam_alert_one: '1 dose not marked yet (2+ hours late or skipped)', fam_add_card: 'Add a family member', fam_add_hint: 'Keep a parent, partner or child\'s records here too.',
       fam_age_n: '{n} years', fam_locked_note: 'Locked. Enter the PIN to open.', fam_hidden_tag: 'Hidden from child profiles', fam_go_health: 'My health'
     });
     Object.assign(STR.hi, {
@@ -102,7 +102,7 @@ const SehatFamily = (function () {
       fam_busy: 'प्रोफ़ाइल बदलने से पहले जिस रिकॉर्ड की जाँच कर रहे हैं उसे पूरा करें या हटाएँ, या जवाब आने तक रुकें।',
       fam_viewing: '{name} की प्रोफ़ाइल',
       fam_view: 'परिवार की झलक', fam_active: 'अभी खुला है', fam_open_m: 'खोलें', fam_meds_n: 'आज की दवाइयाँ: {y} में से {x} ली गईं', fam_meds_none: 'कोई दवा ट्रैक नहीं हो रही',
-      fam_alerts: '{n} चेतावनियाँ', fam_alert_one: '1 चेतावनी', fam_add_card: 'परिवार का सदस्य जोड़ें', fam_add_hint: 'माता-पिता, जीवनसाथी या बच्चे के रिकॉर्ड भी यहीं रखें।',
+      fam_alerts: '{n} खुराकें अभी दर्ज नहीं (2+ घंटे देर या छोड़ी गई)', fam_alert_one: '1 खुराक अभी दर्ज नहीं (2+ घंटे देर या छोड़ी गई)', fam_add_card: 'परिवार का सदस्य जोड़ें', fam_add_hint: 'माता-पिता, जीवनसाथी या बच्चे के रिकॉर्ड भी यहीं रखें।',
       fam_age_n: '{n} वर्ष', fam_locked_note: 'लॉक है। खोलने के लिए पिन डालें।', fam_hidden_tag: 'बच्चों की प्रोफ़ाइल से छिपा', fam_go_health: 'मेरी सेहत'
     });
   }
