@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script>try{var th=localStorage.getItem("sehat_theme");if(th!=="dark"&&th!=="light")th=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=th}catch(e){document.documentElement.dataset.theme="light"}</script>
-<meta name="theme-color" content="#0F766E">
+<meta name="theme-color" content="#0774C4">
 <title>Sehat Copilot</title>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;600&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -70,6 +70,6 @@
 <script src="/bulk.js"></script>
 <script src="inbox.js" defer></script>
 <script src="fx.js" defer></script>
-<script>if(/[?&]seed=/.test(location.search)&&/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){window.addEventListener("load",function(){var s=document.createElement("script");s.src="/seed-year.js";document.body.appendChild(s)})}</script>
+<script>var sdDemo=false;try{sdDemo=/[?&]demo=1/.test(location.search)&&!localStorage.getItem("sehat_seed_year")}catch(e){}if((/[?&]seed=/.test(location.search)&&/^(localhost|127\.0\.0\.1)$/.test(location.hostname))||sdDemo){window.addEventListener("load",function(){var s=document.createElement("script");s.src="/seed-year.js";document.body.appendChild(s)})}</script>
 </body>
 </html>

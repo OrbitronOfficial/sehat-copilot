@@ -180,10 +180,14 @@
   function greet(q) {
     let me = null; try { me = JSON.parse(localStorage.getItem('sehat_doctor') || 'null'); } catch (e) { /* private mode */ }
     const demo = /[?&]demo=1/.test(location.search) || !me;
-    let name = String((demo ? 'Dr. R. K. Bansal' : (me.name || me.email || '')) || '').split(',')[0].trim();
-    if (name && !/^dr\.?\s/i.test(name)) name = 'Dr. ' + name;
+    // "Dr. Anuj Sharma" -> "Dr. Anuj"; initials only ("Dr. R. K. Bansal") -> "Dr. Bansal"
+    const parts = String((demo ? 'Dr. R. K. Bansal' : (me.name || String(me.email || '').split('@')[0])) || '').split(',')[0]
+      .replace(/^\s*dr\.?\s+/i, '').trim().split(/\s+/).filter(Boolean);
+    const first = parts.find(w => w.replace(/\./g, '').length > 1 && !/\.$/.test(w));
+    const pick = first && first === parts[0] ? first : parts[parts.length - 1];
+    const name = pick ? 'Dr. ' + pick.charAt(0).toUpperCase() + pick.slice(1) : '';
     const h = new Date().getHours(), part = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    $('greet').textContent = part + (name ? ', ' + name : '');
+    $('greet').textContent = part + (name ? ', ' + name : '') + '.';
     const wait = q.filter(p => !p.done).length, major = q.filter(p => !p.done && p.lv === 'major').length;
     $('greetSub').textContent = new Date().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' +
       (q.length ? wait + ' of ' + q.length + ' patients waiting' + (major ? ', ' + major + ' urgent' : '') : 'No patients booked yet');

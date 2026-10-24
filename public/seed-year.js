@@ -1,5 +1,5 @@
 /* Demo data: one year of fictional readings, journal, steps and past records for the Mehra family.
-   Loaded by index.html only on localhost / 127.0.0.1 with ?seed=1.   ?seed=reset removes only what this file wrote.
+   Loaded by index.html on localhost with ?seed=1, and once for the demo account (/app?demo=1). ?seed=reset (localhost) removes only what this file wrote.
    Everything here is FICTIONAL. Seeded items carry an id prefix (vit_seed_, rec_seed_) or a seed:1 flag so reset is exact.
    Keys written (per profile; "@id" is added by profKeyFor for non-self profiles):
      IndexedDB sehat/meta  : family, patient[@id], vitals[@id]      IndexedDB sehat/records: rec_seed_*
