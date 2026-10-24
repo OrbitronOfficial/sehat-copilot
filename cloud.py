@@ -5,7 +5,7 @@ user's password), so this module only ever handles ciphertext. A vault lives at 
 from the account id and a sync token; both come from the password on the device and the
 password itself never reaches the server.
 
-On Vercel it uses Vercel Blob (BLOB_READ_WRITE_TOKEN). Each save is a new, uniquely named
+On Vercel it uses a private Vercel Blob store (BLOB_READ_WRITE_TOKEN); every read and write needs the token. Each save is a new, uniquely named
 object, so a read never meets a stale CDN copy; older versions are deleted after a save.
 Without a token (local development) vaults are kept in data/sync/ on disk.
 """
@@ -54,7 +54,7 @@ def _request(method, url, data=None, headers=None, timeout=20):
 
 
 def _auth():
-    return {"authorization": "Bearer " + _blob_token(), "x-api-version": "7"}
+    return {"authorization": "Bearer " + _blob_token(), "x-api-version": "13"}
 
 
 def _blob_list(prefix):
@@ -76,7 +76,7 @@ def save(vault_id, token, vault, at):
     old = _blob_list(path)
     name = f"{path}/{int(time.time() * 1000)}.json"
     _request("PUT", API + "/" + name, data=body, headers=dict(_auth(), **{
-        "x-content-type": "application/json", "x-add-random-suffix": "1", "x-cache-control-max-age": "60"}))
+        "x-content-type": "application/json", "x-add-random-suffix": "1", "x-vercel-blob-access": "private"}))
     if old:  # earlier versions are no longer needed
         try:
             _request("POST", API + "/delete", data=json.dumps({"urls": [b["url"] for b in old]}).encode(),
@@ -98,4 +98,5 @@ def load(vault_id, token):
     blobs = _blob_list(path)
     if not blobs:
         return None
-    return json.loads(_request("GET", blobs[-1]["url"]))
+    # a private store: reading needs the token too, and the cache is skipped so the newest copy is read
+    return json.loads(_request("GET", blobs[-1]["url"] + "?cache=0", headers={"authorization": "Bearer " + _blob_token()}))
