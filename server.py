@@ -9,6 +9,7 @@ import binascii
 import json
 import mimetypes
 import os
+import time
 import re
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -177,6 +178,12 @@ class Handler(BaseHTTPRequestHandler):
                 out = {"lang": lang, "translations": pipeline.translate_labels(lang, b.get("texts"))}
             elif path == "/api/abha":
                 out = mock_abha(b.get("abha"))
+            elif path == "/api/consult":  # doctor beta: transcript to a draft prescription
+                out = pipeline.from_consult(b.get("transcript"), b.get("patient"))
+            elif path == "/api/consult/send":  # doctor approved: queue it for the patient's app
+                out = inbox_send(b)
+            elif path == "/api/inbox":  # patient app collects prescriptions sent to its family names
+                out = {"records": inbox_pull(b.get("names"))}
             elif path == "/api/fhir":
                 out = fhir.bundle(b.get("patient"), b.get("records") or [], b.get("vitals"))
             else:
@@ -217,6 +224,43 @@ def _extract(b):
         rec["extracted_by"] = f"{saved.get('extracted_by')} (saved reading)"
         rec["warnings"].insert(0, "The live reader is busy, so this sample shows its saved reading.")
         return rec
+
+
+INBOX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "doctor_inbox.json")
+
+
+def _inbox_rw(items=None):
+    if items is None:
+        try:
+            with open(INBOX, encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            return []
+    os.makedirs(os.path.dirname(INBOX), exist_ok=True)
+    with open(INBOX, "w", encoding="utf-8") as f:
+        json.dump(items, f)
+
+
+def inbox_send(b):
+    """Beta, local only: an approved prescription waits here until the patient's app collects it."""
+    rec = b.get("record")
+    name = str(((rec or {}).get("patient") or {}).get("name") or "").strip()
+    if not isinstance(rec, dict) or not name:
+        raise ValueError("Add the patient's name before sending.")
+    rec["approved_by_doctor"] = True
+    items = _inbox_rw()
+    items.append({"to": name.lower(), "record": rec, "at": int(time.time())})
+    _inbox_rw(items)
+    return {"ok": True, "queued": name}
+
+
+def inbox_pull(names):
+    want = {str(n).strip().lower() for n in (names or []) if str(n).strip()}
+    items = _inbox_rw()
+    mine = [i for i in items if i.get("to") in want]
+    if mine:
+        _inbox_rw([i for i in items if i.get("to") not in want])
+    return [i["record"] for i in mine]
 
 
 def _transcribe(b):

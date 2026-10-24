@@ -5,6 +5,7 @@ Stage 2  code validates it, applies reference ranges, checks medicine names
 Stage 3  model writes the explanation around flags the code already decided
 """
 import base64
+import html
 import datetime as dt
 import difflib
 import json
@@ -21,6 +22,20 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 HANDWRITTEN_CAP = 0.6
 DOC_TYPES = ("lab_report", "prescription", "discharge_summary", "diagnostic_report", "other")
 MIME_OK = ("image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain")
+DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+
+def _docx_text(data_b64):
+    """Plain text of a Word document (paragraphs and table cells), stdlib only."""
+    import io
+    import zipfile
+    try:
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(data_b64))) as z:
+            xml = z.read("word/document.xml").decode("utf-8", "replace")
+    except (zipfile.BadZipFile, KeyError, ValueError) as e:
+        raise ValueError("This Word file could not be opened. Save it again as .docx or PDF.") from e
+    xml = re.sub(r"</w:p>|</w:tc>", "\n", xml)
+    return html.unescape(re.sub(r"<[^>]+>", "", xml))
 
 DISCLAIMER = {
     "en": "This explanation is for understanding your records only. It is not a diagnosis or "
@@ -375,6 +390,63 @@ def check(rec):
     return rec
 
 
+CONSULT_NOTE = """
+
+This is a transcript of a doctor speaking during a consultation, not a scanned page. It may mix
+English and Hindi. Extract only what the doctor prescribes or advises for this patient: medicines
+(name, strength, dose, frequency, timing, duration), diagnoses, advice and follow-up. Do not invent
+anything the doctor did not say; leave a field empty when it was not said. There are no test values
+unless the doctor reads out a result. Use the transcript sentence as source_text.
+Speech-to-text often misspells drug names (for example "telmezartin" for Telmisartan). When a word
+clearly sounds like a known medicine, write its standard generic name; if you are not sure, keep
+what was heard."""
+
+
+def _snap_medicine(m):
+    """Speech-to-text misspells drug names. Replace a name with the reference-list match only when
+    one candidate clearly wins; when several are close, keep the name and ask the doctor to check."""
+    known, _ = match_medicine(m["name"])
+    if known:
+        return
+    word = re.sub(r"\b(tab|tablet|cap|capsule|syp|syrup|inj|injection)\b\.?", " ", m["name"].lower())
+    word = " ".join(w for w in re.sub(r"[^a-z0-9 ]+", " ", word).split() if not re.fullmatch(r"\d+(mg|ml|mcg|iu|g)?", w))
+    if not word:
+        return
+    scores = sorted(((difflib.SequenceMatcher(None, word, n).ratio(), n) for n in _MED_NAMES), reverse=True)[:3]
+    if not scores or scores[0][0] < 0.70:
+        return
+    best = scores[0][0]
+    if len(scores) == 1 or best - scores[1][0] >= 0.08:
+        m["heard_as"] = m["name"]
+        m["name"] = scores[0][1].title()
+    else:
+        close = [n.title() for r, n in scores if best - r < 0.08]
+        m["check"] = "Unclear name. Did you mean " + " or ".join(close) + "?"
+        m["confidence"] = min(m.get("confidence") or 1, 0.5)
+
+
+def from_consult(transcript, patient=None):
+    """Draft a prescription from a consultation transcript. The doctor reviews and approves it."""
+    text = str(transcript or "")[:20000]
+    if len(text.strip()) < 20:
+        raise ValueError("The recording is too short to write a prescription from.")
+    raw, provider = llm.write_json(EXTRACT_PROMPT + CONSULT_NOTE + "\n\nDOCUMENT TEXT:\n" + text)
+    raw = raw if isinstance(raw, dict) else {}
+    raw["doc_type"] = "prescription"
+    raw["date"] = raw.get("date") or dt.date.today().isoformat()
+    p = patient if isinstance(patient, dict) else {}
+    raw["patient"] = {k: p.get(k) or (raw.get("patient") or {}).get(k) for k in ("name", "age", "sex")}
+    rec = normalise(raw, "consult")
+    for m in rec["medicines"]:
+        _snap_medicine(m)
+    if not rec["medicines"] and not rec["diagnoses"]:
+        raise ValueError("Prescription not made. This conversation does not seem to be a medical consultation. "
+                         "Please keep the recording to the patient's symptoms, diagnosis and treatment.")
+    rec["extracted_by"] = provider
+    rec["transcript"] = text
+    return rec
+
+
 class VisionUnavailable(Exception):
     """No vision model could read the file. The page falls back to on-device OCR."""
 
@@ -394,8 +466,10 @@ def extract(filename, mime, data_b64, source="upload", ocr=None):
     mime = (mime or "").split(";")[0].strip().lower()
     if mime == "image/jpg":
         mime = "image/jpeg"
+    if mime == DOCX:
+        data_b64, mime = base64.b64encode(_docx_text(data_b64).encode()).decode(), "text/plain"
     if mime not in MIME_OK:
-        raise ValueError("Unsupported file type. Upload a photo (JPG/PNG), a PDF or a text file.")
+        raise ValueError("Unsupported file type. Upload a photo, a PDF, a Word (.docx) or a text file.")
     if mime == "text/plain":
         text = base64.b64decode(data_b64).decode("utf-8", "replace")[:20000]
         if len(text.strip()) < 20:
@@ -419,6 +493,9 @@ def extract(filename, mime, data_b64, source="upload", ocr=None):
         check(rec)
         rec["warnings"].insert(0, "This document was read with the backup on-device reader, which is less "
                                   "accurate. Please compare every value with the original.")
+    if rec.get("doc_type") == "other" and not rec.get("tests") and not rec.get("medicines") and not rec.get("diagnoses"):
+        raise ValueError("This does not look like a medical document. Please upload medical documents only "
+                         "(prescription, lab report, discharge summary or scan report). If it is one, try a sharper photo.")
     return rec
 
 
