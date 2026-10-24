@@ -66,6 +66,23 @@ def course_end(date, duration):
     return start + dt.timedelta(days=int(m.group(1)) * _UNIT[m.group(2)])
 
 
+def follow_up_due(date, text):
+    """Due date of a written follow-up ("after 3 months"). Months and years count by the calendar
+    (14 Mar + 3 months = 14 Jun), the same as the app's Visits view; days and weeks by count."""
+    start = _date(date)
+    m = re.search(r"(\d+)\s*(day|days|week|weeks|month|months|year|years)\b", str(text or "").lower())
+    if not start or not m:
+        return None
+    n, unit = int(m.group(1)), m.group(2)
+    if unit.startswith(("day", "week")):
+        return start + dt.timedelta(days=n * _UNIT[unit])
+    months = n * (12 if unit.startswith("year") else 1)
+    y, mo = divmod(start.month - 1 + months, 12)
+    y, mo = start.year + y, mo + 1
+    last = (dt.date(y + (mo == 12), mo % 12 + 1, 1) - dt.timedelta(days=1)).day
+    return dt.date(y, mo, min(start.day, last))
+
+
 def observed_date(test_name, record_date):
     """A discharge summary may print several results of one test: "Platelet Count (05/08, lowest)".
     The date inside the name is when that result was observed; otherwise it is the document date."""
@@ -464,7 +481,7 @@ def _follow_up_items(records, today, hi):
     dated = [r for r in records if _date(r.get("date"))]
     for rec in [r for r in reversed(dated) if r.get("follow_up")][:3]:
         text = pipeline._s(rec["follow_up"], 200)
-        due = course_end(rec["date"], text)
+        due = follow_up_due(rec["date"], text)
         d = _nice(rec["date"])
         out.append({"kind": "follow_up", "due": due.isoformat() if due else None, "overdue": bool(due and due < today),
                     "title": f"{d} के रिकॉर्ड का फ़ॉलो-अप" if hi else f"Follow-up from your {d} record",

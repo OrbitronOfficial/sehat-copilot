@@ -15,6 +15,8 @@
   Object.assign(STR.en, {
     rm_what: 'What your copilot did', rm_sub: 'Your copilot acts on its own. You can see, edit or reject everything it did.',
     rm_rx: 'Scheduled {n} reminders from your prescription of {date}', rm_rx_note: 'The reminders follow what the prescription says. Nothing starts until you accept.',
+    rm_rxe: "This prescription's courses ended on {date}, so no reminders were set.", rm_anyway: 'Set reminders anyway', rm_prn: 'Only when needed — no reminder',
+    rm_fu_q: 'Did this follow-up happen?', rm_fu_yes: 'Yes, it happened', rm_fu_na: 'Not needed',
     rm_fu: 'A follow-up looks overdue: {text} (record of {date})', rm_rp: 'A repeat test looks due: {title}',
     rm_visit: 'Drafted questions for your next visit', rm_open_visit: 'Open visit summary', rm_open_rec: 'Open record',
     rm_accept: 'Accept', rm_edit: 'Edit', rm_reject: 'Reject', rm_undo: 'Undo', rm_dismiss: 'Dismiss', rm_done: 'Mark done',
@@ -40,6 +42,8 @@
   Object.assign(STR.hi, {
     rm_what: 'आपके कोपायलट ने क्या किया', rm_sub: 'आपका कोपायलट अपने आप काम करता है। उसने जो किया उसे आप देख, बदल या अस्वीकार कर सकते हैं।',
     rm_rx: '{date} के आपके पर्चे से {n} याद दिलाने तय किए', rm_rx_note: 'याद दिलाना वही है जो पर्चे में लिखा है। आपके स्वीकार करने तक कुछ शुरू नहीं होता।',
+    rm_rxe: 'इस पर्चे की दवाओं का कोर्स {date} को पूरा हो चुका है, इसलिए कोई याद दिलाना तय नहीं किया।', rm_anyway: 'फिर भी याद दिलाएँ', rm_prn: 'ज़रूरत पड़ने पर ही — कोई याद दिलाना नहीं',
+    rm_fu_q: 'क्या यह फ़ॉलो-अप हुआ था?', rm_fu_yes: 'हाँ, हो गया', rm_fu_na: 'ज़रूरत नहीं थी',
     rm_fu: 'फ़ॉलो-अप की तारीख़ निकल चुकी लगती है: {text} ({date} का रिकॉर्ड)', rm_rp: 'दोबारा जाँच का समय हो गया लगता है: {title}',
     rm_visit: 'अगली मुलाक़ात के लिए सवाल तैयार किए', rm_open_visit: 'विज़िट सारांश खोलें', rm_open_rec: 'रिकॉर्ड खोलें',
     rm_accept: 'स्वीकार करें', rm_edit: 'बदलें', rm_reject: 'अस्वीकार करें', rm_undo: 'वापस करें', rm_dismiss: 'हटाएँ', rm_done: 'पूरा हुआ',
@@ -182,7 +186,7 @@
       if (seen[k]) return;
       seen[k] = 1;
       const e = doseEvent(d, o), more = ds.filter(x => curKey(x.m) === k && x !== d).map(x => doseTime(x, o));
-      if (more.length) e.details += '. Also at ' + more.join(', ');
+      if (more.length) e.details += (/\.$/.test(e.details) ? ' ' : '. ') + 'Also at ' + more.join(', ');
       out.push(e);
     });
     return out;
@@ -211,8 +215,9 @@
 
   /* ---------- appointments & follow-ups ---------- */
   /* A follow-up stays until the user marks it done or links a later record to it. A newer record never closes it by itself. */
-  const apStore = () => { const s = jget('sehat_appts', {}); return { items: Array.isArray(s.items) ? s.items : [], done: s.done || {}, links: s.links || {}, resched: s.resched || {} }; };
-  const fuClosed = (id, st) => !!(st.done[id] || st.links[id]);
+  const apStore = () => { const s = jget('sehat_appts', {}); return { items: Array.isArray(s.items) ? s.items : [], done: s.done || {}, links: s.links || {}, resched: s.resched || {}, na: s.na || {}, late: s.late || {} }; };
+  const fuClosed = (id, st) => !!(st.done[id] || st.links[id] || st.na[id]);
+  const staleFU = a => a.src === 'r' && ((!!a.date && a.date < addDays(todayKey(), -30)) || !!apStore().late[a.rec]);  /* due over 30 days ago, or already past when the document was uploaded: asked about, not raised as overdue */
   const fuDue = (r, st) => st.resched[r.id] || parseFU(r.follow_up, r.date);
   const whatOf = r => {
     const d = arr(r.diagnoses).map(x => (x && typeof x === 'object' ? x.name : x)).filter(x => typeof x === 'string' && x.trim());
@@ -261,11 +266,11 @@
   }
 
   /* Visits view card: Done / Missed / Upcoming. The layout agent places it with SehatRem.visitsCard(). */
-  const VISIT_TYPES = ['prescription', 'discharge_summary', 'lab_report'];
+  const VISIT_TYPES = ['prescription', 'discharge_summary'];  // lab reports are not visits
   function visitsCard() {
     const st = apStore(), recs = S.records || [], all = appts();
     const done = recs.filter(r => VISIT_TYPES.indexOf(r.doc_type) >= 0).map(r => ({ date: r.date, what: whatOf(r), rec: r.id, kind: 'rec' }));
-    recs.filter(r => r.follow_up && fuClosed(r.id, st)).forEach(r => {
+    recs.filter(r => r.follow_up && fuClosed(r.id, st) && !(st.na[r.id] && !st.done[r.id] && !st.links[r.id])).forEach(r => {
       const lk = st.links[r.id] && recs.find(o => o.id === st.links[r.id]);
       done.push({ date: (lk && lk.date) || (typeof st.done[r.id] === 'string' ? st.done[r.id] : '') || fuDue(r, st) || r.date, what: whatOf(r), rec: r.id, kind: lk ? 'link' : 'fu' });
     });
@@ -275,6 +280,8 @@
     const row = (a, g) => {
       const meta = [a.date ? (a.src === 'r' ? t('rm_next', { date: fmtDate(a.date) }) : fmtDate(a.date) + (a.time ? ' ' + a.time : '')) : t('rm_nodate'), t('vis_for', { what: a.src === 'r' ? a.what : a.title }), a.src === 'r' ? t('rm_from', { date: fmtDate(a.rdate) }) : ''].filter(Boolean).join(' · ');
       const id = a.src === 'r' ? a.rec : a.id;
+      if (g === 'missed' && staleFU(a)) return '<li><span class="l"><strong>' + esc(t('rm_fu_q')) + '</strong><br><span class="muted small">' + esc([a.title, meta].join(' · ')) + '</span><div class="rm-btns">' +
+        '<button type="button" class="btn small secondary" data-act="rm_done" data-rec="' + esc(id) + '">' + esc(t('rm_fu_yes')) + '</button><button type="button" class="btn small link" data-act="rm_na" data-rec="' + esc(id) + '">' + esc(t('rm_fu_na')) + '</button></div>' + linkSel(a.rec, a.rdate) + '</span></li>';
       return '<li><span class="l"><strong>' + esc(a.title) + '</strong><br><span class="muted small">' + esc(meta) + '</span><div class="rm-btns">' +
         (g === 'missed' ? '<button type="button" class="btn small secondary" data-act="rm_done" data-rec="' + esc(id) + '">' + esc(t('rm_done')) + '</button><button type="button" class="btn small secondary" data-act="rm_resched" data-id="' + esc(a.id) + '">' + esc(t('rm_resched')) + '</button>' : '') +
         calLink(a) + '</div>' + (a.src === 'r' && g === 'missed' ? linkSel(a.rec, a.rdate) : '') + '</span></li>';
@@ -282,7 +289,7 @@
     const drow = d => '<li><span class="l"><strong>' + esc(d.date ? fmtDate(d.date) : t('undated')) + '</strong>' + (d.kind !== 'rec' ? ' <span class="tag green">' + esc(t(d.kind === 'link' ? 'vis_linked' : 'vis_fu_done')) + '</span>' : '') +
       '<br><span class="muted small">' + esc(t('vis_for', { what: d.what })) + '</span>' + (d.rec ? '<div class="rm-btns"><button type="button" class="btn small link" data-act="openrec" data-id="' + esc(d.rec) + '">' + esc(t('rm_open_rec')) + '</button></div>' : '') + '</span></li>';
     const grp = (title, items, fn) => '<h3 style="margin:12px 0 4px">' + esc(t(title)) + ' (' + items.length + ')</h3>' + (items.length ? '<ul class="list rm-ap">' + items.map(fn).join('') + '</ul>' : '<p class="muted small">' + esc(t('vis_none')) + '</p>');
-    return '<div class="card" id="rmVisits"><h2>' + esc(t('vis_title')) + '</h2>' + grp('vis_done', done, drow) + grp('vis_missed', missed, a => row(a, 'missed')) + grp('vis_up', up, a => row(a, 'up')) + '</div>';
+    return '<div class="card" id="rmVisits"><div class="row between"><h2>' + esc(t('vis_title')) + '</h2><button type="button" class="btn small secondary" data-act="rm_ap_new">' + esc(t('rm_ap_add')) + '</button></div>' + grp('vis_done', done, drow) + grp('vis_missed', missed, a => row(a, 'missed')) + grp('vis_up', up, a => row(a, 'up')) + '</div>';
   }
 
   /* ---------- copilot actions feed ---------- */
@@ -300,9 +307,21 @@
   function onSaved(rec) {
     const meds = arr(rec.medicines).filter(m => m && m.name).map(m => ({ name: m.name, strength: m.strength || null, dose: m.dose || null, frequency: m.frequency || null, timing: m.timing || null, duration: m.duration || null, date: rec.date || null }));
     if (meds.length) {
-      const a = { id: 'rx:' + rec.id, type: 'rx', rec: rec.id, date: rec.date || todayKey(), meds };
+      const today = todayKey(), o = ov();
+      const isPrn = m => medSlots(m)[0] === 'prn';
+      const ended = m => { const e = endOf(m, o); return !isPrn(m) && !!e && e < today; };
+      const live = meds.filter(m => !ended(m));
+      const a = { id: 'rx:' + rec.id, type: 'rx', rec: rec.id, date: rec.date || todayKey(), meds: live };
       if (actDoses(a).length) addAct(a);
+      else if (live.length < meds.length) {
+        const last = meds.filter(ended).map(m => endOf(m, o)).sort().pop();
+        addAct({ id: 'rxe:' + rec.id, type: 'rxe', rec: rec.id, date: rec.date || todayKey(), end: last, meds });
+      }
       addAct({ id: 'visit:' + rec.id, type: 'visit', rec: rec.id });
+    }
+    if (rec.follow_up) {  // a follow-up date already past at upload is history, not a missed reminder
+      const st = apStore(), d = parseFU(rec.follow_up, rec.date);
+      if (d && d < todayKey()) { st.late[rec.id] = 1; jset('sehat_appts', st); }
     }
     scan();
   }
@@ -310,15 +329,15 @@
   function scan() {
     if (!S || !S.records || !S.records.length) return;
     const st = apStore(), today = todayKey();
-    S.records.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).filter(r => r.follow_up && !fuClosed(r.id, st)).filter(r => { const d = fuDue(r, st); return d && d < today; })
-      .slice(0, 2).forEach(r => addAct({ id: 'fu:' + r.id, type: 'fu', rec: r.id, text: r.follow_up, date: r.date }));
+    S.records.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).filter(r => r.follow_up && !fuClosed(r.id, st) && !st.late[r.id]).filter(r => { const d = fuDue(r, st); return d && d < today && d >= addDays(today, -30); })
+      .slice(0, 1).forEach(r => addAct({ id: 'fu:' + r.id, type: 'fu', rec: r.id, text: r.follow_up, date: r.date }));
     const pv = S.insights && S.insights.data && Array.isArray(S.insights.data.preventive) ? S.insights.data.preventive : [];
     pv.filter(p => p && p.kind === 'repeat_test' && p.overdue && p.title).forEach(p => addAct({ id: 'rp:' + String(p.kind || '') + ':' + String(p.title).toLowerCase(), type: 'rp', title: p.title, why: p.why || '', records: arr(p.records) }));
   }
   function actionsCard(opts) {
     try { scan(); } catch (e) { /* ignore */ }
     const fst = apStore(), today0 = todayKey();
-    const fuOpen = a => { const r = (S.records || []).find(x => x.id === a.rec); if (!r || fuClosed(r.id, fst)) return false; const d = fuDue(r, fst); return !d || d < today0; };
+    const fuOpen = a => { const r = (S.records || []).find(x => x.id === a.rec); if (!r || fuClosed(r.id, fst) || fst.late[r.id]) return false; const d = fuDue(r, fst); return !d || (d < today0 && d >= addDays(today0, -30)); };
     let l = acts().filter(a => a.type === 'rx' || a.st !== 'rejected').filter(a => a.type !== 'fu' || fuOpen(a)).sort((a, b) => b.ts - a.ts);
     if (opts && opts.recent) l = l.filter(a => a.st === 'new').slice(0, 3); else l = l.slice(0, 6);
     if (!l.length) return '';
@@ -330,10 +349,15 @@
         head = t('rm_rx', { n: ds.length, date: fmtDate(a.date) });
         body = '<ul class="rm-doses">' + a.meds.map(m => {
           const mine = ds.filter(d => d.m === m || curKey(d.m) === curKey(m)), e = endOf(m, o);
+          if (medSlots(m)[0] === 'prn') return '<li>' + esc(medName(m)) + ': ' + esc(t('rm_prn')) + '</li>';
           return '<li>' + esc(medName(m)) + ': ' + esc(mine.map(d => doseTime(d, o)).join(', ') || '-') + ' · ' + esc(e ? t('rm_until', { date: fmtDate(e) }) : t('rm_noend')) + '</li>';
         }).join('') + '</ul>';
         if (a.st === 'new') b = btn('rm_acc', a.id, 'rm_accept', '') + btn('rm_aedit', a.id, 'rm_edit') + btn('rm_rej', a.id, 'rm_reject', 'danger') + '</div><p class="muted small" style="margin:6px 0 0">' + esc(t('rm_rx_note')) + '</p><div>';
         else b = '<span class="small">' + esc(t(a.st === 'accepted' ? 'rm_accepted' : 'rm_rejected')) + '</span> ' + (a.st === 'accepted' ? btn('rm_aedit', a.id, 'rm_edit') : '') + btn('rm_undo', a.id, 'rm_undo', 'link');
+      } else if (a.type === 'rxe') {
+        head = t('rm_rxe', { date: fmtDate(a.end || a.date) });
+        body = '<ul class="rm-doses">' + a.meds.map(m => '<li>' + esc(medName(m)) + (medSlots(m)[0] === 'prn' ? ': ' + esc(t('rm_prn')) : '') + '</li>').join('') + '</ul>';
+        b = btn('rm_dis', a.id, 'rm_dismiss', 'secondary') + btn('rm_anyway', a.id, 'rm_anyway', 'link');
       } else if (a.type === 'fu') {
         head = t('rm_fu', { text: a.text, date: fmtDate(a.date) });
         const fr = (S.records || []).find(x => x.id === a.rec), due = fr ? fuDue(fr, fst) : parseFU(a.text, a.date);
@@ -398,7 +422,7 @@
       const st = apStore(); st.resched[ED.rec] = v; jset('sehat_appts', st);
     } else if (ED.kind === 'meds') {
       const o = ov();
-      q('[data-t]').forEach(i => { if (i.value) o.t[i.dataset.t] = i.value; });
+      q('[data-t]').forEach(i => { if (i.value) { o.t[i.dataset.t] = i.value; delete o.s[i.dataset.t]; } });  // a new time clears an old snooze
       q('[data-d]').forEach(i => { const v = i.value.trim(), k = i.dataset.d; if (v) o.d[k] = v; else delete o.d[k]; });
       q('[data-e]').forEach(i => { if (i.value) o.e[i.dataset.e] = i.value; else delete o.e[i.dataset.e]; });
       ovSave(o);
@@ -426,6 +450,16 @@
       render();
     } else if (a === 'rm_aedit') { const x = rxMeds(id); if (x) editMeds(x.meds.map(m => ({ m, date: x.date }))); }
     else if (a === 'rm_dis') { setSt(id, 'rejected'); cgChanged(); render(); }
+    else if (a === 'rm_na') { const st = apStore(); st.na[el.dataset.rec || id] = todayKey(); jset('sehat_appts', st); render(); }
+    else if (a === 'rm_anyway') {  // run the normal flow: restart each ended course from today
+      const x = acts().find(q => q.id === id && q.type === 'rxe'); if (!x) return;
+      const o = ov(), today = todayKey();
+      x.meds.forEach(m => { if (medSlots(m)[0] !== 'prn' && endOf(m, o) && endOf(m, o) < today) o.e[curKey(m)] = addDays(today, (durDays(m.duration) || 5) - 1); });
+      ovSave(o);
+      const rx = { id: 'rx:' + x.rec, type: 'rx', rec: x.rec, date: x.date, meds: x.meds };
+      if (actDoses(rx).length) { const l = acts().filter(q => q.id !== 'rx:' + x.rec); actsSave(l); addAct(rx); }
+      setSt(id, 'rejected'); render();
+    }
     else if (a === 'rm_done') { const st = apStore(); st.done[el.dataset.rec || id] = todayKey(); jset('sehat_appts', st); render(); }
     else if (a === 'rm_resched') { if (String(id).indexOf('fu:') === 0) editResched(id.slice(3)); else editAppt(id); }
     else if (a === 'rm_cg_call') { setSt(id, 'followed'); cgChanged(); render(); }
@@ -583,7 +617,8 @@
     if (TAKEN_MEM[mk]) return TAKEN_MEM[mk];
     try { return JSON.parse(localStorage.getItem('sehat_taken_' + mk) || '{}') || {}; } catch (e) { return {}; }
   }
-  function caregiverCount() { return jgetP('sehat_actions', [], 'self').filter(a => a && a.type === 'cg' && a.st === 'new').length; }
+  /* caregiver alerts about one member (pid), or all of them */
+  function caregiverCount(pid) { return jgetP('sehat_actions', [], 'self').filter(a => a && a.type === 'cg' && a.st === 'new' && (!pid || a.pid === pid)).length; }
   function cgChanged(force) {
     const n = caregiverCount();
     if (n === CGLAST && !force) return;

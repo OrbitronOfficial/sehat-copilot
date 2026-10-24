@@ -255,7 +255,7 @@ class PreventiveTests(unittest.TestCase):
                 rx("g", "2026-10-05", "Come back x 10 days"),
                 rx("h", "2026-10-06", "Visit when needed")]
         by = {i["records"][0]: i for i in self.items(recs) if i["kind"] == "follow_up"}
-        self.assertEqual((by["f"]["due"], by["f"]["overdue"]), ("2026-11-30", False))
+        self.assertEqual((by["f"]["due"], by["f"]["overdue"]), ("2026-12-01", False))
         self.assertEqual((by["g"]["due"], by["g"]["overdue"]), ("2026-10-15", False))
         self.assertEqual((by["h"]["due"], by["h"]["overdue"]), (None, False))
         late = [i for i in self.items([rx("z", "2026-06-01", "after 1 week")]) if i["kind"] == "follow_up"]

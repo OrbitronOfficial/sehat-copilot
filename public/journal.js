@@ -203,7 +203,7 @@
     }).join('') + '</ul><p class="small" style="margin:10px 0 0"><strong>' + esc(t('pr_disc')) + '</strong></p></div>';
   }
   function nextCard(I) {
-    const xs = arr(I && I.preventive); if (!xs.length) return '';
+    const xs = arr(I && I.preventive).filter(x => !(x && x.kind === 'follow_up' && typeof viewVisits === 'function')); if (!xs.length) return '';  // follow-ups live in the Visits view
     const item = x => {
       const kind = ['repeat_test', 'screening', 'follow_up'].indexOf(x.kind) >= 0 ? '<span class="tag">' + esc(t('nx_' + x.kind)) + '</span> ' : '';
       const due = x.due ? (x.overdue ? '<span class="tag amber">' + esc(t('nx_over', { d: fmtDate(x.due) })) + '</span>' : '<span class="muted small">' + esc(t('nx_due', { d: fmtDate(x.due) })) + '</span>') : '';
