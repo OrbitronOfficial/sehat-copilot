@@ -114,7 +114,9 @@
   let me = null;
   try { me = JSON.parse(localStorage.getItem('sehat_doctor') || 'null'); } catch (e) { /* private mode */ }
   const DEMO = /[?&]demo=1/.test(location.search) || !me;
+  const SEED = /[?&]seed=1/.test(location.search);  // a signed-in doctor can load the sample clinic into their own workspace
   async function firstOpen() {
+    if (SEED) { const n = await seed(true); if (history.replaceState) history.replaceState(null, '', location.pathname); alert('Loaded ' + n + ' sample items into your workspace.'); return; }
     if (!DEMO) return;
     const empty = !(await all()).length && !lsGet('sehat_doc_queue_' + dayKey(Date.now()), []).length && !lsGet(TK, []).length;
     if (!lsGet(FLAG, 0) && empty) await seed(false);
