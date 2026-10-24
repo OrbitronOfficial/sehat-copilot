@@ -7,8 +7,6 @@ recordings. Everything staff add or complete waits in the doctor's daily review.
 Stored with cloud.put_doc: a private Vercel Blob in production, data/team.json locally. Keys and tokens are stored only as SHA-256 hashes.
 """
 import hashlib
-import json
-import os
 import secrets
 import threading
 import time

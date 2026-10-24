@@ -231,8 +231,6 @@ def _extract(b):
         return rec
 
 
-
-
 def _inbox_rw(items=None):
     """Approved prescriptions waiting for the patient's app (private blob on Vercel, data/ locally)."""
     if items is None:

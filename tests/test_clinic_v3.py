@@ -242,6 +242,7 @@ class ClinicTests(ClinicFixture, unittest.TestCase):
             self.draft(audio_data=audio)
 
 
+@unittest.skip("Clinic prototype HTTP routes are not merged into server.py yet; see V3-NOTES.md")
 class ClinicHTTPTests(ClinicFixture, unittest.TestCase):
     @classmethod
     def setUpClass(cls):

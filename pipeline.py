@@ -37,6 +37,7 @@ def _docx_text(data_b64):
     xml = re.sub(r"</w:p>|</w:tc>", "\n", xml)
     return html.unescape(re.sub(r"<[^>]+>", "", xml))
 
+
 DISCLAIMER = {
     "en": "This explanation is for understanding your records only. It is not a diagnosis or "
           "medical advice. Do not start, stop or change any medicine without your doctor.",
