@@ -1097,8 +1097,7 @@ function viewAdd() {
     '<div class="dropzone" id="drop">' +
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>' +
     '<h2>' + esc(t('drop_title')) + '</h2><p class="muted">' + esc(t('drop_hint')) + (window.SehatBulk ? ' ' + esc(t('bulk_hint')) : '') + '</p>' +
-    '<div class="row"><button type="button" class="btn" data-act="choose">' + esc(t('choose_file')) + '</button>' +
-    '<button type="button" class="btn secondary" data-act="photo">' + esc(t('take_photo')) + '</button></div></div>' +
+    '<div class="row"><button type="button" class="btn" data-act="choose">' + esc(t('choose_file')) + '</button></div></div>' +
     '<ol class="how">' + [1, 2, 3].map(n => '<li><span class="how-n">' + n + '</span><div><strong>' + esc(t('how_' + n)) + '</strong><div class="muted small">' + esc(t('how_' + n + 's')) + '</div></div></li>').join('') + '</ol>' +
     '<p class="muted small consent">' + esc(t('consent')) + '</p>' +
     '<div class="card" style="margin-top:16px"><h2 style="margin-bottom:10px">' + esc(t('samples_title')) + '</h2>' + samples +
