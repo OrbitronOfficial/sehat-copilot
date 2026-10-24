@@ -1,8 +1,11 @@
 import os
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-import clinic
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import clinic  # noqa: E402
 
 
 class DemoTests(unittest.TestCase):
