@@ -286,7 +286,7 @@ const SehatFamily = (function () {
     FAM.modal = { kind: 'pin', id }; FAM.menu = false; paint();
     modal('<form id="famPin" novalidate><h2>' + esc(p ? t('fam_pin_title', { name: nameOf(p) }) : t('fam_pin_any_title')) + '</h2>' +
       '<p class="muted small">' + esc(t('fam_lock_note')) + '</p><label>' + esc(t('fam_pin')) + '<input name="pin" type="password" inputmode="numeric" pattern="\\d{4}" maxlength="4" autocomplete="off" class="fam-pinbox"></label>' +
-      '<p class="fam-err" role="alert"></p><div class="row fam-btns"><button type="submit" class="btn">' + esc(t('fam_open')) + '</button><button type="button" class="btn secondary" data-fam="close">' + esc(t('fam_cancel')) + '</button></div></form>');
+      '<p class="fam-err" role="alert"></p><div class="row fam-btns"><button type="submit" class="btn">' + esc(t('fam_open')) + '</button>' + (FAM.bootLock ? '' : '<button type="button" class="btn secondary" data-fam="close">' + esc(t('fam_cancel')) + '</button>') + '</div></form>');
   }
   async function submitPin(form) {
     const id = FAM.modal && FAM.modal.id;
@@ -316,11 +316,11 @@ const SehatFamily = (function () {
   const hba1c = v => ({ name: 'HbA1c (Glycated Hemoglobin)', value: v, unit: '%', ref_low: 4.0, ref_high: 5.6, ref_text: '4.0 - 5.6', ref_source: 'report', flag: 'high', source_text: 'HbA1c (Glycated Hemoglobin) ' + v + ' % 4.0 - 5.6', page: 1, confidence: 1, loinc: '4548-4', standard_name: 'HbA1c' });
   function rameshRecords() {
     return [
-      lab('rec_fam_r_lab1', '2026-02-10', [hba1c(8.1)]),
-      lab('rec_fam_r_lab2', '2026-06-12', [hba1c(8.6)]),
-      lab('rec_fam_r_lab3', '2026-09-20', [hba1c(8.9), { name: 'Fasting Blood Sugar', value: 168, unit: 'mg/dL', ref_low: 70, ref_high: 100, ref_text: '70 - 100', ref_source: 'report', flag: 'high', source_text: 'Fasting Blood Sugar 168 mg/dL 70 - 100', page: 1, confidence: 1, loinc: '1558-6', standard_name: 'Fasting Blood Sugar' }]),
+      lab('rec_fam_r_lab1', '2026-01-08', [hba1c(8.1)]),
+      lab('rec_fam_r_lab2', '2026-04-06', [hba1c(8.6)]),
+      lab('rec_fam_r_lab3', '2026-07-02', [hba1c(8.9), { name: 'Fasting Blood Sugar', value: 168, unit: 'mg/dL', ref_low: 70, ref_high: 100, ref_text: '70 - 100', ref_source: 'report', flag: 'high', source_text: 'Fasting Blood Sugar 168 mg/dL 70 - 100', page: 1, confidence: 1, loinc: '1558-6', standard_name: 'Fasting Blood Sugar' }]),
       normalizeRecord({
-        id: 'rec_fam_r_rx1', profile: 'p_ramesh', doc_type: 'prescription', title: 'Prescription - Dr. K. Rao', date: '2026-09-21', facility: 'Rao Family Clinic', doctor: 'Dr. K. Rao',
+        id: 'rec_fam_r_rx1', profile: 'p_ramesh', doc_type: 'prescription', title: 'Prescription - Dr. K. Rao', date: '2026-07-03', facility: 'Rao Family Clinic', doctor: 'Dr. K. Rao',
         patient: { name: 'Ramesh Tawri', age: '72', sex: 'M' }, language_detected: 'en', handwritten: false, source: 'sample', extracted_by: 'sample', overall_confidence: 1, tests: [],
         medicines: [{ name: 'Tab. Metformin', generic: 'Metformin', strength: '500 mg', dose: '1 tablet', frequency: 'twice a day', timing: 'after food', duration: '3 months', instructions: null, source_text: 'Tab. Metformin 500 mg 1-0-1 after food x 3 months', page: 1, confidence: 1, known: true }],
         diagnoses: [{ name: 'Type 2 Diabetes Mellitus', confidence: 1 }], advice: ['Walk 30 minutes daily', 'Repeat HbA1c in 3 months'], follow_up: null, warnings: [], unread: [], explanation: {}
@@ -331,7 +331,7 @@ const SehatFamily = (function () {
     const had = FAM.list.length > 1;
     const self = byId('self');
     if (!self.name) Object.assign(self, { name: 'Jay Tawri', age: 46, sex: 'M' });
-    if (!had && cryptoOK()) { self.pin = await makePin('1234'); self.hidden = true; }  // parental-control demo: Aarav cannot see Jay
+    if (!had && cryptoOK()) { self.pin = await makePin('1234'); self.hidden = true; FAM.unlocked.self = true; saveUnlocked(); }  // the demo opens Jay on purpose, once  // parental-control demo: Aarav cannot see Jay
     if (!byId('p_ramesh')) FAM.list.push({ id: 'p_ramesh', name: 'Ramesh Tawri', relation: 'father', age: 72, sex: 'M', pin: null, hidden: false });
     if (!byId('p_aarav')) FAM.list.push({ id: 'p_aarav', name: 'Aarav Tawri', relation: 'child', age: 12, sex: 'M', pin: null, hidden: false });
     FAM.list = norm(FAM.list);
