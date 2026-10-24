@@ -2,6 +2,7 @@
 
 Run: python -m unittest discover tests
 """
+import base64
 import http.client
 import json
 import os
@@ -281,6 +282,106 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(out["resting"], [first])
         finally:
             llm._resting.clear()
+
+
+class VoiceAndJournalRouteTests(ServerTests):
+    """Input validation for /api/transcribe and the new JSON routes. The network is always mocked."""
+
+    @staticmethod
+    def clip(n=100):
+        return base64.b64encode(b"\x1aE\xdf\xa3" + b"0" * n).decode()
+
+    def test_transcribe_sends_audio_and_returns_text(self):
+        with mock.patch.object(llm, "transcribe", return_value="what is hba1c") as t:
+            status, out = self.post("/api/transcribe", {"audio": self.clip(), "mime": "audio/webm;codecs=opus", "lang": "hi-IN"})
+        self.assertEqual((status, out), (200, {"text": "what is hba1c"}))
+        audio, mime, name, lang = t.call_args[0]
+        self.assertTrue(audio.startswith(b"\x1aE"))
+        self.assertEqual((mime, name, lang), ("audio/webm", "voice.webm", "hi"))
+
+    def test_transcribe_rejects_bad_input_with_400(self):
+        bad = [{}, {"audio": ""}, {"audio": 5}, {"audio": "!!!not base64!!!", "mime": "audio/webm"},
+               {"audio": self.clip(), "mime": "text/html"}, {"audio": self.clip(), "mime": "audio/exe"}]
+        with mock.patch.object(llm, "transcribe", side_effect=AssertionError("network used")):
+            for body in bad:
+                status, out = self.post("/api/transcribe", body)
+                self.assertEqual(status, 400, body)
+                self.assertTrue(out["error"])
+
+    def test_transcribe_rejects_oversized_audio(self):
+        big = base64.b64encode(b"0" * (server.MAX_AUDIO + 1)).decode()
+        with mock.patch.object(llm, "transcribe", side_effect=AssertionError("network used")):
+            status, out = self.post("/api/transcribe", {"audio": big, "mime": "audio/webm"})
+        self.assertEqual(status, 400)
+        self.assertIn("too long", out["error"])
+
+    def test_transcribe_without_a_working_key_is_503_voice_unavailable(self):
+        with mock.patch.object(llm, "transcribe", side_effect=llm.VoiceUnavailable("none")):
+            status, out = self.post("/api/transcribe", {"audio": self.clip(), "mime": "audio/webm"})
+        self.assertEqual(status, 503)
+        self.assertEqual(out["code"], "voice_unavailable")
+
+    def test_transcribe_empty_result_is_400(self):
+        with mock.patch.object(llm, "transcribe", return_value=""):
+            status, _ = self.post("/api/transcribe", {"audio": self.clip(), "mime": "audio/webm"})
+        self.assertEqual(status, 400)
+
+    def test_llm_transcribe_tries_next_key_and_builds_multipart(self):
+        calls = []
+
+        def fake(url, headers, body, ctype, timeout=0):
+            calls.append((url, headers["Authorization"], body, ctype))
+            if len(calls) == 1:
+                raise llm._Http(429, "rate limit")
+            return {"text": " hello "}
+        with mock.patch.dict(os.environ, {"GROQ_API_KEY": "k1,k2"}), mock.patch.object(llm, "_post_form", fake):
+            self.assertEqual(llm.transcribe(b"AUDIO", "audio/webm", "voice.webm", "hi"), "hello")
+        self.assertEqual([c[1] for c in calls], ["Bearer k1", "Bearer k2"])
+        body = calls[1][2]
+        for part in (b'name="model"', b"whisper-large-v3-turbo", b'name="language"', b'filename="voice.webm"', b"AUDIO"):
+            self.assertIn(part, body)
+        self.assertTrue(calls[1][0].startswith("https://") and "boundary=" in calls[1][3])
+
+    def test_llm_transcribe_all_keys_failing_or_none_is_voice_unavailable(self):
+        def fail(*a, **k):
+            raise llm._Http(401, "bad key")
+        with mock.patch.dict(os.environ, {"GROQ_API_KEY": "k1"}), mock.patch.object(llm, "_post_form", fail):
+            with self.assertRaises(llm.VoiceUnavailable):
+                llm.transcribe(b"A", "audio/webm", "voice.webm", "en")
+        with mock.patch.object(llm, "_keys", return_value=[]):
+            with self.assertRaises(llm.VoiceUnavailable):
+                llm.transcribe(b"A", "audio/webm", "voice.webm", "en")
+
+    def test_llm_post_form_refuses_non_https(self):
+        with self.assertRaises(llm.LLMError):
+            llm._post_form("file:///etc/passwd", {}, b"", "x")
+
+    def test_unsupported_language_is_omitted(self):
+        seen = []
+        with mock.patch.object(llm, "_keys", return_value=["k"]), \
+                mock.patch.object(llm, "_post_form", lambda u, h, body, c, timeout=0: seen.append(body) or {"text": "x"}):
+            llm.transcribe(b"A", "audio/webm", "voice.webm", "xx")
+        self.assertNotIn(b'name="language"', seen[0])
+
+    def test_journal_summary_route(self):
+        entries = [{"date": "2026-10-0%d" % i, "symptoms": ["cough"], "meds_taken": i % 2 == 0} for i in range(1, 5)]
+        status, out = self.post("/api/journal_summary", {"entries": entries, "lang": "en"})
+        self.assertEqual(status, 200)
+        self.assertEqual(out["symptoms"][0]["count"], 4)
+        self.assertEqual(out["adherence"], {"taken": 2, "missed": 2, "unknown": 0})
+        status, out = self.post("/api/journal_summary", {"entries": "bad"})
+        self.assertEqual((status, out["entries"]), (200, 0))
+
+    def test_insights_route_passes_patient_and_returns_new_keys(self):
+        status, out = self.post("/api/insights", {"records": [LAB], "patient": {"age": 55, "sex": "F"}})
+        self.assertEqual(status, 200)
+        for key in ("persistent", "preventive", "wellness"):
+            self.assertIn(key, out)
+        self.assertTrue(any(i["kind"] == "screening" for i in out["preventive"]))
+
+
+for _name in [n for n in dir(ServerTests) if n.startswith("test_") and n not in VoiceAndJournalRouteTests.__dict__]:
+    setattr(VoiceAndJournalRouteTests, _name, None)  # run only the new tests, not the inherited ones
 
 
 class HandlerUnitTests(unittest.TestCase):

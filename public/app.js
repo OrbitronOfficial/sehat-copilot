@@ -808,8 +808,11 @@ async function loadDemo() {
     await dbPut('meta', S.patient, 'patient');
     for (const raw of arr(d.records)) {
       const r = normalizeRecord(raw);
+      r.profile = 'self';  // family.js: the bundled demo records are Jay's (the 'self' profile)
       await saveRecordLocal(r);
     }
+    await famDemo();  // family.js: adds Jay's father and son, with sample records for the father
+    if (typeof journalSeedDemo === 'function') journalSeedDemo(); /* journal.js */
     S.view = 'timeline'; S.detailId = null;
   } catch (e) {
     showError(e.message, loadDemo);
@@ -818,7 +821,9 @@ async function loadDemo() {
 }
 
 async function saveRecordLocal(r) {
+  const elsewhere = famStamp(r);  // family.js: stamps r.profile; true if it belongs to another profile
   await dbPut('records', r);
+  if (elsewhere) return;
   const i = S.records.findIndex(x => x.id === r.id);
   if (i >= 0) S.records[i] = r; else S.records.push(r);
 }
@@ -890,11 +895,12 @@ async function saveDraft() {
     rec = normalizeRecord(rec);
     if (S.editingId && S.editingId !== rec.id) rec.id = S.editingId;
     await saveRecordLocal(rec);
+    if (!S.editingId && window.SehatRem) { try { SehatRem.onSaved(rec); } catch (x) { /* reminders.js: copilot actions */ } }
     if (S.pendingFile) await dbPut('files', { id: rec.id, mime: S.pendingFile.mime, dataUrl: S.pendingFile.dataUrl });
     const p = rec.patient || {};
     if ((!S.patient || !S.patient.name) && (p.name || p.age || p.sex)) {
       S.patient = { name: p.name || null, age: p.age || null, sex: p.sex || null, abha: S.patient ? S.patient.abha || null : null };
-      await dbPut('meta', S.patient, 'patient');
+      await dbPut('meta', S.patient, profKey('patient'));
     }
     S.draft = null; S.pendingFile = null; S.previewFile = null; S.stage = 'idle'; S.editingId = null;
     S.overview = {};
@@ -947,6 +953,7 @@ function viewAdd() {
         '<button type="button" class="btn secondary small" data-act="sample" data-id="' + esc(s.id) + '">' + esc(s.title || s.id) + '</button>').join('') + '</div>'
       : '<p class="muted">' + esc(t('samples_none')) + '</p>');
   return '<div class="page-head"><h1>' + esc(t('add_title')) + '</h1><p>' + esc(t('add_sub')) + '</p></div>' +
+    (window.SehatRem ? SehatRem.actionsCard({ recent: true }) : '') /* reminders.js */ +
     '<div class="dropzone" id="drop">' +
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>' +
     '<h2>' + esc(t('drop_title')) + '</h2><p class="muted">' + esc(t('drop_hint')) + '</p>' +
@@ -1153,6 +1160,7 @@ function viewDetail() {
     '<div class="row"><button type="button" class="btn secondary" data-act="edit" data-id="' + esc(r.id) + '">' + esc(t('edit')) + '</button>' +
     '<button type="button" class="btn danger" data-act="delete" data-id="' + esc(r.id) + '">' + esc(t('delete')) + '</button></div></div>' +
     (arr(r.warnings).length ? '<div class="notice"><strong>' + esc(t('warnings_title')) + '</strong><ul>' + r.warnings.map(w => '<li>' + esc(warnText(w)) + '</li>').join('') + '</ul></div>' : '') +
+    (window.SehatRem ? SehatRem.actionsCard({ recent: true }) : '') /* reminders.js: shown right after saving */ +
     '<div class="detail"><div class="stack">' +
     '<div class="card expl"><h2 style="margin-bottom:10px">' + esc(t('expl_title')) + '</h2><div id="expl"></div></div>' +
     '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('structured')) + '</h2>' + (kv ? '<dl class="kv" style="margin-bottom:12px">' + kv + '</dl>' : '') +
@@ -1319,15 +1327,15 @@ function normInsights(d) {
     if (!x.latest) x.latest = x.points[x.points.length - 1] || {};
     return x;
   });
-  return { conditions: arr(d.conditions), medicines: arr(d.medicines), tests, attention: arr(d.attention), questions: arr(d.questions), cross: arr(d.cross), vitals: arr(d.vitals), disclaimer: d.disclaimer || '' };
+  return { conditions: arr(d.conditions), medicines: arr(d.medicines), tests, attention: arr(d.attention), questions: arr(d.questions), cross: arr(d.cross), vitals: arr(d.vitals), disclaimer: d.disclaimer || '', persistent: arr(d.persistent), preventive: arr(d.preventive), wellness: arr(d.wellness) /* journal.js cards */ };
 }
 async function runInsights(key) {
   let res = null;
-  try { res = await api('/api/insights', { records: S.records.map(lite), vitals: S.vitals, lang }); } catch (e) { /* fall back to profile() */ }
+  try { res = await api('/api/insights', { records: S.records.map(lite), vitals: S.vitals, lang, patient: { age: (S.patient || {}).age, sex: (S.patient || {}).sex } }); } catch (e) { /* fall back to profile() */ }
   if (!S.insights || S.insights.key !== key) return;
   if (res && typeof res === 'object' && Array.isArray(res.tests)) {
     S.insights.state = 'ok'; S.insights.data = normInsights(res); S.insights.stale = null;
-    try { localStorage.setItem('sehat_insights', JSON.stringify({ key, day: new Date().toISOString().slice(0, 10), data: res })); } catch (x) { /* ignore */ }
+    try { localStorage.setItem(profKey('sehat_insights'), JSON.stringify({ key, day: new Date().toISOString().slice(0, 10), data: res })); } catch (x) { /* ignore */ }
   } else S.insights.state = 'fail';
   const typing = document.activeElement && document.activeElement.closest && document.activeElement.closest('#vitForm');
   if ((S.view === 'health' || S.view === 'visit') && !typing) render();
@@ -1341,8 +1349,8 @@ function getInsights() {
     const stale = S.insights && (S.insights.data || S.insights.stale) || null;
     S.insights = { key, state: 'loading', data: null, stale };
     let saved = null;
-    try { saved = JSON.parse(localStorage.getItem('sehat_insights') || 'null'); } catch (x) { /* ignore */ }
-    if (saved && saved.key === key && saved.day === new Date().toISOString().slice(0, 10) && saved.data && Array.isArray(saved.data.tests)) {
+    try { saved = JSON.parse(localStorage.getItem(profKey('sehat_insights')) || 'null'); } catch (x) { /* ignore */ }
+    if (saved && saved.key === key && saved.day === new Date().toISOString().slice(0, 10) && saved.data && Array.isArray(saved.data.tests) && Array.isArray(saved.data.preventive)) {  // a profile cached before Round 2 lacks the new cards
       S.insights.state = 'ok'; S.insights.data = normInsights(saved.data);
     } else runInsights(key);
   }
@@ -1356,14 +1364,14 @@ function curInsights() { return S.insights && S.insights.state === 'ok' && S.ins
 /* A medicine written in a record is not proof it is taken today: the user confirms each one
    before it can enter the schedule, the reminders or "Next up". Kept on this device. */
 function curKey(m) { return String((m && m.name) || '').trim().toLowerCase(); }
-function curGet() { try { return JSON.parse(localStorage.getItem('sehat_current') || '{}') || {}; } catch (e) { return {}; } }
+function curGet() { try { return JSON.parse(localStorage.getItem(profKey('sehat_current')) || '{}') || {}; } catch (e) { return {}; } }
 function curSet(k, on) {
   const c = curGet();
   if (on) c[k] = 1; else delete c[k];
-  try { localStorage.setItem('sehat_current', JSON.stringify(c)); } catch (e) { /* storage blocked */ }
+  try { localStorage.setItem(profKey('sehat_current'), JSON.stringify(c)); } catch (e) { /* storage blocked */ }
 }
 function schedAll() { return curInsights().medicines.filter(m => m.status !== 'course_ended').map(m => ({ m, date: m.date })); }
-function schedMeds() { const c = curGet(); return schedAll().filter(x => c[curKey(x.m)]); }
+function schedMeds() { const c = curGet(); return schedAll().filter(x => c[curKey(x.m)] && !(window.SehatRem && SehatRem.hide(x.m))); /* reminders.js: drops stopped / ended courses */ }
 function confirmMedsCard() {
   const all = schedAll(), c = curGet();
   if (!all.length) return '';
@@ -1481,6 +1489,7 @@ function medsRecordedCard(I) {
     }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') +
     '<p class="muted small" style="margin:10px 0 0">' + esc(t('med_note')) + '</p></div>';
 }
+function jrH(I, w) { return typeof journalHTML === 'function' ? journalHTML(I, w) : ''; } /* journal.js hook */
 function viewHealth() {
   const head = '<div class="page-head"><h1>' + esc(t('health_title')) + '</h1><p>' + esc(t('health_sub')) + '</p></div>';
   if (!S.records.length && !S.vitals.length) return head + '<div class="card empty"><p>' + esc(t('none_yet')) + '</p><button type="button" class="btn" data-act="nav" data-view="add">' + esc(t('go_add')) + '</button></div>' +
@@ -1523,9 +1532,10 @@ function viewHealth() {
     }).join('') + '</ul>' : '<p class="muted">' + esc(t('no_items')) + '</p>') + '</div>';
   const patientCard = '<div class="card"><h2 style="margin-bottom:10px">' + esc(t('h_patient')) + '</h2><dl class="kv"><dt>' + esc(t('h_name')) + '</dt><dd>' + esc(p.name || '-') + '</dd><dt>' + esc(t('h_age')) + '</dt><dd>' + esc(p.age || '-') + '</dd><dt>' + esc(t('h_sex')) + '</dt><dd>' + esc(sexLbl(p.sex) || '-') + '</dd><dt>' + esc(t('h_abha')) + '</dt><dd class="mono">' + esc(ab ? ab + ' (' + t('mock_tag') + ')' : t('not_linked')) + '</dd></dl></div>';
   const sec = (k, body) => '<section class="hsec"><div class="kicker">' + esc(t(k)) + '</div>' + body + '</section>';
-  return headV + dashHTML(I) + sec('kick_wellness', wellnessCard(I)) + tiles +
-    sec('kick_results', '<div class="stack">' + attn + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>') +
-    sec('kick_meds', '<div class="stack">' + medsRecordedCard(I) + confirmMedsCard() + medsTodayCard(schedMeds()) + pharmacistCard(sched) + '</div>') +
+  return headV + (window.SehatRem ? SehatRem.actionsCard() : '') /* reminders.js */ + dashHTML(I) + jrH(I, 'top') + sec('kick_wellness', wellnessCard(I)) + tiles +
+    sec('kick_results', '<div class="stack">' + attn + jrH(I, 'risk') + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>') +
+    sec('kick_meds', '<div class="stack">' + medsRecordedCard(I) + confirmMedsCard() + medsTodayCard(schedMeds()) + (window.SehatRem ? SehatRem.apptCard() : '') /* reminders.js */ + pharmacistCard(sched) + '</div>') +
+    jrH(I, 'habits') +
     sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>') +
     sec('kick_about', '<div class="health-grid">' + patientCard + condCard + '</div>');
 }
@@ -1738,7 +1748,7 @@ async function abhaVerify() {
     name: old.name || res.name || null, age: old.age == null ? null : old.age, sex: old.sex || null,
     abha: { number: res.abha_number || fmtAbha(f.digits), address: res.abha_address || '', name: res.name || '' }
   };
-  await dbPut('meta', S.patient, 'patient');
+  await dbPut('meta', S.patient, profKey('patient'));
   f.step = 3; render();
 }
 function abhaGrant(form) {
@@ -1778,7 +1788,7 @@ async function linkAbha(digits, importOnly) {
       name: old.name || res.name || null, age: old.age == null ? null : old.age, sex: old.sex || null,
       abha: { number: res.abha_number || fmtAbha(digits), address: res.abha_address || '', name: res.name || '' }
     };
-    await dbPut('meta', S.patient, 'patient');
+    await dbPut('meta', S.patient, profKey('patient'));
     if (importOnly) {
       let n = 0;
       for (const raw of arr(res.records)) {
@@ -1810,8 +1820,9 @@ async function exportFhir() {
 async function wipeAll() {
   if (!confirm(t('confirm_wipe'))) return;
   await dbClear('records'); await dbClear('files'); await dbClear('meta');
+  famReset();  // family.js: forget every profile, back to a single 'self'
   try {
-    Object.keys(localStorage).filter(k => /^sehat_(insights|current|skip|taken_|notified_)/.test(k)).forEach(k => localStorage.removeItem(k));
+    Object.keys(localStorage).filter(k => /^sehat_(insights|current|skip|taken_|notified_|actions|appts|rem)/.test(k)).forEach(k => localStorage.removeItem(k));
   } catch (e) { /* storage blocked: nothing was cached there */ }
   S.visitNotes = ''; S.medcheck = null; S.abhaFlow = null; S.pendingFile = null; S.previewFile = null;
   if (typeof TAKEN_MEM === 'object' && TAKEN_MEM) Object.keys(TAKEN_MEM).forEach(k => delete TAKEN_MEM[k]);
@@ -1877,11 +1888,11 @@ function buildDoses(P) {
 }
 const isTickable = slot => slot === 'morning' || slot === 'afternoon' || slot === 'night' || slot === 'asis';
 function takenGet() {
-  const k = todayKey();
+  const k = profKey(todayKey());  // family.js: ticks are per profile
   if (!TAKEN_MEM[k]) { try { TAKEN_MEM[k] = JSON.parse(localStorage.getItem('sehat_taken_' + k) || '{}') || {}; } catch (e) { TAKEN_MEM[k] = {}; } }
   return TAKEN_MEM[k];
 }
-function takenSave() { const k = todayKey(); try { localStorage.setItem('sehat_taken_' + k, JSON.stringify(TAKEN_MEM[k] || {})); } catch (e) { /* ignore */ } }
+function takenSave() { const k = profKey(todayKey()); try { localStorage.setItem('sehat_taken_' + k, JSON.stringify(TAKEN_MEM[k] || {})); } catch (e) { /* ignore */ } }
 function remindOn() {
   try { return localStorage.getItem('sehat_remind') === '1' && typeof Notification !== 'undefined' && Notification.permission === 'granted'; } catch (e) { return false; }
 }
@@ -1904,7 +1915,7 @@ function medsTodayCard(P) {
         (detail ? '<br><span class="muted small">' + esc(detail) + '</span>' : '') + '</span>';
       if (!isTickable(slot)) return '<li>' + body + '</li>';
       return '<li><label class="dose"><input type="checkbox" data-dose="' + esc(d.key) + '"' + (tk[d.key] ? ' checked' : '') + '>' + body +
-        '<span class="muted small dose-lbl">' + esc(t('mt_taken')) + '</span></label></li>';
+        '<span class="muted small dose-lbl">' + esc(t('mt_taken')) + '</span></label>' + (window.SehatRem ? SehatRem.doseCtl(d) : '') /* reminders.js: snooze / edit / stop */ + '</li>';
     }).join('') + '</ul></div>';
   });
   const supported = typeof Notification !== 'undefined';
@@ -2026,6 +2037,7 @@ function viewVisit() {
       I.attention.map(a => '<tr><td>' + esc(a.name) + '</td><td class="mono">' + esc(a.value == null ? '' : a.value) + ' ' + esc(a.unit || '') + '</td><td class="mono">' + esc(a.ref_text || '-') + '</td><td>' + esc(fmtDate(a.date)) + '</td><td><strong>' + esc(t('flag_' + normFlag(a.flag))) + '</strong></td></tr>').join('') + '</tbody></table></div>' : none) +
     vitVisitHTML(I) +
     sec(t('visit_changes'), series.length ? '<ul class="qlist">' + series.map(s => '<li><strong>' + esc(s.name) + ':</strong> ' + esc(changeText(s)) + '</li>').join('') + '</ul>' : none) +
+    (typeof journalVisitHTML === 'function' ? journalVisitHTML() : '') + /* journal.js */
     sec(t('visit_q'), (qs.length ? '<ul class="qlist">' + qs.map(q => '<li>' + esc(q) + '</li>').join('') + '</ul>' : '<p class="muted noprint">' + esc(t('visit_noq')) + '</p>') +
       '<h3 style="margin:12px 0 6px">' + esc(t('visit_notes')) + '</h3><textarea id="visitNotes" class="visit-notes" rows="5" aria-label="' + esc(t('visit_notes')) + '">' + esc(notes) + '</textarea>' +
       '<div class="print-notes" id="visitNotesPrint">' + esc(notes) + '</div>') +
@@ -2087,7 +2099,7 @@ async function backupRestore(file) {
     if (!good) throw new Error(t('bk_bad'));
     if (j.patient) {
       S.patient = { name: j.patient.name || null, age: j.patient.age == null ? null : j.patient.age, sex: j.patient.sex || null, abha: j.patient.abha || null };
-      await dbPut('meta', S.patient, 'patient');
+      await dbPut('meta', S.patient, profKey('patient'));
     }
     for (const raw of j.records) await saveRecordLocal(normalizeRecord(raw));
     for (const f of arr(j.files)) await dbPut('files', { id: f.id, mime: String(f.mime || ''), dataUrl: f.dataUrl });
@@ -2121,7 +2133,7 @@ function cleanVital(e) {
   if (VIT_TYPES.indexOf(e.type) < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(String(e.date || '')) || !isNum(e.value)) return null;
   return { id: e.id, type: e.type, date: e.date, value: Number(e.value), value2: e.type === 'bp' && isNum(e.value2) ? Number(e.value2) : null, note: e.note ? String(e.note).slice(0, 200) : null };
 }
-async function saveVitals() { await dbPut('meta', S.vitals, 'vitals'); }
+async function saveVitals() { await dbPut('meta', S.vitals, profKey('vitals')); }  // family.js: per profile
 function vf() {
   if (!S.vform) S.vform = { type: 'bp', date: '', v: '', v2: '', note: '', err: null };
   if (!S.vform.date) S.vform.date = todayKey();
@@ -2483,6 +2495,7 @@ window.addEventListener('resize', syncDiscHeight);
     S.records = arr(await dbGetAll('records')).map(normalizeRecord);
     S.patient = await dbGet('meta', 'patient');
     S.vitals = arr(await dbGet('meta', 'vitals')).map(cleanVital).filter(Boolean);
+    await famBoot();  // family.js: keep only the active profile's records; its own patient and vitals
   } catch (e) { S.records = []; }
   S.ready = true;
   if ((S.records.length || S.vitals.length) && S.view === 'add' && S.stage === 'idle') S.view = 'health';
@@ -2624,6 +2637,7 @@ renderUser();
     renderUser();
   }
   if (!S.records.length) await loadDemo();
+  if (typeof journalSeedDemo === 'function') journalSeedDemo(); /* journal.js */
   const want = (location.search.match(/[?&]view=([a-z]+)/) || [])[1];  // /app?demo=1&view=timeline opens that tab
   if (S.records.length && S.stage === 'idle') { S.view = ['timeline', 'ask', 'abha', 'add'].indexOf(want) >= 0 ? want : 'health'; render(); }
   try { history.replaceState(null, '', '/app'); } catch (e) { /* ignore */ }

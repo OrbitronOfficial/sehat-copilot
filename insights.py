@@ -385,7 +385,374 @@ def _vitals(vitals, lang):
     return [series[k] for k in VITALS if k in series]
 
 
-def build(records, lang="en", today=None, vitals=None):
+# ---- persistent out-of-range results, next steps, wellness tips ----
+_OUT = ("low", "high", "critical")
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+_EVERY = {90: ("about every 3 months", "लगभग हर 3 महीने"), 180: ("about every 6 months", "लगभग हर 6 महीने"),
+          365: ("about once a year", "लगभग साल में एक बार")}
+
+
+def _nice(date):
+    d = _date(date)
+    return f"{d.day} {_MONTHS[d.month - 1]} {d.year}" if d else str(date or "")
+
+
+def _persistent(tests):
+    """Tests whose latest result and the one before it are both outside the range."""
+    out = []
+    for s in tests:
+        pts = [p for p in s["points"] if p["comparable"] and p["date"]]
+        run = []
+        for p in reversed(pts):
+            if p["flag"] not in _OUT:
+                break
+            run.append(p)
+        if len(run) < 2:
+            continue
+        run.reverse()
+        last = run[-1]
+        out.append({"name": s["name"], "unit": last["unit"], "count": len(run), "since": run[0]["date"],
+                    "latest": {"value": last["orig_value"], "date": last["date"], "flag": last["flag"]},
+                    "records": sorted({p["record"] for p in run if p["record"]})})
+    return sorted(out, key=lambda x: (-x["count"], x["name"]))
+
+
+# (title en, hi), tests in the group, typical days, days when worth repeating sooner, when "sooner" applies
+_REPEAT = [
+    (("HbA1c", "HbA1c"), ("HbA1c",), 90, 90, lambda f: True),
+    (("Blood sugar", "ब्लड शुगर"), ("Fasting Blood Sugar", "Random Blood Sugar", "Post Prandial Blood Sugar"),
+     90, 90, lambda f: True),
+    (("Lipid profile", "लिपिड प्रोफ़ाइल"), ("Total Cholesterol", "LDL Cholesterol", "HDL Cholesterol", "Triglycerides"),
+     365, 180, lambda f: any(v in _OUT for v in f.values())),
+    (("Kidney function (creatinine)", "किडनी की जाँच (क्रिएटिनिन)"), ("Serum Creatinine", "Blood Urea"), 180, 180,
+     lambda f: True),
+    (("TSH", "TSH"), ("TSH",), 180, 180, lambda f: True),
+    (("Liver function test", "लिवर फ़ंक्शन टेस्ट"), ("SGPT (ALT)", "SGOT (AST)"), 180, 180, lambda f: True),
+    (("Vitamin D", "विटामिन D"), ("Vitamin D (25-OH)",), None, 90, lambda f: f.get("Vitamin D (25-OH)") == "low"),
+    (("Complete blood count", "कम्प्लीट ब्लड काउंट"), ("Hemoglobin", "Total WBC Count", "Platelet Count"), 180, 90,
+     lambda f: f.get("Hemoglobin") == "low"),
+]
+
+
+def _repeat_items(tests, today, hi):
+    out = []
+    by_name = {s["name"]: s for s in tests}
+    for (title, members, normal, soon, hot) in _REPEAT:
+        found = [by_name[m] for m in members if m in by_name and by_name[m]["latest"]["date"]]
+        if not found:
+            continue
+        flags = {s["name"]: s["latest"]["flag"] for s in found}
+        days = soon if hot(flags) else normal
+        if not days:
+            continue
+        last = max(s["latest"]["date"] for s in found)
+        due = _date(last) + dt.timedelta(days=days)
+        every = _EVERY[days][1 if hi else 0]
+        t = title[1 if hi else 0]
+        recs = {s["latest"]["record"] for s in found if s["latest"]["date"] == last and s["latest"]["record"]}
+        out.append({"kind": "repeat_test", "due": due.isoformat(), "overdue": due < today,
+                    "title": f"दोबारा जाँच: {t}" if hi else f"Repeat test: {t}",
+                    "why": (f"{t} आमतौर पर {every} दोहराया जाता है। आपका पिछला {_nice(last)} को हुआ था." if hi else
+                            f"{t} is usually repeated {every}. Your last one was on {_nice(last)}."),
+                    "records": sorted(recs)})
+    return out
+
+
+def _follow_up_items(records, today, hi):
+    out = []
+    dated = [r for r in records if _date(r.get("date"))]
+    for rec in [r for r in reversed(dated) if r.get("follow_up")][:3]:
+        text = pipeline._s(rec["follow_up"], 200)
+        due = course_end(rec["date"], text)
+        if any(_date(o["date"]) >= (due or _date(rec["date"]) + dt.timedelta(days=1)) for o in dated):
+            continue  # a record from on or after the due date shows that visit already happened
+        d = _nice(rec["date"])
+        out.append({"kind": "follow_up", "due": due.isoformat() if due else None, "overdue": bool(due and due < today),
+                    "title": f"{d} के रिकॉर्ड का फ़ॉलो-अप" if hi else f"Follow-up from your {d} record",
+                    "why": (f"{d} के आपके रिकॉर्ड में लिखा है: \"{text}\"" if hi else
+                            f"Your record from {d} says: \"{text}\""),
+                    "records": [rec.get("id")] if rec.get("id") else []})
+    return out
+
+
+def _clean_patient(patient):
+    p = patient if isinstance(patient, dict) else {}
+    age = ranges.to_number(p.get("age"))
+    sex = str(p.get("sex") or "").strip().lower()
+    return (int(age) if age is not None and 0 < age < 121 else None), ("f" if sex[:1] == "f" else "m" if sex[:1] == "m" else "")
+
+
+def _screening_items(patient, tests, home, today, hi):
+    age, sex = _clean_patient(patient)
+    if age is None:
+        return []
+    out = []
+
+    def add(en, hi_t, why_en, why_hi):
+        out.append({"kind": "screening", "title": hi_t if hi else en, "why": why_hi if hi else why_en,
+                    "due": None, "overdue": False, "records": []})
+
+    sugar = ("HbA1c", "Fasting Blood Sugar", "Random Blood Sugar", "Post Prandial Blood Sugar")
+    lipid = ("Total Cholesterol", "LDL Cholesterol", "HDL Cholesterol", "Triglycerides")
+    bp = next((s for s in home if s["type"] == "bp"), None)
+    if age >= 30 and not (bp and (today - _date(bp["latest"]["date"])).days <= 365):
+        add("Blood pressure check", "ब्लड प्रेशर की जाँच",
+            f"At age {age}, a blood pressure check is usually done about once a year.",
+            f"{age} वर्ष की उम्र में ब्लड प्रेशर की जाँच आमतौर पर साल में एक बार की जाती है।")
+    if age >= 40 and not any(s["name"] in sugar for s in tests):
+        diab = age >= 45
+        add("Diabetes screening" if diab else "Blood sugar check", "डायबिटीज़ की जाँच" if diab else "ब्लड शुगर की जाँच",
+            f"At age {age}, blood sugar is usually checked about once a year, and none is in your records.",
+            f"{age} वर्ष की उम्र में ब्लड शुगर आमतौर पर साल में एक बार जाँची जाती है, और आपके रिकॉर्ड में कोई नहीं है।")
+    if age >= 40 and not any(s["name"] in lipid for s in tests):
+        add("Lipid profile", "लिपिड प्रोफ़ाइल",
+            f"At age {age}, a lipid profile is usually done about every 5 years, and none is in your records.",
+            f"{age} वर्ष की उम्र में लिपिड प्रोफ़ाइल आमतौर पर लगभग हर 5 साल में होती है, और आपके रिकॉर्ड में कोई नहीं है।")
+    if age >= 50:
+        add("Colon cancer screening: talk to your doctor", "कोलन कैंसर की जाँच: डॉक्टर से बात करें",
+            f"At age {age}, doctors usually discuss colon cancer screening.",
+            f"{age} वर्ष की उम्र में डॉक्टर आमतौर पर कोलन कैंसर की जाँच पर चर्चा करते हैं।")
+    if sex == "f" and age >= 21:
+        add("Cervical screening: talk to your doctor", "सर्वाइकल जाँच: डॉक्टर से बात करें",
+            f"At age {age}, cervical screening is usually discussed about every 3 years.",
+            f"{age} वर्ष की उम्र में सर्वाइकल जाँच पर आमतौर पर लगभग हर 3 साल में चर्चा होती है।")
+    if sex == "f" and age >= 40:
+        add("Mammography: talk to your doctor", "मैमोग्राफ़ी: डॉक्टर से बात करें",
+            f"At age {age}, doctors usually discuss mammography for women.",
+            f"{age} वर्ष की उम्र में डॉक्टर महिलाओं के लिए मैमोग्राफ़ी पर चर्चा करते हैं।")
+    return out
+
+
+def _preventive(records, tests, home, patient, today, lang):
+    """Next steps by code: typical repeat intervals, written follow-ups, age and sex screenings."""
+    hi = lang == "hi"
+    items = _repeat_items(tests, today, hi) + _follow_up_items(records, today, hi)
+    items += _screening_items(patient, tests, home, today, hi)
+    return sorted(items, key=lambda i: (not i["overdue"], i["due"] is None, i["due"] or ""))
+
+
+def _wellness(tests, home, conditions, patient, lang):
+    """General lifestyle tips, each with the record value or age that triggered it."""
+    hi = lang == "hi"
+    by = {s["name"]: s for s in tests}
+    out, seen = [], set()
+
+    def add(area, en, hi_t, why_en, why_hi, recs=()):
+        if (area, en) not in seen:
+            seen.add((area, en))
+            out.append({"area": area, "tip": hi_t if hi else en, "why": why_hi if hi else why_en,
+                        "records": sorted({r for r in recs if r})})
+
+    def high(*names):
+        return next((by[n] for n in names if n in by and by[n]["latest"]["flag"] in ("high", "critical")), None)
+
+    def cond(word):
+        return next((c for c in conditions if word in c["name"].lower()), None)
+
+    def says(s, side):
+        p = s["latest"]
+        num = ranges.to_number(p["orig_value"])
+        v = f"{ranges._fmt(num) if num is not None else p['orig_value']} {p['orig_unit']}".strip()
+        return (f"आपका {s['name']} {_nice(p['date'])} को {v} था, रिपोर्ट की छपी सीमा {side[1]}",
+                f"Your {s['name']} was {v} on {_nice(p['date'])}, {side[0]} the printed range")
+
+    over = ("above", "से अधिक")
+    sugar = high("HbA1c", "Fasting Blood Sugar", "Post Prandial Blood Sugar", "Random Blood Sugar")
+    diab = cond("diabetes")
+    if sugar or diab:
+        if sugar:
+            why_hi, why_en = says(sugar, over)
+            recs = [sugar["latest"]["record"]]
+        else:
+            m = diab["mentions"][-1]
+            why_hi = f"आपके {_nice(m['date'])} के रिकॉर्ड में {diab['name']} लिखा है"
+            why_en = f"Your record from {_nice(m['date'])} mentions {diab['name']}"
+            recs = [m["record"]]
+        add("diet", "Have fewer sugary drinks and refined carbohydrates such as white bread and sweets, and eat more "
+            "vegetables and whole grains.", "मीठे पेय और मैदा जैसे रिफ़ाइंड कार्बोहाइड्रेट (सफ़ेद ब्रेड, मिठाई) कम लें, और "
+            "सब्ज़ियाँ व साबुत अनाज ज़्यादा खाएँ।", why_en, why_hi, recs)
+        add("activity", "Walking for about 30 minutes on most days is a common general suggestion; check with your "
+            "doctor first.", "ज़्यादातर दिन लगभग 30 मिनट पैदल चलना एक आम सुझाव है; पहले डॉक्टर से पूछ लें।",
+            why_en, why_hi, recs)
+    fat = high("LDL Cholesterol", "Total Cholesterol", "Triglycerides")
+    if fat:
+        why_hi, why_en = says(fat, over)
+        add("diet", "Eat less fried and oily food, and more fibre such as vegetables, fruit and pulses.",
+            "तला-भुना और चिकना खाना कम खाएँ, और सब्ज़ियाँ, फल व दालें जैसा फ़ाइबर ज़्यादा लें।", why_en, why_hi,
+            [fat["latest"]["record"]])
+    bp = next((s for s in home if s["type"] == "bp" and s["latest"]["flag"] in ("high", "critical")), None)
+    htn = cond("hypertension")
+    if bp or htn:
+        if bp:
+            p = bp["latest"]
+            why_en = f"Your home blood pressure was {p['text']} mmHg on {_nice(p['date'])}, above the usual range"
+            why_hi = f"घर पर {_nice(p['date'])} को आपका ब्लड प्रेशर {p['text']} mmHg था, जो सामान्य सीमा से अधिक है"
+            recs = []
+        else:
+            m = htn["mentions"][-1]
+            why_en = f"Your record from {_nice(m['date'])} mentions {htn['name']}"
+            why_hi = f"आपके {_nice(m['date'])} के रिकॉर्ड में {htn['name']} लिखा है"
+            recs = [m["record"]]
+        add("diet", "Use less salt, and go easy on pickles, papad and packaged snacks.",
+            "नमक कम इस्तेमाल करें, और अचार, पापड़ व पैकेट वाले स्नैक्स कम खाएँ।", why_en, why_hi, recs)
+    hb = by.get("Hemoglobin")
+    if hb and hb["latest"]["flag"] == "low":
+        why_hi, why_en = says(hb, ("below", "से कम"))
+        add("diet", "Include iron-rich foods such as lentils, green leafy vegetables and jaggery, with a source of "
+            "vitamin C like lemon.", "आयरन वाले खाद्य जैसे दालें, हरी पत्तेदार सब्ज़ियाँ और गुड़ लें, साथ में नींबू जैसा "
+            "विटामिन C का स्रोत रखें।", why_en, why_hi, [hb["latest"]["record"]])
+    vd = by.get("Vitamin D (25-OH)")
+    if vd and vd["latest"]["flag"] == "low":
+        why_hi, why_en = says(vd, ("below", "से कम"))
+        add("habits", "Get some safe morning sunlight, and ask your doctor whether your vitamin D needs testing "
+            "or follow-up.", "सुबह की थोड़ी सुरक्षित धूप लें, और डॉक्टर से पूछें कि विटामिन D की जाँच या फ़ॉलो-अप चाहिए या नहीं।",
+            why_en, why_hi, [vd["latest"]["record"]])
+    liver = high("SGPT (ALT)", "SGOT (AST)")
+    if liver:
+        why_hi, why_en = says(liver, over)
+        add("habits", "Avoid alcohol, and ask your doctor what else is worth avoiding for your liver.",
+            "शराब से दूर रहें, और डॉक्टर से पूछें कि लिवर के लिए और क्या टालना चाहिए।", why_en, why_hi,
+            [liver["latest"]["record"]])
+    age, _ = _clean_patient(patient)
+    ground = (f"At age {age}, " if age else "") + "this is general guidance for adults."
+    ground_hi = (f"{age} वर्ष की उम्र में " if age else "") + "यह वयस्कों के लिए सामान्य सुझाव है।"
+    del out[4:]
+    add("sleep", "Aim for 7 to 9 hours of sleep, at regular times.", "रोज़ नियमित समय पर 7 से 9 घंटे सोने का लक्ष्य रखें।",
+        ground, ground_hi)
+    add("habits", "Avoid smoking and tobacco in any form.", "धूम्रपान और किसी भी रूप में तंबाकू से बचें।", ground, ground_hi)
+    if len(out) < 3:
+        add("activity", "Walking for about 30 minutes on most days is a common general suggestion; check with your "
+            "doctor first.", "ज़्यादातर दिन लगभग 30 मिनट पैदल चलना एक आम सुझाव है; पहले डॉक्टर से पूछ लें।", ground, ground_hi)
+    return out[:6]
+
+
+# ---- symptom diary summary (patient-reported; code only, no model) ----
+_SCALES = {"mood": (1, 5, ("mood", "मनोदशा")), "sleep": (1, 5, ("sleep", "नींद")),
+           "energy": (1, 5, ("energy", "ऊर्जा")), "pain": (0, 10, ("pain", "दर्द"))}
+
+
+def _text(v, n):
+    return re.sub(r"\s+", " ", v).strip()[:n] if isinstance(v, str) else ""
+
+
+def clean_journal(entries, since=None):
+    """Validated diary entries, oldest first, at most 400. Bad dates and non-objects are dropped."""
+    start = _date(since) if since else None
+    out = []
+    for e in entries if isinstance(entries, list) else []:
+        d = _date(e.get("date")) if isinstance(e, dict) else None
+        if not d or (start and d < start):
+            continue
+        row = {"date": d.isoformat()}
+        for k, (lo, top, _) in _SCALES.items():
+            v = ranges.to_number(e.get(k))
+            row[k] = int(v) if v is not None and lo <= v <= top else None
+        syms = e.get("symptoms") if isinstance(e.get("symptoms"), list) else []
+        row["symptoms"] = [t for t in (_text(s, 60) for s in syms) if t][:20]
+        row["meds_taken"] = e.get("meds_taken") if isinstance(e.get("meds_taken"), bool) else None
+        row["side_effects"] = _text(e.get("side_effects"), 120)
+        out.append(row)
+    return sorted(out, key=lambda r: r["date"])[-400:]
+
+
+def _avg(rows, k):
+    vals = [r[k] for r in rows if r[k] is not None]
+    return (sum(vals) / len(vals), len(vals)) if vals else (None, 0)
+
+
+def _trends(rows, hi):
+    """First half of the entries against the second half, for mood, sleep, energy and pain."""
+    better, worse = [], []
+    half = len(rows) // 2
+    for k, (lo, top, names) in _SCALES.items():
+        a, na = _avg(rows[:half], k)
+        b, nb = _avg(rows[half:], k)
+        if na < 3 or nb < 3 or abs(b - a) < (1.0 if k == "pain" else 0.5):
+            continue
+        good = b < a if k == "pain" else b > a
+        nums = f"{a:.1f} → {b:.1f}"
+        name = names[1 if hi else 0]
+        if hi:
+            line = f"मरीज़ ने बताया कि {name} {'बेहतर हुई' if good else 'बिगड़ी'} (औसत {nums}, {top} में से)"
+        else:
+            line = f"Reported {name} {'improved' if good else 'got worse'} (average {nums} out of {top})"
+        (better if good else worse).append(line)
+    return better, worse
+
+
+def _longest_run(days):
+    """Longest run of consecutive calendar days in a sorted list of ISO dates."""
+    best = cur = 0
+    prev = None
+    for d in map(_date, days):
+        cur = cur + 1 if prev and (d - prev).days == 1 else 1
+        best, prev = max(best, cur), d
+    return best
+
+
+def _counted(rows, field, many):
+    """Distinct days per spelling, most frequent first. many: the field holds a list."""
+    seen = {}
+    for r in rows:
+        for s in (r[field] if many else [r[field]] if r[field] else []):
+            seen.setdefault(s.lower(), {"name": s, "dates": set()})["dates"].add(r["date"])
+    return sorted(seen.values(), key=lambda e: (-len(e["dates"]), e["name"].lower()))
+
+
+def journal_summary(entries, since=None, lang="en", today=None):
+    """Counts and trends from the person's own diary. Everything is patient-reported, never a finding."""
+    hi = lang == "hi"
+    rows = clean_journal(entries, since)
+    days = sorted({r["date"] for r in rows})
+    symptoms = [{"name": e["name"], "count": len(e["dates"]), "first": min(e["dates"]), "last": max(e["dates"])}
+                for e in _counted(rows, "symptoms", True)]
+    missed = sorted({r["date"] for r in rows if r["meds_taken"] is False})
+    taken = {r["date"] for r in rows if r["meds_taken"] is True} - set(missed)
+    adherence = {"taken": len(taken), "missed": len(missed), "unknown": len(days) - len(taken) - len(missed)}
+    side = [{"text": e["name"], "count": len(e["dates"])} for e in _counted(rows, "side_effects", False)]
+    better, worse = _trends(rows, hi)
+    concerns = []
+    for s in symptoms:
+        if s["count"] >= 3:
+            concerns.append(f"{s['name']} {s['count']} दिन बताया गया" if hi else f"{s['name']} was reported on {s['count']} days")
+    bad = sorted({r["date"] for r in rows if r["pain"] is not None and r["pain"] >= 7})
+    if bad:
+        top = max(r["pain"] for r in rows if r["pain"] is not None)
+        concerns.append(f"दर्द {len(bad)} दिन 7/10 या उससे अधिक बताया गया (सबसे अधिक {top}/10)" if hi else
+                        f"Pain was reported at 7/10 or more on {len(bad)} day(s) (highest {top}/10)")
+    run = _longest_run(missed)
+    if run >= 2:
+        concerns.append(f"लगातार {run} दिन खुराक छूटी बताई गई" if hi else f"Doses were marked missed on {run} days in a row")
+    qs = []
+    for s in symptoms[:2]:
+        qs.append(f"मैंने {s['count']} दिन {s['name']} दर्ज किया; क्या इसे जाँचना ज़रूरी है?" if hi else
+                  f"I noted {s['name']} on {s['count']} days; is this worth checking?")
+    if bad:
+        qs.append(f"मेरा दर्द {len(bad)} दिन 7/10 या अधिक रहा; ऐसे में मुझे क्या करना चाहिए?" if hi else
+                  f"My pain was 7/10 or more on {len(bad)} day(s); what should I do when it is this strong?")
+    if missed:
+        qs.append(f"मैंने {len(missed)} दिन खुराक छूटी दर्ज की; छूटी खुराक को लेकर सही तरीका क्या है?" if hi else
+                  f"I marked missed doses on {len(missed)} day(s); what is the right way to handle a missed dose?")
+    for f in side[:1]:
+        qs.append(f"मैंने {f['count']} दिन \"{f['text']}\" दर्ज किया; क्या इसे जाँचना ज़रूरी है?" if hi else
+                  f"I noted \"{f['text']}\" on {f['count']} day(s); is this worth checking?")
+    if worse:
+        qs.append("मेरे दर्ज किए अनुसार कुछ बातें बिगड़ीं; इनके लिए मैं क्या देखूँ?" if hi else
+                  "Some of the things I tracked got worse; what should I keep an eye on?")
+    for en, hi_t in (("Is there anything I should track differently in my diary?", "मेरी डायरी में क्या मुझे अलग तरह से दर्ज करना चाहिए?"),
+                     ("What should I keep tracking until my next visit?", "अगली मुलाक़ात तक मुझे क्या दर्ज करते रहना चाहिए?"),
+                     ("Is there anything in my diary that worries you?", "क्या मेरी डायरी में कुछ ऐसा है जो आपको चिंताजनक लगता है?")):
+        if len(qs) < 3:
+            qs.append(hi_t if hi else en)
+    start = _date(since)
+    return {"period": {"from": days[0] if days else (start.isoformat() if start else None),
+                       "to": days[-1] if days else None},
+            "entries": len(rows), "symptoms": symptoms, "improving": better, "worsening": worse,
+            "missed_days": missed, "adherence": adherence, "side_effects": side, "concerns": concerns,
+            "questions": qs[:5], "entry_dates": days}
+
+
+def build(records, lang="en", today=None, vitals=None, patient=None):
     lang = lang if lang in DISCLAIMER else "en"
     today = today or dt.date.today()
     records = sorted((r for r in records or [] if isinstance(r, dict)), key=lambda r: r.get("date") or "")
@@ -410,6 +777,10 @@ def build(records, lang="en", today=None, vitals=None):
                     "क्या मुझे इसे दोबारा नापना चाहिए, और कब?" if hi else
                     f"At home on {p['date']} my {s['name'].lower()} was {p['text']} {s['unit']}, {side[0]} the usual range "
                     f"({s['ref_text']}). Should I measure it again, and when?")})
-    return {"conditions": _conditions(records), "medicines": meds, "tests": tests, "vitals": home,
+    conditions = _conditions(records)
+    return {"conditions": conditions, "medicines": meds, "tests": tests, "vitals": home,
             "attention": attention, "questions": questions, "cross": cross,
+            "persistent": _persistent(tests),
+            "preventive": _preventive(records, tests, home, patient, today, lang),
+            "wellness": _wellness(tests, home, conditions, patient, lang),
             "disclaimer": DISCLAIMER[lang]}

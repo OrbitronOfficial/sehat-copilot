@@ -246,3 +246,59 @@ def write_json(prompt):
     """Text only: explanations, answers, structuring OCR text."""
     order = os.environ.get("TEXT_ORDER", "groq,openrouter,gemini,nvidia").split(",")
     return _first([p.strip() for p in order], prompt, None)
+
+
+# ---- speech to text (voice questions) ----
+GROQ_STT_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
+STT_MODEL = "whisper-large-v3-turbo"
+STT_LANGS = {"en", "hi", "bn", "te", "mr", "ta", "gu", "kn", "ml", "pa", "ur", "ne", "as", "ar", "es", "fr",
+             "de", "pt", "ru", "zh", "ja", "ko", "id", "tr"}
+
+
+class VoiceUnavailable(LLMError):
+    pass
+
+
+def _multipart(fields, filename, mime, data):
+    """A multipart/form-data body built by hand: (bytes, content type)."""
+    boundary = "----sehat" + os.urandom(8).hex()
+    out = []
+    for k, v in fields.items():
+        out.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode("utf-8"))
+    out.append((f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+                f"Content-Type: {mime}\r\n\r\n").encode("utf-8") + data + b"\r\n")
+    out.append(f"--{boundary}--\r\n".encode("utf-8"))
+    return b"".join(out), f"multipart/form-data; boundary={boundary}"
+
+
+def _post_form(url, headers, body, ctype, timeout=CALL_TIMEOUT):
+    if not url.startswith("https://"):  # provider endpoints only, never file: or other schemes
+        raise LLMError("refusing a non-https model endpoint")
+    req = urllib.request.Request(url, data=body, headers={
+        "Content-Type": ctype, "User-Agent": "sehat-copilot/1.0", **headers})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:  # nosec B310 - scheme checked above
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        raise _Http(e.code, e.read().decode("utf-8", "replace")) from e
+    except Exception as e:  # timeouts, DNS, bad JSON
+        raise LLMError(str(e) or type(e).__name__) from e
+
+
+def transcribe(audio, mime, filename, lang=None):
+    """Speech to text through Groq Whisper. Tries each key on 429/401. Returns the text."""
+    fields = {"model": STT_MODEL, "response_format": "json"}
+    if lang in STT_LANGS:
+        fields["language"] = lang
+    body, ctype = _multipart(fields, filename, mime, audio)
+    keys = _keys("GROQ_API_KEY")
+    for key in keys:
+        try:
+            out = _post_form(GROQ_STT_URL, {"Authorization": f"Bearer {key}"}, body, ctype)
+            return str(out.get("text") or "").strip()
+        except _Http as e:
+            if e.code not in (429, 401, 403, 413, 500, 502, 503):
+                raise
+        except LLMError:
+            continue
+    raise VoiceUnavailable("no speech-to-text key available" if not keys else "speech-to-text keys exhausted")

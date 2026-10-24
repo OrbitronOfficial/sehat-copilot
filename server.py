@@ -4,6 +4,8 @@ reads documents, checks values, writes explanations and builds FHIR bundles.
 Local:  python server.py   ->  http://localhost:8820
 Vercel: api/index.py subclasses Handler.
 """
+import base64
+import binascii
 import json
 import mimetypes
 import os
@@ -14,6 +16,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PUBLIC = os.path.join(ROOT, "public")
 MAX_BODY = 6 * 1024 * 1024
+MAX_AUDIO = 8 * 1024 * 1024  # decoded; the base64 body is a third larger
+AUDIO_EXT = {"webm": "webm", "ogg": "ogg", "mp4": "mp4", "m4a": "m4a", "mpeg": "mp3", "mp3": "mp3",
+             "wav": "wav", "x-wav": "wav", "wave": "wav", "flac": "flac", "x-m4a": "m4a", "aac": "m4a"}
 # module scripts need a JavaScript type; Windows can report .js as text/plain
 TYPES = {".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8",
          ".svg": "image/svg+xml", ".glb": "model/gltf-binary", ".css": "text/css; charset=utf-8"}
@@ -94,9 +99,9 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _body(self):
+    def _body(self, limit=MAX_BODY):
         length = int(self.headers.get("Content-Length") or 0)
-        if length > MAX_BODY:
+        if length > limit:
             raise ValueError("That file is too large. Please keep uploads under 3 MB.")
         try:
             data = json.loads(self.rfile.read(length) or b"{}")
@@ -140,7 +145,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         path = self.path.split("?")[0]
         try:
-            b = self._body()
+            b = self._body(MAX_AUDIO * 4 // 3 + 4096 if path == "/api/transcribe" else MAX_BODY)
             lang = b.get("lang") or "en"
             if path == "/api/extract":
                 if not b.get("data"):
@@ -156,7 +161,11 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/ask":
                 out = pipeline.ask(b.get("question"), b.get("records") or [], lang)
             elif path == "/api/insights":
-                out = insights.build(b.get("records") or [], lang, vitals=b.get("vitals"))
+                out = insights.build(b.get("records") or [], lang, vitals=b.get("vitals"), patient=b.get("patient"))
+            elif path == "/api/journal_summary":
+                out = insights.journal_summary(b.get("entries"), b.get("since"), lang)
+            elif path == "/api/transcribe":
+                out = {"text": _transcribe(b)}
             elif path == "/api/medcheck":
                 out = pipeline.medcheck(b.get("medicines") or [], lang)
             elif path == "/api/translate":
@@ -175,6 +184,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(503, {"code": "vision_unavailable",
                                     "error": "The AI document reader is busy right now. Please try again in a "
                                              "minute, or upload a photo instead of a PDF."})
+        except llm.VoiceUnavailable as e:
+            sys.stderr.write(f"Voice unavailable: {e}\n")
+            return self._send(503, {"code": "voice_unavailable",
+                                    "error": "Voice input is not available right now. Please type your question."})
         except llm.LLMError as e:
             sys.stderr.write(f"LLM error: {e}\n")
             return self._send(503, {"error": "The AI reader is busy or unreachable right now. Please try again in a moment."})
@@ -197,6 +210,32 @@ def _extract(b):
         rec["extracted_by"] = f"{saved.get('extracted_by')} (saved reading)"
         rec["warnings"].insert(0, "The live reader is busy, so this sample shows its saved reading.")
         return rec
+
+
+def _transcribe(b):
+    """Validate a base64 voice clip and turn it into text. Raises ValueError (400) on bad input."""
+    raw = b.get("audio")
+    if not isinstance(raw, str) or not raw.strip():
+        raise ValueError("No audio was received.")
+    mime = str(b.get("mime") or "audio/webm").split(";")[0].strip().lower()
+    kind, _, sub = mime.partition("/")
+    if kind not in ("audio", "video") or sub not in AUDIO_EXT:
+        raise ValueError("That audio format is not supported.")
+    if raw.startswith("data:"):
+        raw = raw.partition(",")[2]
+    if len(raw) > MAX_AUDIO * 4 // 3 + 8:
+        raise ValueError("That recording is too long. Please keep it under a minute or two.")
+    try:
+        audio = base64.b64decode(raw, validate=True)
+    except (binascii.Error, ValueError):
+        raise ValueError("The audio was not valid.")
+    if not audio or len(audio) > MAX_AUDIO:
+        raise ValueError("No audio was received." if not audio else "That recording is too long. Please keep it under a minute or two.")
+    code = re.split(r"[-_]", str(b.get("lang") or "").lower())[0]
+    text = llm.transcribe(audio, f"audio/{AUDIO_EXT[sub]}", "voice." + AUDIO_EXT[sub], code)
+    if not text:
+        raise ValueError("I could not hear any words. Please try again.")
+    return text
 
 
 def _record(body):

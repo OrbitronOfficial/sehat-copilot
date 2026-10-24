@@ -209,5 +209,170 @@ class ShapeTests(unittest.TestCase):
         json.dumps(insights.build(DEMO, "hi", today=TODAY))
 
 
+class PersistentTests(unittest.TestCase):
+    def test_two_high_results_in_a_row_are_persistent(self):
+        recs = [lab("a", "2026-03-01", [{"name": "HbA1c", "value": 7.5, "unit": "%"}]),
+                lab("b", "2026-06-01", [{"name": "HbA1c", "value": 7.1, "unit": "%"}]),
+                lab("c", "2026-09-01", [{"name": "HbA1c", "value": 6.9, "unit": "%"}])]
+        p = insights.build(recs, today=TODAY)["persistent"]
+        self.assertEqual(len(p), 1)
+        self.assertEqual((p[0]["name"], p[0]["count"], p[0]["since"]), ("HbA1c", 3, "2026-03-01"))
+        self.assertEqual(p[0]["latest"], {"value": 6.9, "date": "2026-09-01", "flag": "high"})
+        self.assertEqual(p[0]["records"], ["a", "b", "c"])
+
+    def test_back_in_range_or_single_result_is_not_persistent(self):
+        recs = [lab("a", "2026-03-01", [{"name": "HbA1c", "value": 7.5, "unit": "%"},
+                                        {"name": "Hemoglobin", "value": 9, "unit": "g/dL"}]),
+                lab("b", "2026-06-01", [{"name": "HbA1c", "value": 5.2, "unit": "%"}])]
+        self.assertEqual(insights.build(recs, today=TODAY)["persistent"], [])
+
+
+class PreventiveTests(unittest.TestCase):
+    def items(self, recs, **kw):
+        return insights.build(recs, today=TODAY, **kw)["preventive"]
+
+    def test_repeat_test_due_and_overdue_from_fixed_today(self):
+        old = self.items([lab("a", "2026-06-01", [{"name": "HbA1c", "value": 7.1, "unit": "%"}])])
+        item = next(i for i in old if i["title"].endswith("HbA1c"))
+        self.assertEqual((item["kind"], item["due"], item["overdue"]), ("repeat_test", "2026-08-30", True))
+        self.assertIn("1 Jun 2026", item["why"])
+        self.assertEqual(item["records"], ["a"])
+        new = self.items([lab("b", "2026-09-22", [{"name": "HbA1c", "value": 7.1, "unit": "%"}])])
+        item = next(i for i in new if i["title"].endswith("HbA1c"))
+        self.assertEqual((item["due"], item["overdue"]), ("2026-12-21", False))
+
+    def test_lipid_interval_depends_on_range(self):
+        high = self.items([lab("a", "2026-01-01", [{"name": "LDL Cholesterol", "value": 150, "unit": "mg/dL"}])])
+        ok = self.items([lab("a", "2026-01-01", [{"name": "LDL Cholesterol", "value": 80, "unit": "mg/dL"}])])
+        self.assertEqual(next(i for i in high if "Lipid" in i["title"])["due"], "2026-06-30")
+        self.assertEqual(next(i for i in ok if "Lipid" in i["title"])["due"], "2027-01-01")
+
+    def test_follow_up_interval_is_parsed(self):
+        def rx(rec_id, date, text):
+            return pipeline.check({"id": rec_id, "doc_type": "prescription", "date": date,
+                                   "follow_up": text, "medicines": [], "tests": []})
+        recs = [rx("f", "2026-09-01", "Review after 3 months with reports"),
+                rx("g", "2026-10-05", "Come back x 10 days"),
+                rx("h", "2026-10-06", "Visit when needed")]
+        by = {i["records"][0]: i for i in self.items(recs) if i["kind"] == "follow_up"}
+        self.assertEqual((by["f"]["due"], by["f"]["overdue"]), ("2026-11-30", False))
+        self.assertEqual((by["g"]["due"], by["g"]["overdue"]), ("2026-10-15", False))
+        self.assertEqual((by["h"]["due"], by["h"]["overdue"]), (None, False))
+        late = [i for i in self.items([rx("z", "2026-06-01", "after 1 week")]) if i["kind"] == "follow_up"]
+        self.assertTrue(late[0]["overdue"])
+
+    def test_screening_by_age_and_sex(self):
+        def titles(**p):
+            return [i["title"] for i in self.items([], patient=p) if i["kind"] == "screening"]
+        self.assertEqual(self.items([]), [])   # no age, no records: nothing invented
+        self.assertEqual(titles(age=35, sex="F"), ["Blood pressure check", "Cervical screening: talk to your doctor"])
+        t = titles(age=52, sex="female")
+        for want in ("Diabetes screening", "Lipid profile", "Colon cancer screening: talk to your doctor",
+                     "Mammography: talk to your doctor"):
+            self.assertIn(want, t)
+        self.assertNotIn("Mammography: talk to your doctor", titles(age=52, sex="M"))
+
+    def test_screening_skipped_when_test_already_in_records(self):
+        recs = [lab("a", "2026-09-01", [{"name": "HbA1c", "value": 5.2, "unit": "%"}])]
+        t = [i["title"] for i in self.items(recs, patient={"age": 50, "sex": "M"}) if i["kind"] == "screening"]
+        self.assertNotIn("Diabetes screening", t)
+        self.assertIn("Lipid profile", t)
+
+    def test_hindi_items_use_devanagari(self):
+        recs = [lab("a", "2026-06-01", [{"name": "HbA1c", "value": 7.1, "unit": "%"}])]
+        item = insights.build(recs, "hi", today=TODAY)["preventive"][0]
+        self.assertRegex(item["why"], "[ऀ-ॿ]")
+
+
+class WellnessTests(unittest.TestCase):
+    def tips(self, recs, **kw):
+        return insights.build(recs, today=TODAY, **kw)["wellness"]
+
+    def test_high_hba1c_tips_cite_the_record_date(self):
+        tips = self.tips([lab("a", "2026-09-22", [{"name": "HbA1c", "value": 6.9, "unit": "%"}])])
+        diet = [t for t in tips if t["area"] == "diet"]
+        self.assertEqual(diet[0]["why"], "Your HbA1c was 6.9 % on 22 Sep 2026, above the printed range")
+        self.assertEqual(diet[0]["records"], ["a"])
+        self.assertIn("activity", [t["area"] for t in tips])
+
+    def test_no_tip_for_absent_conditions(self):
+        tips = self.tips([lab("a", "2026-09-22", [{"name": "HbA1c", "value": 5.0, "unit": "%"}])])
+        text = " ".join(t["tip"] for t in tips).lower()
+        for word in ("sugary", "salt", "iron", "alcohol", "fried", "sunlight"):
+            self.assertNotIn(word, text)
+
+    def test_always_sleep_and_habit_tip_and_bounded_size(self):
+        for recs in ([], DEMO):
+            tips = self.tips(recs)
+            self.assertTrue(3 <= len(tips) <= 6)
+            self.assertIn("sleep", [t["area"] for t in tips])
+            self.assertEqual(len({(t["area"], t["tip"]) for t in tips}), len(tips))
+            self.assertTrue(all(t["why"] for t in tips))
+
+    def test_low_hemoglobin_and_vitamin_d_and_home_bp(self):
+        recs = [lab("a", "2026-09-01", [{"name": "Hemoglobin", "value": 9, "unit": "g/dL"},
+                                        {"name": "Vitamin D", "value": 12, "unit": "ng/mL"}])]
+        vit = [{"id": "v", "type": "bp", "date": "2026-10-01", "value": 150, "value2": 95}]
+        text = " ".join(t["tip"] for t in self.tips(recs, vitals=vit)).lower()
+        for word in ("iron", "sunlight", "salt"):
+            self.assertIn(word, text)
+
+
+class JournalSummaryTests(unittest.TestCase):
+    def entries(self):
+        out = []
+        for i in range(1, 9):
+            out.append({"date": f"2026-10-{i:02d}", "mood": 2 if i <= 4 else 4, "sleep": 2 if i <= 4 else 4,
+                        "energy": 3, "pain": 8 if i == 2 else 2,
+                        "symptoms": ["Dizziness"] if i in (1, 2, 3, 5, 6, 7) else [],
+                        "meds_taken": False if i in (3, 4) else True, "side_effects": "dry mouth" if i > 6 else "",
+                        "note": "x"})
+        return out
+
+    def test_counts_trends_and_adherence(self):
+        out = insights.journal_summary(self.entries(), lang="en", today=TODAY)
+        self.assertEqual(out["period"], {"from": "2026-10-01", "to": "2026-10-08"})
+        self.assertEqual(out["entries"], 8)
+        self.assertEqual(out["symptoms"], [{"name": "Dizziness", "count": 6, "first": "2026-10-01", "last": "2026-10-07"}])
+        self.assertIn("Reported sleep improved (average 2.0 → 4.0 out of 5)", out["improving"])
+        self.assertTrue(any("mood" in x for x in out["improving"]))
+        self.assertFalse(any("energy" in x for x in out["improving"] + out["worsening"]))
+        self.assertEqual(out["missed_days"], ["2026-10-03", "2026-10-04"])
+        self.assertEqual(out["adherence"], {"taken": 6, "missed": 2, "unknown": 0})
+        self.assertEqual(out["side_effects"], [{"text": "dry mouth", "count": 2}])
+        self.assertEqual(len(out["entry_dates"]), 8)
+
+    def test_concerns_and_safe_questions(self):
+        out = insights.journal_summary(self.entries(), lang="en")
+        text = " ".join(out["concerns"])
+        self.assertIn("Dizziness was reported on 6 days", text)
+        self.assertIn("highest 8/10", text)
+        self.assertIn("2 days in a row", text)
+        self.assertTrue(3 <= len(out["questions"]) <= 5)
+        self.assertIn("I noted Dizziness on 6 days; is this worth checking?", out["questions"])
+        joined = " ".join(out["questions"]).lower()
+        self.assertNotIn("caused", joined)
+        self.assertNotIn("because of your medicine", joined)
+
+    def test_worsening_needs_three_values_in_each_half(self):
+        e = [{"date": f"2026-10-{i:02d}", "sleep": 4 if i <= 4 else 2} for i in range(1, 9)]
+        self.assertEqual(insights.journal_summary(e)["worsening"], ["Reported sleep got worse (average 4.0 → 2.0 out of 5)"])
+        self.assertEqual(insights.journal_summary(e[:5])["worsening"], [])
+
+    def test_cleaning_and_since(self):
+        e = self.entries() + [{"date": "not-a-date", "mood": 1}, "junk",
+                              {"date": "2026-10-09", "mood": 99, "pain": -1, "symptoms": "nope"}]
+        out = insights.journal_summary(e, since="2026-10-05")
+        self.assertEqual(out["period"]["from"], "2026-10-05")
+        self.assertEqual(out["entries"], 5)
+        self.assertEqual(len(insights.clean_journal([{"date": "2026-01-01"}] * 500)), 400)
+        empty = insights.journal_summary([], lang="hi")
+        self.assertEqual((empty["entries"], empty["adherence"]["unknown"]), (0, 0))
+
+    def test_hindi(self):
+        out = insights.journal_summary(self.entries(), lang="hi")
+        self.assertRegex(out["questions"][0], "[ऀ-ॿ]")
+
+
 if __name__ == "__main__":
     unittest.main()
