@@ -299,7 +299,7 @@
       const link = location.origin + '/login?role=staff';
       $('stNew').hidden = false;
       $('stNew').innerHTML = '<div class="st-new"><div class="d-row"><b>' + esc(name) + '</b><span class="d-tag">' + esc(ROLE[role] || role) + '</span><span class="d-status">New code, works once</span></div>' +
-        '<div class="st-code">' + esc(j.code) + '</div><div class="st-link">They sign in at <b>' + esc(link) + '</b>, choose Nurse / staff, and enter this code.</div>' +
+        '<div class="st-code">' + esc(j.code) + '</div><div class="st-link">They go to <b>' + esc(location.host + '/login') + '</b>, choose Nurse / staff, and enter this code.</div>' +
         '<div class="d-row"><button class="btn small primary" id="stCopy">Copy code and link</button><button class="btn small secondary" id="stHide">Done</button></div></div>';
       $('stCopy').onclick = async () => {
         try { await navigator.clipboard.writeText('Your Sehat to-do access code: ' + j.code + '\nSign in at ' + link + ' (Nurse / staff)'); $('stCopy').textContent = 'Copied'; }
@@ -309,6 +309,7 @@
     } catch (e) { $('stNew').hidden = false; $('stNew').innerHTML = '<p class="d-note">' + esc(e.message) + '</p>'; }
   };
   $('staffList').onclick = e => { const id = e.target.dataset.revoke; if (id && confirm('Remove this person\'s access to your to-do list?')) drawTodo({ action: 'revoke', id }); };
+  document.querySelectorAll('.st-site').forEach(b => { b.textContent = location.host + '/login'; });
   setInterval(() => { if (view === 'todo' && document.visibilityState === 'visible') drawTodo({ action: 'state' }); }, 20000);
 
   go(NAV.some(n => n[0] === view) ? view : 'today');
