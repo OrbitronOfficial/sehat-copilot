@@ -35,7 +35,7 @@
     vis_title: 'Visits', vis_done: 'Done', vis_missed: 'Missed', vis_up: 'Upcoming', vis_none: 'Nothing here yet.', vis_for: 'For: {what}', vis_fu_done: 'Follow-up done', vis_linked: 'Visit recorded',
     cg_msg: '{name} missed {med} ({time})', cg_msg_self: 'You have not marked {med} ({time}) as taken', cg_call: 'Call / remind', cg_followed: 'Followed up', cg_note: 'Based on what is marked in this app on this device.',
     td_title: 'Today', td_next: 'Next: {med} at {time}, in {when}', td_over: 'Overdue: {med} was due at {time}', td_alldone: 'No more doses today.',
-    td_all_cal: 'Add all my medicine reminders to Google Calendar', td_links: 'If your browser blocked a tab, use these links:', td_one: 'Add {med}',
+    td_all_cal: 'Add all my medicine reminders to Google Calendar', td_links: 'If your browser blocked a tab, use these links:', td_one: 'Add {med}', td_each: 'Or add one medicine at a time:',
     td_h: '{h} h', td_hm: '{h} h {m} min', td_m: '{m} min', td_now: 'now',
     rm_taken: 'Taken', rm_in15: 'In 15 min', rm_in60: 'In 1 hour', rm_pick: 'Pick a time', rm_set: 'Set', rm_skip: 'Skip this dose', rm_skipped: 'skipped today'
   });
@@ -62,7 +62,7 @@
     vis_title: 'मुलाक़ातें', vis_done: 'हो चुकी', vis_missed: 'छूट गई', vis_up: 'आने वाली', vis_none: 'यहाँ अभी कुछ नहीं है।', vis_for: 'किसलिए: {what}', vis_fu_done: 'फ़ॉलो-अप हो गया', vis_linked: 'मुलाक़ात दर्ज है',
     cg_msg: '{name} ने {med} ({time}) नहीं ली', cg_msg_self: 'आपने {med} ({time}) ली, यह अभी तक दर्ज नहीं किया', cg_call: 'फ़ोन करें / याद दिलाएँ', cg_followed: 'पूछ लिया गया', cg_note: 'यह इस डिवाइस पर इस ऐप में लगाए गए निशानों पर आधारित है।',
     td_title: 'आज', td_next: 'अगली: {med}, {time} बजे, {when} में', td_over: 'देर हो चुकी: {med} का समय {time} था', td_alldone: 'आज की कोई और खुराक नहीं है।',
-    td_all_cal: 'मेरी सभी दवाओं के याद दिलाने Google कैलेंडर में जोड़ें', td_links: 'अगर ब्राउज़र ने कोई टैब रोका, तो ये लिंक इस्तेमाल करें:', td_one: '{med} जोड़ें',
+    td_all_cal: 'मेरी सभी दवाओं के याद दिलाने Google कैलेंडर में जोड़ें', td_links: 'अगर ब्राउज़र ने कोई टैब रोका, तो ये लिंक इस्तेमाल करें:', td_one: '{med} जोड़ें', td_each: 'या एक-एक दवा जोड़ें:',
     td_h: '{h} घंटे', td_hm: '{h} घंटे {m} मिनट', td_m: '{m} मिनट', td_now: 'अभी',
     rm_taken: 'ले ली', rm_in15: '15 मिनट बाद', rm_in60: '1 घंटे बाद', rm_pick: 'समय चुनें', rm_set: 'तय करें', rm_skip: 'यह खुराक छोड़ें', rm_skipped: 'आज छोड़ी गई'
   });
@@ -663,7 +663,9 @@
     const line = next ? t('td_next', { med: medName(next.d.m), time: fmt12(hhmm(next.due)), when: fmtIn(next.due - now) }) :
       late ? t('td_over', { med: medName(late.d.m), time: fmt12(hhmm(late.due)) }) : t('td_alldone');
     return '<h3>' + esc(t('td_title')) + '</h3><p><strong>' + esc(line) + '</strong></p><p class="small">' + esc(t('mt_count', { x: ds.filter(d => tk[d.key]).length, y: ds.length })) + '</p>' +
-      '<div class="rm-btns"><button type="button" class="btn small" data-act="rm_cal_all">' + esc(t('td_all_cal')) + '</button><button type="button" class="btn small secondary" data-act="rm_ics">' + esc(t('rm_ics')) + '</button></div><div id="rmCalLinks"></div>';
+      '<div class="rm-btns"><button type="button" class="btn small" data-act="rm_cal_all">' + esc(t('td_all_cal')) + '</button><button type="button" class="btn small secondary" data-act="rm_ics">' + esc(t('rm_ics')) + '</button></div>' +
+      (function () { const evs = medEvents(); return evs.length > 1 ? '<p class="muted small" style="margin:10px 0 4px">' + esc(t('td_each')) + '</p><div class="rm-btns">' + evs.map(e => '<a class="btn small secondary" target="_blank" rel="noopener" href="' + esc(gcal(e)) + '">' + esc(t('td_one', { med: e.title })) + '</a>').join('') + '</div>' : ''; })() +
+      '<div id="rmCalLinks"></div>';
   }
   function todayCard() { const h = todayInner(); return h ? '<div class="rm-today" id="rmToday">' + h + '</div>' : ''; }
   function refreshToday() {

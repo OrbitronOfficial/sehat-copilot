@@ -151,7 +151,7 @@ Context rules:
 - A medicine may carry a "status". Say the patient "takes" a medicine only when the status says they confirmed it. If the course has ended, say so. Otherwise say it "is written in" the record and is not confirmed as still being taken.
 - Write in {language}, in that language's own script (Hindi in Devanagari, never in Latin letters), whatever script the question uses. Keep test names, medicine names and units as written.
 
-Rules: compare two results of the same test only when their units match; if the units differ, say they cannot be compared directly. Never diagnose. Never advise starting, stopping or changing a medicine or dose. Never write a number that is not in the records. Plain text only, no markdown (no asterisks, no headings); short lines.
+Rules: compare two results of the same test only when their units match; if the units differ, say they cannot be compared directly. Never diagnose. Never advise starting, stopping or changing a medicine or dose. Never write a number that is not in the records. Format: plain text, no markdown (no asterisks, no headings). Write the answer as 2 to 5 short bullet points, one per line, each starting with "• " (a bullet and a space); one short sentence per bullet. A one-line safety reply may skip the bullets.
 
 Return ONE JSON object: {{"kind": "records" | "general" | "doctor", "answer": str, "sources": [ids of the records you used, empty unless kind is "records"]}}
 
@@ -789,6 +789,17 @@ def _mostly_devanagari(text):
     return not letters or sum("ऀ" <= c <= "ॿ" for c in letters) / len(letters) > 0.5
 
 
+def _bullets(text):
+    """Chat answers read as short bullet points: one point per line or sentence, each starting "• "."""
+    text = (text or "").strip()
+    lines = [x.strip(" -*•\t") for x in re.split(r"\n+", text) if x.strip(" -*•\t")]
+    if len(lines) == 1:
+        lines = [x.strip() for x in re.split(r"(?<=[.!?।])\s+(?=[^\s])", lines[0]) if x.strip()]
+    if len(lines) < 2:
+        return text
+    return "\n".join("• " + x for x in lines)
+
+
 def ask(question, records, lang="en"):
     lang = _lang(lang)
     question = _s(question, 600)
@@ -826,7 +837,7 @@ def ask(question, records, lang="en"):
         label = "records"
     else:
         label = "general"
-    return {"answer": (_s(out.get("answer"), 2500) or "").replace("**", ""),
+    return {"answer": _bullets((_s(out.get("answer"), 2500) or "").replace("**", "")),
             "sources": sources, "label": label, "disclaimer": _disclaimer(lang)}
 
 

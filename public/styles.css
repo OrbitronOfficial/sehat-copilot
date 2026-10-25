@@ -2256,3 +2256,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
 /* one button language in dark: filled = light blue with navy text, secondary = outlined */
 :root[data-theme="dark"] .btn:not(.secondary):not(.link):not(.xbtn) { background: linear-gradient(180deg, #A6CCFA 0%, #8EBEF9 100%); color: #04213F; border-color: transparent; box-shadow: 0 10px 26px -12px rgba(142, 190, 249, .55); }
 :root[data-theme="dark"] .btn:not(.secondary):not(.link):not(.xbtn):hover:not(:disabled) { background: linear-gradient(180deg, #BCD9FB 0%, #A6CCFA 100%); }
+
+/* Listen button: a normal pill, never squeezed into a circle */
+.btn.listen { width: auto !important; height: auto !important; min-width: 0; aspect-ratio: auto; border-radius: 999px !important; padding: 6px 14px !important; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.btn.listen svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+.msg-tools { margin-top: 8px; }
