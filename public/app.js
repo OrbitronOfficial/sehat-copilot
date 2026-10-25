@@ -14,7 +14,7 @@ const STR = {
     samples_title: 'Try a sample', samples_none: 'No samples available right now.',
     demo_btn: 'Load full demo profile', demo_hint: 'Adds a sample patient with several records and opens the timeline.',
     processing_title: 'Reading your document',
-    err_unread: 'We could not read any medicines, tests or diagnoses in this document. Try a clearer, well-lit photo with the whole page in view, or a PDF.',
+    err_unread: 'This prescription or report is not readable. Please call your doctor or clinic to confirm the medicines and doses, or try a clearer, well-lit photo of the whole page.',
     warn_hdate: 'The date was read as {date}. Handwritten dates are easy to misread; please confirm it.',
     med_conf: 'You confirmed you take this', warn_ocr: 'This document was read with the backup on-device reader, which is less accurate. Please check every value.',
     warn_hand: 'This document is handwritten. Please check every medicine name and dose against the original.',
@@ -50,6 +50,8 @@ const STR = {
     timeline_title: 'Health timeline', timeline_sub: 'Your saved records, newest first.',
     tl_empty: 'No records yet. Add your first record to start your timeline.', go_add: 'Add a record',
     filter_all: 'All', undated: 'No date',
+    tl_for_doc: 'Showing a new doctor? Narrow it down:', tl_period: 'Period', tl_cond: 'Condition', tl_any: 'All time', tl_m: 'Last {n} months', tl_m1: 'Last month',
+    tl_allcond: 'All conditions', tl_count: '{n} of {m} records shown', tl_nomatch: 'No records match these filters.', tl_reset: 'Show everything',
     n_abn: '{a} abnormal of {n} tests', n_tests: '{n} tests', n_meds: '{n} medicines',
     back: 'Back to timeline', edit: 'Edit', delete: 'Delete', confirm_delete: 'Delete this record from this device?',
     expl_title: 'In plain language', findings: 'Key findings', questions: 'Questions to ask your doctor',
@@ -199,7 +201,7 @@ const STR = {
     samples_title: 'नमूना आज़माएँ', samples_none: 'अभी कोई नमूना उपलब्ध नहीं है।',
     demo_btn: 'पूरी डेमो प्रोफ़ाइल लोड करें', demo_hint: 'एक नमूना मरीज़ और कई रिकॉर्ड जोड़कर टाइमलाइन खोलता है।',
     processing_title: 'आपका दस्तावेज़ पढ़ा जा रहा है',
-    err_unread: 'इस दस्तावेज़ में कोई दवा, जाँच या निदान पढ़ा नहीं जा सका। पूरा पन्ना दिखाते हुए, अच्छी रोशनी में साफ़ फ़ोटो या PDF आज़माएँ।',
+    err_unread: 'यह पर्चा या रिपोर्ट पढ़ने लायक नहीं है। दवाइयाँ और खुराक पक्का करने के लिए अपने डॉक्टर या क्लिनिक को फ़ोन करें, या पूरे पन्ने की साफ़, अच्छी रोशनी में फ़ोटो आज़माएँ।',
     warn_hdate: 'तारीख़ {date} पढ़ी गई। हाथ से लिखी तारीख़ें आसानी से ग़लत पढ़ी जाती हैं; कृपया इसकी पुष्टि करें।',
     med_conf: 'आपने पुष्टि की है कि आप यह लेते हैं', warn_ocr: 'यह दस्तावेज़ डिवाइस पर चलने वाले बैकअप रीडर से पढ़ा गया, जो कम सटीक है। कृपया हर मान जाँचें।',
     warn_hand: 'यह दस्तावेज़ हाथ से लिखा है। कृपया हर दवा का नाम और खुराक मूल दस्तावेज़ से मिलाएँ।',
@@ -235,6 +237,8 @@ const STR = {
     timeline_title: 'स्वास्थ्य टाइमलाइन', timeline_sub: 'आपके सहेजे गए रिकॉर्ड, सबसे नए पहले।',
     tl_empty: 'अभी कोई रिकॉर्ड नहीं है। टाइमलाइन शुरू करने के लिए पहला रिकॉर्ड जोड़ें।', go_add: 'रिकॉर्ड जोड़ें',
     filter_all: 'सभी', undated: 'तारीख नहीं',
+    tl_for_doc: 'नए डॉक्टर को दिखाना है? छाँटें:', tl_period: 'समय', tl_cond: 'बीमारी', tl_any: 'पूरा समय', tl_m: 'पिछले {n} महीने', tl_m1: 'पिछला महीना',
+    tl_allcond: 'सभी बीमारियाँ', tl_count: '{m} में से {n} रिकॉर्ड', tl_nomatch: 'इन फ़िल्टर से कोई रिकॉर्ड नहीं मिला।', tl_reset: 'सब दिखाएँ',
     n_abn: '{n} जाँचों में से {a} असामान्य', n_tests: '{n} जाँचें', n_meds: '{n} दवाइयाँ',
     back: 'टाइमलाइन पर वापस', edit: 'संपादित करें', delete: 'हटाएँ', confirm_delete: 'इस रिकॉर्ड को इस डिवाइस से हटाएँ?',
     expl_title: 'आसान भाषा में', findings: 'मुख्य निष्कर्ष', questions: 'डॉक्टर से पूछने के सवाल',
@@ -648,6 +652,9 @@ function readAsDataURL(file) {
     fr.readAsDataURL(file);
   });
 }
+/* Upload size drives reading time: 1600 px on the long side at JPEG 0.8 keeps printed and
+   handwritten text sharp while a 12 MP phone photo goes up as roughly 250 KB instead of several MB. */
+const UPLOAD_SIDE = 1600, UPLOAD_QUALITY = 0.8;
 function downscale(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -655,14 +662,14 @@ function downscale(file) {
     img.onload = () => {
       let w = img.naturalWidth, h = img.naturalHeight;
       const m = Math.max(w, h);
-      if (m > 1800) { const k = 1800 / m; w = Math.round(w * k); h = Math.round(h * k); }
+      if (m > UPLOAD_SIDE) { const k = UPLOAD_SIDE / m; w = Math.round(w * k); h = Math.round(h * k); }
       const c = document.createElement('canvas');
       c.width = w; c.height = h;
       const x = c.getContext('2d');
       x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
       x.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      resolve(c.toDataURL('image/jpeg', 0.82));
+      resolve(c.toDataURL('image/jpeg', UPLOAD_QUALITY));
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(t('err_image'))); };
     img.src = url;
@@ -794,7 +801,11 @@ function textToBase64(text) {
 }
 
 /* A reading with no medicines, tests or diagnoses is not shown as an empty record. */
-function unreadable(r) { return !arr(r && r.tests).length && !arr(r && r.medicines).length && !arr(r && r.diagnoses).length; }
+function unreadable(r) {
+  if (!arr(r && r.tests).length && !arr(r && r.medicines).length && !arr(r && r.diagnoses).length) return true;
+  // read, but so poorly that showing it would mislead: send the person to their doctor instead
+  return isNum(r.overall_confidence) && Number(r.overall_confidence) < 0.3;
+}
 async function handleFile(file, sampleId) {
   if (!file) return;
   const mime = file.type || guessMime(file.name);
@@ -1265,7 +1276,23 @@ function viewTimeline() {
   if (S.filter !== 'all' && present.indexOf(S.filter) < 0) S.filter = 'all';
   const chips = '<div class="chips" style="margin-bottom:6px"><button type="button" class="chip" data-act="filter" data-type="all" aria-pressed="' + (S.filter === 'all') + '">' + esc(t('filter_all')) + '</button>' +
     present.map(ty => '<button type="button" class="chip" data-act="filter" data-type="' + ty + '" aria-pressed="' + (S.filter === ty) + '">' + esc(t('type_' + ty)) + '</button>').join('') + '</div>';
-  const list = sortedRecords().filter(r => S.filter === 'all' || r.doc_type === S.filter);
+  // for a new doctor: only the last N months, and only one condition
+  const conds = [];
+  S.records.forEach(r => arr(r.diagnoses).forEach(d => { const n = String((d && d.name) || '').trim(); if (n && !conds.some(c => c.toLowerCase() === n.toLowerCase())) conds.push(n); }));
+  if (S.tlCond && !conds.some(c => c.toLowerCase() === S.tlCond.toLowerCase())) S.tlCond = '';
+  const since = S.tlMonths ? new Date(Date.now() - S.tlMonths * 30.44 * 864e5).toISOString().slice(0, 10) : '';
+  const hasCond = r => arr(r.diagnoses).some(d => String((d && d.name) || '').trim().toLowerCase() === S.tlCond.toLowerCase());
+  const chip = (act, v, on, label) => '<button type="button" class="chip" data-act="' + act + '" data-v="' + esc(v) + '" aria-pressed="' + on + '">' + esc(label) + '</button>';
+  const narrow = '<div class="card tl-narrow"><p class="muted small" style="margin:0 0 8px">' + esc(t('tl_for_doc')) + '</p>' +
+    '<div class="chips"><span class="muted small">' + esc(t('tl_period')) + ':</span>' + chip('tlmonths', 0, !S.tlMonths, t('tl_any')) + chip('tlmonths', 1, S.tlMonths === 1, t('tl_m1')) +
+    [2, 3, 6, 12].map(n => chip('tlmonths', n, S.tlMonths === n, t('tl_m', { n }))).join('') + '</div>' +
+    (conds.length ? '<div class="chips" style="margin-top:8px"><span class="muted small">' + esc(t('tl_cond')) + ':</span>' + chip('tlcond', '', !S.tlCond, t('tl_allcond')) +
+      conds.slice(0, 12).map(c => chip('tlcond', c, !!S.tlCond && S.tlCond.toLowerCase() === c.toLowerCase(), c)).join('') + '</div>' : '') + '</div>';
+  const typed = sortedRecords().filter(r => S.filter === 'all' || r.doc_type === S.filter);
+  const list = typed.filter(r => (!since || (r.date && String(r.date) >= since)) && (!S.tlCond || hasCond(r)));
+  const narrowed = !!(S.tlMonths || S.tlCond);
+  const countLine = narrowed ? '<p class="muted small">' + esc(t('tl_count', { n: list.length, m: typed.length })) + ' · <button type="button" class="btn small link" data-act="tlreset">' + esc(t('tl_reset')) + '</button></p>' : '';
+  if (!list.length) return head + chips + narrow + countLine + '<div class="card empty"><p>' + esc(t('tl_nomatch')) + '</p></div>';
   let out = '', cur = null;
   list.forEach(r => {
     const key = r.date ? String(r.date).slice(0, 7) : 'none';
@@ -1278,7 +1305,7 @@ function viewTimeline() {
     out += timelineCard(r);
   });
   if (cur !== null) out += '</div>';
-  return head + chips + out;
+  return head + chips + narrow + countLine + out;
 }
 function timelineCard(r) {
   const tests = arr(r.tests), abn = tests.filter(x => isAbn(x.flag)).length;
@@ -2482,7 +2509,7 @@ Jay's overall health profile demonstrates **stable glycemic management** on mono
 function viewHealth() {
   const head = '<div class="page-head"><h1>' + esc(t('health_title')) + '</h1><p>' + esc(t('health_sub')) + '</p></div>';
   if (!S.records.length && !S.vitals.length) return head + '<div class="card empty"><p>' + esc(t('none_yet')) + '</p><button type="button" class="btn" data-act="nav" data-view="add">' + esc(t('go_add')) + '</button></div>' +
-    hubTiles();  // wellness.js
+    (typeof hubTiles === 'function' ? hubTiles() : '');  // wellness.js
   const p = S.patient || {}, ab = abhaNumber(p);
   const sexLbl = s => { const v = String(s || '').toLowerCase(); return v === 'male' || v === 'm' ? t('sex_male') : (v === 'female' || v === 'f' ? t('sex_female') : (s || '')); };
   const headV = '<div class="page-head row between"><div><div class="kicker">' + esc(t('health_title')) + '</div><h1>' + esc(greetingLine()) + '</h1><p>' +
@@ -2527,7 +2554,7 @@ function viewHealth() {
   const sec = (k, body, open) => '<details class="hsec" data-k="' + k + '"' + ((S.secOpen && k in S.secOpen ? S.secOpen[k] : open) ? ' open' : '') +
     '><summary class="kicker">' + esc(t(k)) + '</summary>' + body + '</details>';
   // The overview only; medicines, visits, journal and wellness have their own views (hubTiles links to them).
-  return headV + dashHTML(I) + tiles + hubTiles() /* wellness.js */ + (window.SehatRem ? SehatRem.actionsCard() : '') /* reminders.js */ +
+  return headV + dashHTML(I) + tiles + (typeof hubTiles === 'function' ? hubTiles() : '') /* wellness.js */ + (window.SehatRem ? SehatRem.actionsCard() : '') /* reminders.js */ +
     sec('kick_results', '<div class="stack">' + attn + jrH(I, 'risk') + '</div><div class="health-grid" style="margin-top:14px">' + latestCard + trendsCard + '</div>', true) +
     sec('kick_doctor', '<div class="stack">' + crossCard + qCard + ovCard + '</div>', true) +
     sec('kick_about', '<div class="health-grid">' + patientCard + condCard + '</div>', false);
@@ -3429,6 +3456,9 @@ document.addEventListener('click', e => {
     case 'save': saveDraft(); break;
     case 'discard': discardDraft(); break;
     case 'filter': S.filter = el.dataset.type; render(); break;
+    case 'tlmonths': S.tlMonths = Number(el.dataset.v) || 0; render(); break;
+    case 'tlcond': S.tlCond = el.dataset.v || ''; render(); break;
+    case 'tlreset': S.tlMonths = 0; S.tlCond = ''; S.filter = 'all'; render(); break;
     case 'openrec': S.detailId = el.dataset.id; S.view = 'detail'; clearError(); render(); window.scrollTo(0, 0); break;
     case 'edit': startEdit(el.dataset.id); break;
     case 'delete': deleteRecord(el.dataset.id); break;
