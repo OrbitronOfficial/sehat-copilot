@@ -2261,3 +2261,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
 .btn.listen { width: auto !important; height: auto !important; min-width: 0; aspect-ratio: auto; border-radius: 999px !important; padding: 6px 14px !important; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
 .btn.listen svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .msg-tools { margin-top: 8px; }
+
+/* desktop and laptop: the sidebar lists every page, so the phone-only More button and sheet stay hidden */
+@media (min-width: 821px) { .nav .nv-more, .nav .nav-sheet { display: none !important; } }

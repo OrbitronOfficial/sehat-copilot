@@ -6,7 +6,18 @@ const STR = {
     app_name: 'Sehat Copilot',
     local_note: 'Stored on this device',
     disclaimer: 'Sehat Copilot explains your records. It is not a diagnosis. Always confirm with your doctor.',
-    nav_add: 'Add record', nav_timeline: 'Timeline', nav_health: 'My health', nav_ask: 'Ask', nav_abha: 'ABHA & export',
+    nav_add: 'Add record', nav_timeline: 'Timeline', nav_health: 'My health', nav_ask: 'Ask', nav_abha: 'ABHA & export', nav_settings: 'Settings',
+    st_title: 'Settings', st_sub: 'Appearance, language, reminders, your account and your data.',
+    st_look: 'Appearance', st_light: 'Light', st_dark: 'Dark', st_system: 'Match my device',
+    st_lang: 'Language', st_lang_note: 'Explanations and chat answers are written in this language.',
+    st_notif: 'Reminders and notifications', st_notif_on: 'Notifications are on for this browser.', st_notif_off: 'Notifications are off. Turn them on to get medicine reminders on this device.',
+    st_notif_blocked: 'Notifications are blocked in your browser settings. Allow them for this site to get reminders.', st_notif_btn: 'Turn on notifications', st_notif_na: 'This browser cannot show notifications. Use Google Calendar reminders instead.',
+    st_cal: 'Medicine reminders in Google Calendar', st_go_meds: 'Open medicine schedule',
+    st_account: 'Account', st_signed: 'Signed in as {who}', st_guest: 'You are using Sehat Copilot as a guest. Records stay on this device.', st_signout: 'Sign out', st_signin: 'Sign in or create an account',
+    st_sync_on: 'End-to-end encrypted sync is on: your other devices get the same records, and only your password can open them.', st_sync_off: 'Sync is off. Records are stored only in this browser.',
+    st_family: 'Family and parental controls', st_family_note: 'Add family members, set a PIN for a child’s profile, and manage caregiver alerts.', st_go_family: 'Manage family',
+    st_export: 'Share with a doctor', st_export_note: 'Export records in the ABDM format (FHIR R4), or print a one-page summary for a visit.', st_go_export: 'Open ABHA and export',
+    st_about: 'About', st_about_note: 'Sehat Copilot explains your records. It is not a diagnosis and does not replace a doctor. In an emergency, call 112.',
     add_title: 'Add a health record',
     add_sub: 'Upload a prescription, lab report or discharge summary as a photo or PDF.',
     drop_title: 'Drop a file here', drop_hint: 'Photo, PDF or text file. PDF and text up to 3 MB.',
@@ -193,7 +204,16 @@ const STR = {
     app_name: 'सेहत कोपायलट',
     local_note: 'इस डिवाइस पर सहेजा गया',
     disclaimer: 'सेहत कोपायलट आपके रिकॉर्ड को समझाता है। यह निदान नहीं है। हमेशा अपने डॉक्टर से पुष्टि करें।',
-    nav_add: 'रिकॉर्ड जोड़ें', nav_timeline: 'टाइमलाइन', nav_health: 'मेरी सेहत', nav_ask: 'पूछें', nav_abha: 'आभा और एक्सपोर्ट',
+    nav_add: 'रिकॉर्ड जोड़ें', nav_timeline: 'टाइमलाइन', nav_health: 'मेरी सेहत', nav_ask: 'पूछें', nav_abha: 'आभा और एक्सपोर्ट', nav_settings: 'सेटिंग्स',
+    st_title: 'सेटिंग्स', st_sub: 'दिखावट, भाषा, याद दिलाने, आपका खाता और आपका डेटा।', st_look: 'दिखावट', st_light: 'लाइट', st_dark: 'डार्क', st_system: 'डिवाइस जैसा',
+    st_lang: 'भाषा', st_lang_note: 'समझाना और चैट के जवाब इसी भाषा में लिखे जाते हैं।', st_notif: 'याद दिलाना और सूचनाएँ',
+    st_notif_on: 'इस ब्राउज़र में सूचनाएँ चालू हैं।', st_notif_off: 'सूचनाएँ बंद हैं। दवा याद दिलाने के लिए इन्हें चालू करें।', st_notif_blocked: 'ब्राउज़र सेटिंग में सूचनाएँ रोकी गई हैं। इस साइट के लिए अनुमति दें।',
+    st_notif_btn: 'सूचनाएँ चालू करें', st_notif_na: 'यह ब्राउज़र सूचनाएँ नहीं दिखा सकता। Google कैलेंडर से याद दिलाना इस्तेमाल करें।', st_cal: 'Google कैलेंडर में दवा याद दिलाना', st_go_meds: 'दवा की समय-सारणी खोलें',
+    st_account: 'खाता', st_signed: '{who} के रूप में साइन इन', st_guest: 'आप मेहमान के रूप में इस्तेमाल कर रहे हैं। रिकॉर्ड इसी डिवाइस पर रहते हैं।', st_signout: 'साइन आउट', st_signin: 'साइन इन करें या खाता बनाएँ',
+    st_sync_on: 'एंड-टू-एंड एन्क्रिप्टेड सिंक चालू है।', st_sync_off: 'सिंक बंद है। रिकॉर्ड सिर्फ़ इसी ब्राउज़र में हैं।', st_family: 'परिवार और पैरेंटल कंट्रोल',
+    st_family_note: 'परिवार के सदस्य जोड़ें, बच्चे की प्रोफ़ाइल पर PIN लगाएँ, देखभाल अलर्ट संभालें।', st_go_family: 'परिवार संभालें', st_export: 'डॉक्टर के साथ साझा करें',
+    st_export_note: 'रिकॉर्ड ABDM फ़ॉर्मेट (FHIR R4) में एक्सपोर्ट करें या एक पन्ने का सारांश प्रिंट करें।', st_go_export: 'आभा और एक्सपोर्ट खोलें', st_about: 'जानकारी',
+    st_about_note: 'सेहत कोपायलट आपके रिकॉर्ड समझाता है। यह निदान नहीं है और डॉक्टर की जगह नहीं लेता। आपात स्थिति में 112 पर कॉल करें।',
     add_title: 'स्वास्थ्य रिकॉर्ड जोड़ें',
     add_sub: 'पर्चा, लैब रिपोर्ट या डिस्चार्ज सारांश की फोटो या PDF अपलोड करें।',
     drop_title: 'फ़ाइल यहाँ छोड़ें', drop_hint: 'फोटो, PDF या टेक्स्ट फ़ाइल। PDF और टेक्स्ट अधिकतम 3 MB।',
@@ -3069,6 +3089,36 @@ document.addEventListener('input', e => {
   if (m) m.textContent = S.visitNotes;
 });
 
+/* ================= Settings =================
+   One place for appearance, language, reminders, account and data. Delete and backup reuse
+   the same actions as the export page. */
+function viewSettings() {
+  const theme = (() => { try { return localStorage.getItem('sehat_theme') || 'system'; } catch (e) { return 'system'; } })();
+  const opt = (v, label) => '<button type="button" class="chip" data-act="settheme" data-v="' + v + '" aria-pressed="' + (theme === v) + '">' + esc(label) + '</button>';
+  const langs = Array.from(document.querySelectorAll('#langSel option')).map(o => '<option value="' + esc(o.value) + '"' + (o.value === lang ? ' selected' : '') + '>' + esc(o.textContent) + '</option>').join('');
+  const N = window.Notification, perm = N ? N.permission : 'na';
+  const notif = perm === 'granted' ? t('st_notif_on') : perm === 'denied' ? t('st_notif_blocked') : perm === 'na' ? t('st_notif_na') : t('st_notif_off');
+  const u = currentUser(), synced = (() => { try { return !!localStorage.getItem('sehat_sync'); } catch (e) { return false; } })();
+  const card = (title, body) => '<div class="card"><h2 style="margin-bottom:8px">' + esc(title) + '</h2>' + body + '</div>';
+  return '<div class="page-head"><h1>' + esc(t('st_title')) + '</h1><p>' + esc(t('st_sub')) + '</p></div>' +
+    card(t('st_look'), '<div class="chips">' + opt('light', t('st_light')) + opt('dark', t('st_dark')) + opt('system', t('st_system')) + '</div>') +
+    card(t('st_lang'), '<p class="muted small">' + esc(t('st_lang_note')) + '</p><select id="stLang" class="d-in" style="max-width:320px">' + langs + '</select>') +
+    card(t('st_notif'), '<p class="muted">' + esc(notif) + '</p><div class="row">' + (perm === 'default' ? '<button type="button" class="btn" data-act="stnotif">' + esc(t('st_notif_btn')) + '</button>' : '') +
+      '<button type="button" class="btn secondary" data-act="nav" data-view="meds">' + esc(t('st_go_meds')) + '</button></div><p class="muted small" style="margin-top:8px">' + esc(t('st_cal')) + '</p>') +
+    card(t('st_account'), '<p>' + esc(u && !u.demo ? t('st_signed', { who: u.email || u.name }) : u && u.demo ? t('st_signed', { who: t('demo_user') }) : t('st_guest')) + '</p><p class="muted small">' + esc(synced ? t('st_sync_on') : t('st_sync_off')) + '</p>' +
+      '<a class="btn secondary" href="/login">' + esc(u ? t('st_signout') : t('st_signin')) + '</a>') +
+    card(t('st_family'), '<p class="muted">' + esc(t('st_family_note')) + '</p><button type="button" class="btn secondary" data-act="nav" data-view="family">' + esc(t('st_go_family')) + '</button>') +
+    card(t('st_export'), '<p class="muted">' + esc(t('st_export_note')) + '</p><button type="button" class="btn secondary" data-act="nav" data-view="abha">' + esc(t('st_go_export')) + '</button>') +
+    backupCard() +
+    '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('data_title')) + '</h2><p class="muted">' + esc(t('consent')) + '</p><p class="muted small">' + esc(t('privacy')) + '</p><p class="muted">' + esc(t('wipe_hint')) + '</p><button type="button" class="btn danger" data-act="wipe">' + esc(t('wipe_btn')) + '</button></div>' +
+    card(t('st_about'), '<p class="muted">' + esc(t('st_about_note')) + '</p>');
+}
+document.addEventListener('change', e => {
+  if (!e.target || e.target.id !== 'stLang') return;
+  const sel = document.getElementById('langSel');
+  if (sel) { sel.value = e.target.value; sel.dispatchEvent(new Event('change', { bubbles: true })); } else setLang(e.target.value);
+});
+
 /* ================= Backup and restore ================= */
 function backupCard() {
   const m = S.backupMsg;
@@ -3364,10 +3414,11 @@ const ICONS = {
   journal: '<path d="M6 3h11a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z"/><path d="M6 3v18M10 8h5M10 12h5"/>',
   wellness: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',
   family: '<circle cx="9" cy="8" r="3"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><circle cx="17" cy="9" r="2.200"/><path d="M17 14a4 4 0 0 1 4 4v2"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   more: '<circle cx="5" cy="12" r="1.600"/><circle cx="12" cy="12" r="1.600"/><circle cx="19" cy="12" r="1.600"/>'
 };
 /* third item 'sec': on the phone bottom bar these live under "More" (the bar keeps at most 5 items) */
-const NAV = [['add', 'nav_add'], ['timeline', 'nav_timeline'], ['health', 'nav_health'], ['meds', 'nav_meds'], ['visits', 'nav_visits', 'sec'], ['journal', 'nav_journal', 'sec'], ['wellness', 'nav_wellness', 'sec'], ['family', 'nav_family', 'sec'], ['ask', 'nav_ask', 'sec'], ['abha', 'nav_abha', 'sec']];
+const NAV = [['add', 'nav_add'], ['timeline', 'nav_timeline'], ['health', 'nav_health'], ['meds', 'nav_meds'], ['visits', 'nav_visits', 'sec'], ['journal', 'nav_journal', 'sec'], ['wellness', 'nav_wellness', 'sec'], ['family', 'nav_family', 'sec'], ['ask', 'nav_ask', 'sec'], ['abha', 'nav_abha', 'sec'], ['settings', 'nav_settings', 'sec']];
 
 function applyStatic() {
   updateDemoPills();
@@ -3411,6 +3462,7 @@ function render() {
     case 'visit': html = viewVisit(); break;
     case 'ask': html = viewAsk(); break;
     case 'abha': html = viewAbha(); break;
+    case 'settings': html = viewSettings(); break;
     default: html = viewAdd();
   }
   // keep ask input text if re-rendering
@@ -3458,6 +3510,12 @@ document.addEventListener('click', e => {
     case 'filter': S.filter = el.dataset.type; render(); break;
     case 'tlmonths': S.tlMonths = Number(el.dataset.v) || 0; render(); break;
     case 'tlcond': S.tlCond = el.dataset.v || ''; render(); break;
+    case 'settheme': {
+      const v = el.dataset.v, dark = v === 'dark' || (v === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+      try { if (v === 'system') localStorage.removeItem('sehat_theme'); else localStorage.setItem('sehat_theme', v); } catch (x) { /* ignore */ }
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light'; render(); break;
+    }
+    case 'stnotif': if (window.Notification) Notification.requestPermission().then(() => render()); break;
     case 'tlreset': S.tlMonths = 0; S.tlCond = ''; S.filter = 'all'; render(); break;
     case 'openrec': S.detailId = el.dataset.id; S.view = 'detail'; clearError(); render(); window.scrollTo(0, 0); break;
     case 'edit': startEdit(el.dataset.id); break;
