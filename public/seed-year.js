@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   const FLAG = 'sehat_seed_year', MAN = 'sehat_seed_manifest', DAYS = 365;
-  const SEED_VERSION = 3;  // bump when the demo data changes: browsers on an older version re-seed (records are keyed by id, days are de-duplicated)
+  const SEED_VERSION = 4;  // bump when the demo data changes: browsers on an older version re-seed (records are keyed by id, days are de-duplicated)
   const wantReset = /[?&]seed=reset\b/.test(location.search);
   const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } };
@@ -252,6 +252,15 @@
   }
 
   async function runSeed() {
+    // demo browsers from before v4 hold the Round 1 sample family next to the Mehras: rebuild the demo cleanly once
+    const u = (typeof currentUser === 'function' && currentUser()) || {};
+    if (u.demo && (lsGet(FLAG, 0) || 0) < SEED_VERSION && FAM.list.some(x => x.id === 'p_aarav' || x.id === 'p_ramesh')) {
+      for (const st of ['records', 'meta', 'files']) { try { await dbClear(st); } catch (e) { /* store missing */ } }
+      Object.keys(localStorage).filter(k => k.indexOf('sehat_') === 0 && !/^sehat_(user|accounts|theme|lang|i18n_)/.test(k)).forEach(k => localStorage.removeItem(k));
+      try { sessionStorage.clear(); } catch (e) { /* ignore */ }
+      location.replace('/app?demo=1');
+      return;
+    }
     if (lsGet(FLAG, null) >= SEED_VERSION) { toast('Year data was already seeded. Add ?seed=reset to remove it, then ?seed=1 again.'); return; }
     const man = { at: new Date().toISOString(), profilesAdded: [], selfNamed: false, byProfile: {}, counts: { vitals: 0, journal: 0, steps: 0, records: 0 } };
     const pk = SehatFamily.profKeyFor;
@@ -285,7 +294,7 @@
       const pid = idOf(p.key); if (!pid) continue;
       const latest = (S.records.concat(FAM.others || [])).filter(r => r.profile === pid && r.doc_type === 'prescription').sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
       if (!latest) continue;
-      const keys = buildDoses(latest.medicines || []).map(d => d.key), rnd = rng(p.seed + 7);
+      const keys = buildDoses((latest.medicines || []).map(m => ({ m, date: latest.date }))).map(d => d.key), rnd = rng(p.seed + 7);
       for (let d = 7; d >= 0; d--) {
         const k = 'sehat_taken_' + pk(ymd(ago(d)), pid), log = lsGet(k, {});
         keys.forEach((key, i) => {

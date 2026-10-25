@@ -438,15 +438,10 @@ const SehatFamily = (function () {
   async function demo() {
     const had = FAM.list.length > 1;
     const self = byId('self');
-    if (!self.name) Object.assign(self, { name: 'Jay Tawri', age: 46, sex: 'M' });
-    if (!had && cryptoOK()) { self.pin = await makePin('1000'); self.hidden = true; FAM.unlocked.self = true; saveUnlocked(); }  // the demo opens Jay on purpose, once  // parental-control demo: Aarav cannot see Jay
-    if (!byId('p_ramesh')) FAM.list.push({ id: 'p_ramesh', name: 'Ramesh Tawri', relation: 'father', age: 72, sex: 'M', pin: null, hidden: false });
-    if (!byId('p_aarav')) FAM.list.push({ id: 'p_aarav', name: 'Aarav Tawri', relation: 'child', age: 12, sex: 'M', pin: null, hidden: false });
+    if (!self.name) Object.assign(self, { name: 'Rahul Mehra', age: 34, sex: 'M' });  // the Mehra family demo; seed-year.js adds the rest
+    if (had) { FAM.list = norm(FAM.list); await save(); await loadProfileMeta(); return; }  // the demo opens Jay on purpose, once  // parental-control demo: Aarav cannot see Jay
     FAM.list = norm(FAM.list);
     await save();
-    await dbPut('meta', { name: 'Ramesh Tawri', age: '72', sex: 'M', abha: null }, profKeyFor('patient', 'p_ramesh'));
-    await dbPut('meta', { name: 'Aarav Tawri', age: '12', sex: 'M', abha: null }, profKeyFor('patient', 'p_aarav'));
-    for (const r of rameshRecords()) await saveRecordLocal(r);   // famStamp keeps them out of Jay's list
     await loadProfileMeta();
   }
 
