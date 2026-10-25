@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   const FLAG = 'sehat_seed_year', MAN = 'sehat_seed_manifest', DAYS = 365;
-  const SEED_VERSION = 2;  // bump when the demo data changes: browsers on an older version re-seed (records are keyed by id, days are de-duplicated)
+  const SEED_VERSION = 3;  // bump when the demo data changes: browsers on an older version re-seed (records are keyed by id, days are de-duplicated)
   const wantReset = /[?&]seed=reset\b/.test(location.search);
   const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } };
@@ -39,7 +39,9 @@
   const PEOPLE = [
     { key: 'rahul', name: 'Rahul Mehra', age: 34, sex: 'M', relation: 'brother', id: 'p_rahul', seed: 1101, doc: BANSAL },
     { key: 'sunita', name: 'Sunita Mehra', age: 58, sex: 'F', relation: 'mother', id: 'p_sunita', seed: 2202, doc: BANSAL },
-    { key: 'aanya', name: 'Aanya Mehra', age: 8, sex: 'F', relation: 'child', id: 'p_aanya', seed: 3303, doc: KHANNA }
+    { key: 'aanya', name: 'Aanya Mehra', age: 8, sex: 'F', relation: 'child', id: 'p_aanya', seed: 3303, doc: KHANNA },
+    { key: 'ramesh', name: 'Ramesh Mehra', age: 63, sex: 'M', relation: 'father', id: 'p_ramesh_m', seed: 4404, doc: BANSAL },
+    { key: 'sonika', name: 'Sonika Mehra', age: 32, sex: 'F', relation: 'spouse', id: 'p_sonika', seed: 5505, doc: BANSAL }
   ];
 
   /* ---------- generators: each returns { vitals, journal, steps, records } for one person ---------- */
@@ -178,6 +180,51 @@
         rx(pid, p, 155, ['Iron deficiency anaemia'], [med('Syp. Ferrous Ascorbate', '30 mg/5 ml', 'once a day', 'after food', '3 months', 'Ferrous ascorbate')], ['Continue iron, Hb improving'], 'Repeat Hb in 3 months'));
         out.records.push(rx(pid, p, 11, ['Iron deficiency anaemia', 'Mild asthma'], [med('Syp. Ferrous Ascorbate', '30 mg/5 ml', 'once a day', 'after food', '3 months', 'Ferrous ascorbate'), med('Tab. Montelukast', '4 mg chewable', 'once a day', 'at night', '4 weeks', 'Montelukast')], ['Iron-rich food: green vegetables, jaggery, dates', 'Inhaler before outdoor play if wheezy'], 'After 1 month with Hb report'));
     }
+    if (p.key === 'ramesh') {  // hypertension, angioplasty three years ago, on secondary prevention
+      for (let d = DAYS - 1; d >= 0; d--) {
+        const t = pctDone(d), date = ymd(ago(d)), dow = ago(d).getDay();
+        if (d % 2 === 1) { const sy = Math.round(clamp(lerp(146, 132, t) + N() * 6, 115, 170)), di = Math.round(clamp(lerp(92, 84, t) + N() * 4, 66, 104)); mkV(V, pid, 'bp', d, sy, Math.min(di, sy - 25)); }
+        if (d % 4 === 2) mkV(V, pid, 'pulse', d, Math.round(clamp(66 + N() * 4, 54, 90)));
+        if (d % 14 === 3) mkV(V, pid, 'weight', d, r1(lerp(79.5, 77.4, t) + N() * 0.4));
+        if (R() < 0.8) {
+          const tired = R() < 0.14, breath = R() < 0.05;
+          out.journal.push(entry(date, { mood: sc(3.5 + N() * 0.7), sleep: sc(3.3 + N() * 0.8), energy: sc((tired ? 2.4 : 3.4) + N() * 0.6), pain: Math.round(clamp(N() * 0.8, 0, 10)),
+            symptoms: [].concat(tired ? ['tiredness'] : [], breath ? ['breathlessness on stairs'] : []), meds_taken: med3(0.88, 0.07), note: breath ? 'Slight breathlessness climbing stairs, settled with rest.' : '', side_effects: '' }));
+        }
+        if (R() < 0.85) out.steps.push({ date, steps: Math.round(clamp(lerp(5200, 6800, t) + (dow === 0 ? 900 : 0) + N() * 1300, 1200, 11000)) });
+      }
+      [[330, 168, 104, 41, 1.0], [240, 152, 92, 42, 1.0], [150, 141, 84, 44, 1.1], [18, 134, 79, 45, 1.1]].forEach(c => {
+        const [d, tc, ldl, hdl, cr] = c;
+        out.records.push(lab(pid, p, d, 'Lipid profile and kidney function', [
+          T('Total Cholesterol', tc, 'mg/dL', null, 200, '< 200', flagOf(tc, null, 200), 'Total Cholesterol'),
+          T('LDL Cholesterol', ldl, 'mg/dL', null, 70, '< 70 (heart patients)', flagOf(ldl, null, 70), 'LDL Cholesterol'),
+          T('HDL Cholesterol', hdl, 'mg/dL', 40, null, '> 40', flagOf(hdl, 40, null), 'HDL Cholesterol'),
+          T('Serum Creatinine', cr, 'mg/dL', 0.7, 1.3, '0.7 - 1.3', flagOf(cr, 0.7, 1.3), 'Serum Creatinine')]));
+      });
+      out.records.push(rx(pid, p, 160, ['Hypertension', 'Coronary artery disease, post angioplasty'], [med('Tab. Aspirin', '75 mg', 'once a day', 'after lunch', '3 months', 'Aspirin'), med('Tab. Atorvastatin', '40 mg', 'once a day', 'at night', '3 months', 'Atorvastatin'), med('Tab. Metoprolol', '25 mg', 'twice a day', 'after food', '3 months', 'Metoprolol')], ['Walk 30 minutes daily', 'Low-salt diet'], 'After 3 months with lipid profile'));
+      out.records.push(rx(pid, p, 6, ['Hypertension', 'Coronary artery disease, post angioplasty'], [med('Tab. Aspirin', '75 mg', 'once a day', 'after lunch', '3 months', 'Aspirin'), med('Tab. Atorvastatin', '40 mg', 'once a day', 'at night', '3 months', 'Atorvastatin'), med('Tab. Metoprolol', '25 mg', 'twice a day', 'after food', '3 months', 'Metoprolol')], ['Walk 30 minutes daily', 'Low-salt diet', 'Report any chest pain at once'], 'After 3 months with ECG and lipid profile'));
+    }
+
+    if (p.key === 'sonika') {  // hypothyroid with mild anaemia; the family's caretaker
+      for (let d = DAYS - 1; d >= 0; d--) {
+        const t = pctDone(d), date = ymd(ago(d)), dow = ago(d).getDay();
+        if (d % 14 === 6) mkV(V, pid, 'weight', d, r1(lerp(61.8, 60.6, t) + N() * 0.3));
+        if (d % 6 === 2) mkV(V, pid, 'pulse', d, Math.round(clamp(78 + N() * 5, 60, 100)));
+        if (R() < 0.78) {
+          const tired = R() < lerp(0.32, 0.14, t);
+          out.journal.push(entry(date, { mood: sc(3.6 + N() * 0.7 - (tired ? 0.6 : 0)), sleep: sc(3.1 + N() * 0.8), energy: sc((tired ? 2.3 : 3.4) + N() * 0.6), pain: Math.round(clamp(N() * 0.6, 0, 10)),
+            symptoms: tired ? ['tiredness'] : [], meds_taken: med3(0.9, 0.05), note: tired && R() < 0.2 ? 'Tired by evening after looking after everyone.' : '', side_effects: '' }));
+        }
+        if (R() < 0.8) out.steps.push({ date, steps: Math.round(clamp(lerp(6100, 7400, t) + (dow === 6 ? 800 : 0) + N() * 1400, 1500, 13000)) });
+      }
+      [[300, 7.8, 10.6], [200, 5.9, 11.0], [110, 4.6, 11.4], [14, 3.4, 11.9]].forEach(c => {
+        const [d, tsh, hb] = c;
+        out.records.push(lab(pid, p, d, 'Thyroid and blood count', [
+          T('TSH', tsh, 'mIU/L', 0.4, 4.0, '0.4 - 4.0', flagOf(tsh, 0.4, 4.0), 'TSH'),
+          T('Haemoglobin', hb, 'g/dL', 12.0, 15.0, '12.0 - 15.0', flagOf(hb, 12.0, 15.0), 'Haemoglobin')]));
+      });
+      out.records.push(rx(pid, p, 4, ['Hypothyroidism', 'Mild iron deficiency anaemia'], [med('Tab. Levothyroxine', '50 mcg', 'once a day', 'empty stomach, morning', '3 months', 'Levothyroxine'), med('Tab. Ferrous Ascorbate', '100 mg', 'once a day', 'after lunch', '2 months', 'Ferrous ascorbate')], ['Thyroid tablet 30 minutes before tea or breakfast', 'Iron-rich food'], 'After 6 weeks with TSH and Hb'));
+    }
     return out;
   }
 
@@ -228,6 +275,28 @@
       man.byProfile[pid] = { name: p.name, vitals: g.vitals.length, journal: jNew.length, steps: sNew.length, records: g.records.length, keys: [vk, jk, sk] };
       man.counts.vitals += g.vitals.length; man.counts.journal += jNew.length; man.counts.steps += sNew.length; man.counts.records += g.records.length;
     }
+    // family roles: the child cannot open the adults' profiles (demo PIN 1000); Sonika is the caretaker
+    const idOf = k => { const q = PEOPLE.find(x => x.key === k); const hit = q && FAM.list.find(x => String(x.name || '').toLowerCase() === q.name.toLowerCase()); return hit ? hit.id : null; };
+    const adults = ['rahul', 'sunita', 'ramesh', 'sonika'].map(idOf).filter(Boolean);
+    try { await SehatFamily.lockForChild(adults, '1000'); } catch (e) { /* no crypto: skip the lock */ }
+    try { await SehatFamily.setCare(idOf('sonika'), ['sunita', 'ramesh', 'aanya', 'rahul'].map(idOf).filter(Boolean)); } catch (e) { /* ignore */ }
+    // a week of doses: mostly taken, a few missed; today Sunita and Ramesh have not marked their first dose (caretaker alert)
+    for (const p of PEOPLE) {
+      const pid = idOf(p.key); if (!pid) continue;
+      const latest = (S.records.concat(FAM.others || [])).filter(r => r.profile === pid && r.doc_type === 'prescription').sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+      if (!latest) continue;
+      const keys = buildDoses(latest.medicines || []).map(d => d.key), rnd = rng(p.seed + 7);
+      for (let d = 7; d >= 0; d--) {
+        const k = 'sehat_taken_' + pk(ymd(ago(d)), pid), log = lsGet(k, {});
+        keys.forEach((key, i) => {
+          if (d === 0) { if (i === 0 && (p.key === 'sunita' || p.key === 'ramesh')) return; if (i === 0) log[key] = 1; return; }
+          if (rnd() < 0.88) log[key] = 1;
+        });
+        lsSet(k, log);
+      }
+    }
+    if (typeof TAKEN_MEM === 'object') Object.keys(TAKEN_MEM).forEach(k => delete TAKEN_MEM[k]);
+    try { if (window.SehatRem && SehatRem.careScan) SehatRem.careScan(); } catch (e) { /* ignore */ }
     lsSet(MAN, man); lsSet(FLAG, SEED_VERSION);
     await SehatFamily._loadProfileMeta();
     const first = Object.keys(man.byProfile)[0];
