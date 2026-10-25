@@ -215,20 +215,24 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(500, {"error": "Something went wrong on our side. Please try again."})
 
 
+def _saved_sample(sample_id):
+    """The saved reading of a bundled sample, from an earlier run of this same pipeline."""
+    sample = next((s for s in SAMPLES if s["id"] == sample_id), None)
+    saved = sample and next((r for r in _json_file("demo.json", {}).get("records", [])
+                             if r.get("file_url") == sample["url"]), None)
+    if not saved:
+        return None
+    rec = pipeline.check(dict(saved, id="rec_" + os.urandom(4).hex(), source="sample"))
+    rec["extracted_by"] = f"{saved.get('extracted_by')} (saved reading)"
+    return rec
+
+
 def _extract(b):
-    try:
-        return pipeline.extract(b.get("filename"), b.get("mime"), b["data"], ocr=b.get("ocr") and "tesseract")
-    except pipeline.VisionUnavailable:
-        # a bundled sample has a saved reading from an earlier run of this same pipeline
-        sample = next((s for s in SAMPLES if s["id"] == b.get("sample_id")), None)
-        saved = sample and next((r for r in _json_file("demo.json", {}).get("records", [])
-                                 if r.get("file_url") == sample["url"]), None)
-        if not saved:
-            raise
-        rec = pipeline.check(dict(saved, id="rec_" + os.urandom(4).hex(), source="sample"))
-        rec["extracted_by"] = f"{saved.get('extracted_by')} (saved reading)"
-        rec["warnings"].insert(0, "The live reader is busy, so this sample shows its saved reading.")
+    # a bundled sample is answered at once from its saved reading: no model call, no quota spent
+    rec = b.get("sample_id") and not b.get("ocr") and _saved_sample(b.get("sample_id"))
+    if rec:
         return rec
+    return pipeline.extract(b.get("filename"), b.get("mime"), b["data"], ocr=b.get("ocr") and "tesseract")
 
 
 def _inbox_rw(items=None):

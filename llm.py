@@ -10,15 +10,22 @@ model that reports "quota exhausted" is skipped until its cool-down passes.
 import json
 import re
 import os
+import queue
+import threading
 import time
 import urllib.error
 import urllib.request
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-# best first; the preview model answers in 30 s or more, so the quick light models come before it
-GEMINI_MODELS = ("gemini-3.8-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite,"
-                 "gemini-flash-lite-latest,gemini-3-flash-preview,gemini-3.7-flash")
+# quickest first. Measured on a phone photo of a prescription with thinking off: 3.5-flash-lite,
+# flash-lite-latest and 3-flash-preview answer in 3 to 5 s, 3.1-flash-lite in about 10 s, while
+# 3.8-flash and 3.7-flash ran past the 28 s call limit, so they come last.
+GEMINI_MODELS = ("gemini-3.5-flash-lite,gemini-flash-lite-latest,gemini-3-flash-preview,"
+                 "gemini-3.1-flash-lite,gemini-3.8-flash,gemini-3.7-flash")
+# a document is sent to these at once and the first good JSON wins; the rest of the chain is the backup
+GEMINI_RACE = "gemini-3.5-flash-lite,gemini-flash-lite-latest,gemini-3-flash-preview"
+RACE_TIMEOUT = 18   # per racer; a quick model answers in under 10 s
 GROQ_MODELS = "openai/gpt-oss-120b,qwen/qwen3.8-27b,openai/gpt-oss-20b"
 GEMINI_TEXT_MODELS = "gemini-3.1-flash-lite,gemini-3.5-flash-lite,gemini-flash-lite-latest"
 CALL_TIMEOUT = 28   # one model
@@ -81,32 +88,84 @@ def _slot(provider, model, i):
     return f"{provider}:{model}" + (f"#{i}" if i else "")
 
 
-def _chain(env_name, default, call, deadline, provider="gemini", per_call=None, keys=(None,)):
+def _attempt(provider, model, i, key, call, timeout, errors):
+    """One call to one model with the i-th key. Returns the parsed JSON, or None after noting
+    why it failed (and resting the model on that key when it is out of quota)."""
+    rest_key = _slot(provider, model, i)
+    try:
+        out = call(model, timeout, key)
+        if isinstance(out, dict):
+            return out
+        errors.append(f"{model}: not a JSON object")
+    except _Http as e:
+        if e.code == 429:
+            # a daily cap rests the model for an hour, a per-minute cap for a minute
+            _resting[rest_key] = time.time() + (3600 if re.search(r"PerDay|per day|TPD|RPD", e.detail) else 60)
+        elif e.code in (401, 403, 404):
+            _resting[rest_key] = time.time() + 3600
+        errors.append(f"{model}: {e}")
+    except LLMError as e:
+        errors.append(f"{model}: {str(e)[:120]}")
+    return None
+
+
+def _free(provider, model, i):
+    return _resting.get(_slot(provider, model, i), 0) <= time.time()
+
+
+def _chain(env_name, default, call, deadline, provider="gemini", per_call=None, keys=(None,), skip=(), errors=None):
     """Try each model in turn, best first, and for each model every key before moving to a
     weaker model. Returns (json, model). Raises LLMError listing why each failed."""
-    errors = []
+    errors = [] if errors is None else errors
     for model in [m.strip() for m in os.environ.get(env_name, default).split(",") if m.strip()]:
+        if model in skip:
+            continue
         for i, key in enumerate(keys):
             left = deadline - time.time()
             if left < 4:
                 errors.append("out of time")
                 raise LLMError("; ".join(errors))
-            rest_key = _slot(provider, model, i)
-            if _resting.get(rest_key, 0) > time.time():
+            if not _free(provider, model, i):
                 errors.append(f"{model}: resting (quota)")
                 continue
-            try:
-                return call(model, min(per_call or CALL_TIMEOUT, left), key), model
-            except _Http as e:
-                if e.code == 429:
-                    # a daily cap rests the model for an hour, a per-minute cap for a minute
-                    _resting[rest_key] = time.time() + (3600 if re.search(r"PerDay|per day|TPD|RPD", e.detail) else 60)
-                elif e.code in (401, 403, 404):
-                    _resting[rest_key] = time.time() + 3600
-                errors.append(f"{model}: {e}")
-            except LLMError as e:
-                errors.append(f"{model}: {str(e)[:120]}")
+            out = _attempt(provider, model, i, key, call, min(per_call or CALL_TIMEOUT, left), errors)
+            if out is not None:
+                return out, model
     raise LLMError("; ".join(errors) or "no models configured")
+
+
+def _race(models, call, deadline, keys, errors, provider="gemini"):
+    """Send the same request to several models at once, each on its own thread and key where
+    there are several keys, and return (json, model) from the first good answer, or None.
+    The slower racers are not waited for: they finish in the background and are ignored."""
+    entrants = []
+    for n, model in enumerate(models):
+        order = [(n + j) % len(keys) for j in range(len(keys))]  # spread the racers over the keys
+        i = next((i for i in order if _free(provider, model, i)), None)
+        if i is None:
+            errors.append(f"{model}: resting (quota)")
+        else:
+            entrants.append((model, i, keys[i]))
+    if not entrants:
+        return None
+    timeout = max(1, min(RACE_TIMEOUT, deadline - time.time() - 4))
+    done = queue.Queue()
+
+    def run(model, i, key):
+        done.put((model, _attempt(provider, model, i, key, call, timeout, errors)))
+
+    for e in entrants:
+        threading.Thread(target=run, args=e, daemon=True).start()
+    end = time.time() + timeout + 1
+    for _ in entrants:
+        try:
+            model, out = done.get(timeout=max(0.05, end - time.time()))
+        except queue.Empty:
+            errors.append("race: no answer in time")
+            return None
+        if out is not None:
+            return out, model
+    return None
 
 
 def _vision_models():
@@ -166,7 +225,15 @@ def _gemini(prompt, file, deadline):
 
     if not file:  # writing: the light models are quick and have the larger free allowance
         return _chain("GEMINI_TEXT_MODELS", GEMINI_TEXT_MODELS, call, deadline, per_call=14, keys=keys)
-    return _chain("GEMINI_MODELS", GEMINI_MODELS, call, deadline, keys=keys)
+    # reading: race the quickest models first, then walk the rest of the chain if none answered
+    known = _vision_models()
+    racers = [m.strip() for m in os.environ.get("GEMINI_RACE", GEMINI_RACE).split(",") if m.strip() in known]
+    errors = []
+    won = _race(racers, call, deadline, keys, errors) if len(racers) > 1 else None
+    if won:
+        return won
+    return _chain("GEMINI_MODELS", GEMINI_MODELS, call, deadline, keys=keys,
+                  skip=racers if len(racers) > 1 else (), errors=errors)
 
 
 # OpenAI-compatible providers: (endpoint, key variable, text models, vision models, JSON mode)
