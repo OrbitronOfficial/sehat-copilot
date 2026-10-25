@@ -377,6 +377,7 @@ const SehatFamily = (function () {
           (al ? '<li><span class="tag amber">' + esc(al === 1 ? t('fam_alert_one') : t('fam_alerts', { n: al })) + '</span></li>' : '')) +
         (p.hidden ? '<li class="muted small">' + esc(t('fam_hidden_tag')) + '</li>' : '') + '</ul>' +
         '<div class="row fam-card-btns"><button type="button" class="btn small" data-fam="openm" data-id="' + esc(p.id) + '">' + esc(on ? t('fam_go_health') : t('fam_open_m')) + '</button>' +
+        (!on && !locked && mp ? '<button type="button" class="btn small secondary" data-act="rm_nudge" data-pid="' + esc(p.id) + '">' + esc(t('nudge_btn')) + '</button>' : '') +
         (canEdit(p) ? '<button type="button" class="btn small secondary" data-fam="edit" data-id="' + esc(p.id) + '" aria-label="' + esc(t('fam_edit') + ' ' + nameOf(p)) + '">' + esc(t('fam_edit')) + '</button>' : '') + '</div></div>';
     }).join('');
     const add = !isChild(FAM.active) ? '<button type="button" class="card fam-card fam-addcard" data-fam="add"><span class="fam-plus" aria-hidden="true">+</span><strong>' + esc(t('fam_add_card')) + '</strong><span class="muted small">' + esc(t('fam_add_hint')) + '</span></button>' : '';

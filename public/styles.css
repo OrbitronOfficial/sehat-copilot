@@ -2264,3 +2264,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal); box-shado
 
 /* desktop and laptop: the sidebar lists every page, so the phone-only More button and sheet stay hidden */
 @media (min-width: 821px) { .nav .nv-more, .nav .nav-sheet { display: none !important; } }
+
+/* a family member's reminder, shown when this profile opens */
+.nudge-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-left: 6px solid var(--teal); background: var(--teal-tint); margin-bottom: 18px; }

@@ -22,7 +22,8 @@
     rm_accept: 'Accept', rm_edit: 'Edit', rm_reject: 'Reject', rm_undo: 'Undo', rm_dismiss: 'Dismiss', rm_done: 'Mark done',
     rm_accepted: 'Accepted. These reminders are on.', rm_rejected: 'Rejected. No reminders were set.',
     rm_at: 'at {time}', rm_until: 'until {date}', rm_snoozed: 'snoozed until {time}', rm_noend: 'no end date',
-    rm_snooze: 'Snooze', rm_min: '{n} min', rm_stop: 'Stop reminders for this medicine', rm_cal: 'Add to Google Calendar',
+    rm_snooze: 'Snooze', rm_min: '{n} min', rm_stop: 'Stop reminders for this medicine', rm_cal: 'Add to Google Calendar', nudge_btn: 'Remind to take medicines', nudge_sent: 'Reminder sent to {name}. They will see it when their profile opens.',
+    nudge_from: '{from} reminded you to take your medicines', nudge_med: 'Next: {med} at {time}', nudge_open: 'Open medicine schedule', nudge_ok: 'Got it',
     rm_stop_confirm: 'Stop reminders for {name}? This only stops reminders in this app. It does not change your prescription.',
     rm_ed_title: 'Edit reminders', rm_time: 'Time', rm_dose: 'Dose', rm_end: 'Last day', rm_save: 'Save', rm_cancel: 'Cancel',
     rm_ap_title: 'Appointments & follow-ups', rm_ap_add: 'Add appointment', rm_ap_edit: 'Edit appointment', rm_ap_empty: 'No appointments or follow-ups yet.',
@@ -49,7 +50,8 @@
     rm_accept: 'स्वीकार करें', rm_edit: 'बदलें', rm_reject: 'अस्वीकार करें', rm_undo: 'वापस करें', rm_dismiss: 'हटाएँ', rm_done: 'पूरा हुआ',
     rm_accepted: 'स्वीकार किया। ये याद दिलाने चालू हैं।', rm_rejected: 'अस्वीकार किया। कोई याद दिलाना नहीं लगाया गया।',
     rm_at: '{time} बजे', rm_until: '{date} तक', rm_snoozed: '{time} तक टाला गया', rm_noend: 'कोई अंतिम तारीख़ नहीं',
-    rm_snooze: 'टालें', rm_min: '{n} मिनट', rm_stop: 'इस दवा के याद दिलाने बंद करें', rm_cal: 'Google कैलेंडर में जोड़ें',
+    rm_snooze: 'टालें', rm_min: '{n} मिनट', rm_stop: 'इस दवा के याद दिलाने बंद करें', rm_cal: 'Google कैलेंडर में जोड़ें', nudge_btn: 'दवा लेने की याद दिलाएँ', nudge_sent: '{name} को याद दिलाया गया। उनकी प्रोफ़ाइल खुलने पर यह दिखेगा।',
+    nudge_from: '{from} ने आपको दवा लेने की याद दिलाई है', nudge_med: 'अगली: {med}, {time} बजे', nudge_open: 'दवा की समय-सारणी खोलें', nudge_ok: 'ठीक है',
     rm_stop_confirm: '{name} के याद दिलाने बंद करें? इससे सिर्फ़ इस ऐप के याद दिलाने बंद होते हैं। आपका पर्चा नहीं बदलता।',
     rm_ed_title: 'याद दिलाने बदलें', rm_time: 'समय', rm_dose: 'खुराक', rm_end: 'आख़िरी दिन', rm_save: 'सहेजें', rm_cancel: 'रद्द करें',
     rm_ap_title: 'अपॉइंटमेंट और फ़ॉलो-अप', rm_ap_add: 'अपॉइंटमेंट जोड़ें', rm_ap_edit: 'अपॉइंटमेंट बदलें', rm_ap_empty: 'अभी कोई अपॉइंटमेंट या फ़ॉलो-अप नहीं है।',
@@ -462,7 +464,7 @@
     }
     else if (a === 'rm_done') { const st = apStore(); st.done[el.dataset.rec || id] = todayKey(); jset('sehat_appts', st); render(); }
     else if (a === 'rm_resched') { if (String(id).indexOf('fu:') === 0) editResched(id.slice(3)); else editAppt(id); }
-    else if (a === 'rm_cg_call') { setSt(id, 'followed'); cgChanged(); render(); }
+    else if (a === 'rm_cg_call') { const x = acts().find(q => q.id === id); if (x && x.pid && x.pid !== activeId()) nudge(x.pid, x.med, x.time); setSt(id, 'followed'); cgChanged(); render(); }
     else if (a === 'rm_skip') { applyAction('skip', activeId(), el.dataset.k); }
     else if (a === 'rm_cal_all') calAll();
     else if (a.indexOf('rm_t_') === 0) toastClick(el, a);
@@ -690,11 +692,54 @@
     const box = document.getElementById('rmCalLinks');
     if (box) box.innerHTML = '<p class="muted small">' + esc(t('td_links')) + '</p><div class="rm-btns">' + evs.map(e => '<a class="btn small secondary" target="_blank" rel="noopener" href="' + esc(gcal(e)) + '">' + esc(t('td_one', { med: e.title })) + '</a>').join('') + '</div>';
   }
+  /* Family nudges: a caregiver taps Remind; the member sees it the next time their profile opens.
+     Stored as sehat_nudges (synced with the account, so another device of the family sees it too). */
+  const NK = 'sehat_nudges';
+  const nudges = () => { try { return JSON.parse(localStorage.getItem(NK) || '[]') || []; } catch (e) { return []; } };
+  const nudgesSave = l => { try { localStorage.setItem(NK, JSON.stringify(l.slice(-50))); } catch (e) { /* storage blocked */ } };
+  const profName = id => { const p = window.SehatFamily && SehatFamily.list().find(x => x.id === id); return p ? String(p.name || '').trim() : ''; };
+  function nudge(to, med, time) {
+    const from = profName(activeId()) || t('assistant');
+    nudgesSave(nudges().filter(n => !(n.to === to && !n.seen)).concat([{ id: 'n' + Date.now().toString(36), to, from, med: med || '', time: time || '', at: Date.now(), seen: false }]));
+    return from;
+  }
+  function nextDoseFor() {
+    try {
+      const o = ov(), tk = takenGet(), now = Date.now(), day = todayKey();
+      const open = buildDoses(schedMeds()).filter(tickable).filter(d => !tk[d.key] && !o.sk[day + d.key]).map(d => ({ d, due: effDue(d, o) })).sort((a, b) => a.due - b.due);
+      const n = open.find(x => x.due >= now) || open[0];
+      return n ? { med: medName(n.d.m), time: fmt12(hhmm(n.due)) } : null;
+    } catch (e) { return null; }
+  }
+  function injectNudge() {
+    const me = activeId(), main = document.querySelector('.main #view') || document.querySelector('.main');
+    const n = nudges().filter(x => x.to === me && !x.seen).pop();
+    const old = document.getElementById('nudgeBar'); if (old) old.remove();
+    if (!n || !main) return;
+    const nx = nextDoseFor() || (n.med ? { med: n.med, time: n.time ? fmt12(n.time) : '' } : null);
+    main.insertAdjacentHTML('afterbegin', '<div class="card nudge-bar" id="nudgeBar" role="status"><div><strong>' + esc(t('nudge_from', { from: n.from })) + '</strong>' +
+      (nx ? '<p class="muted" style="margin:4px 0 0">' + esc(t('nudge_med', { med: nx.med, time: nx.time })) + '</p>' : '') + '</div><div class="rm-btns">' +
+      '<button type="button" class="btn small" data-act="rm_nudge_open" data-n="' + esc(n.id) + '">' + esc(t('nudge_open')) + '</button>' +
+      '<button type="button" class="btn small secondary" data-act="rm_nudge_ok" data-n="' + esc(n.id) + '">' + esc(t('nudge_ok')) + '</button></div></div>');
+  }
+  document.addEventListener('click', e => {
+    const el = e.target && e.target.closest && e.target.closest('[data-act^="rm_nudge"]');
+    if (!el) return;
+    const a = el.dataset.act;
+    if (a === 'rm_nudge') {
+      nudge(el.dataset.pid, '', '');
+      el.textContent = t('nudge_sent', { name: profName(el.dataset.pid) }); el.disabled = true;
+      return;
+    }
+    nudgesSave(nudges().map(n => n.id === el.dataset.n ? Object.assign(n, { seen: true }) : n));
+    if (a === 'rm_nudge_open') { S.view = 'meds'; render(); } else injectNudge();
+  });
+
   function hookRender() {
     if (typeof render !== 'function') return;
     const prev = render;
-    render = function () { prev.apply(this, arguments); try { injectToday(); } catch (e) { /* ignore */ } };
-    try { injectToday(); cgChanged(true); } catch (e) { /* ignore */ }
+    render = function () { prev.apply(this, arguments); try { injectToday(); } catch (e) { /* ignore */ } try { injectNudge(); } catch (e) { /* ignore */ } };
+    try { injectToday(); cgChanged(true); injectNudge(); } catch (e) { /* ignore */ }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookRender); else hookRender();
 
