@@ -107,6 +107,7 @@
         rx(pid, p, 262, ['Lumbar muscle strain'], [med('Tab. Thiocolchicoside', '4 mg', 'twice a day', 'after food', '5 days', 'Thiocolchicoside'), med('Tab. Aceclofenac + Paracetamol', '100/325 mg', 'twice a day', 'after food', '5 days')], ['Hot compress twice a day', 'Avoid lifting heavy weights', 'Back-strengthening stretches once pain settles'], 'Review if pain lasts beyond 10 days'),
         rx(pid, p, 121, ['Lumbar muscle strain', 'High cholesterol (dyslipidaemia)'], [med('Tab. Thiocolchicoside', '4 mg', 'twice a day', 'after food', '5 days'), med('Tab. Atorvastatin', '10 mg', 'once a day', 'at night', '3 months', 'Atorvastatin')], ['Sit with back support, stand and stretch hourly', 'Repeat lipid profile in 6 weeks'], 'Review in 3 months'),
         rx(pid, p, 58, ['Lumbar muscle strain'], [med('Tab. Aceclofenac + Paracetamol', '100/325 mg', 'twice a day', 'after food', '3 days'), med('Tab. Pantoprazole', '40 mg', 'once a day', 'before breakfast', '5 days', 'Pantoprazole')], ['Core exercises daily, physiotherapy if it recurs'], 'Physiotherapy if pain returns'));
+        out.records.push(rx(pid, p, 9, ['High cholesterol (dyslipidaemia)', 'Vitamin D deficiency'], [med('Tab. Atorvastatin', '10 mg', 'once a day', 'at night', '3 months', 'Atorvastatin'), med('Cap. Vitamin D3', '60000 IU', 'once a week', 'after food', '8 weeks', 'Cholecalciferol')], ['Walk 30 minutes daily', 'Less fried food'], 'After 3 months with lipid profile'));
     }
 
     if (p.key === 'sunita') {
@@ -174,6 +175,7 @@
         rx(pid, p, 334, ['Viral fever with cough'], [med('Syp. Paracetamol', '125 mg/5 ml', 'every 6 hours if fever', 'after food', '3 days', 'Paracetamol'), med('Syp. Levocetirizine', '2.5 mg/5 ml', 'once a day', 'at night', '5 days', 'Levocetirizine')], ['Plenty of fluids and rest', 'Warm saline gargles'], 'Review if fever lasts beyond 3 days'),
         rx(pid, p, 261, ['Mild asthma flare', 'Allergic cough'], [med('Tab. Montelukast', '4 mg chewable', 'once a day', 'at night', '4 weeks', 'Montelukast'), med('Inhaler Salbutamol', '100 mcg', 'as needed (2 puffs with spacer)', 'for wheeze or night cough', 'as needed', 'Salbutamol')], ['Keep her away from dust and smoke', 'Steam inhalation at night'], 'Review in 4 weeks'),
         rx(pid, p, 155, ['Iron deficiency anaemia'], [med('Syp. Ferrous Ascorbate', '30 mg/5 ml', 'once a day', 'after food', '3 months', 'Ferrous ascorbate')], ['Continue iron, Hb improving'], 'Repeat Hb in 3 months'));
+        out.records.push(rx(pid, p, 11, ['Iron deficiency anaemia', 'Mild asthma'], [med('Syp. Ferrous Ascorbate', '30 mg/5 ml', 'once a day', 'after food', '3 months', 'Ferrous ascorbate'), med('Tab. Montelukast', '4 mg chewable', 'once a day', 'at night', '4 weeks', 'Montelukast')], ['Iron-rich food: green vegetables, jaggery, dates', 'Inhaler before outdoor play if wheezy'], 'After 1 month with Hb report'));
     }
     return out;
   }
@@ -219,6 +221,9 @@
       lsSet(sk, oldS.concat(sNew));
       // records (IndexedDB records); saveRecordLocal stamps/keeps them in the right profile list
       for (const r of g.records) { const rec = normalizeRecord(r); rec.profile = pid; await saveRecordLocal(rec); }
+      // the newest prescription is the current course: confirm its medicines so the schedule and calendar show
+      const latest = g.records.filter(r => r.doc_type === 'prescription').sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+      if (latest) { const ck = pk('sehat_current', pid), cur = lsGet(ck, {}); (latest.medicines || []).forEach(m => { cur[curKey(m)] = 1; }); lsSet(ck, cur); }
       man.byProfile[pid] = { name: p.name, vitals: g.vitals.length, journal: jNew.length, steps: sNew.length, records: g.records.length, keys: [vk, jk, sk] };
       man.counts.vitals += g.vitals.length; man.counts.journal += jNew.length; man.counts.steps += sNew.length; man.counts.records += g.records.length;
     }
