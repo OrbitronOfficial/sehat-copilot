@@ -83,7 +83,13 @@ const SehatFamily = (function () {
       fam_viewing: 'Viewing {name}',
       fam_view: 'Family overview', fam_active: 'Open now', fam_open_m: 'Open', fam_meds_n: 'Medicines today: {x} of {y} taken', fam_meds_none: 'No medicines being tracked',
       fam_alerts: '{n} doses not marked yet (2+ hours late or skipped)', fam_alert_one: '1 dose not marked yet (2+ hours late or skipped)', fam_add_card: 'Add a family member', fam_add_hint: 'Keep a parent, partner or child\'s records here too.',
-      fam_age_n: '{n} years', fam_locked_note: 'Locked. Enter the PIN to open.', fam_hidden_tag: 'Hidden from child profiles', fam_go_health: 'My health'
+      fam_age_n: '{n} years', fam_locked_note: 'Locked. Enter the PIN to open.', fam_hidden_tag: 'Hidden from child profiles', fam_go_health: 'My health',
+      pin_card: 'Parental control PIN', pin_note: 'Profiles with this PIN are hidden from child profiles. It keeps them private in the app on this device; it does not encrypt the records.',
+      pin_prot: 'Protected profiles', pin_none: 'No profile has a PIN yet. Set one from Family, Edit.', pin_change: 'Change PIN', pin_cur: 'Current PIN', pin_new1: 'New 4-digit PIN', pin_new2: 'New PIN again',
+      pin_reset: 'Reset PIN', pin_reset_note: 'The account holder can set a new PIN for every protected profile without the old one.',
+      pin_reset_owner: 'To reset the PIN, open the account holder\'s profile ({name}) first.', pin_reset_sure: 'Yes, replace the PIN on every protected profile', pin_reset_go: 'Reset the PIN',
+      pin_err_match: 'The two new PINs do not match.', pin_err_sure: 'Tick the box to confirm the reset.', pin_err_owner: 'Only the account holder can reset the PIN.',
+      pin_changed: 'PIN changed for {n} profiles.', pin_was_reset: 'PIN reset for {n} profiles.', pin_demo: 'Demo PIN: 1000'
     });
     Object.assign(STR.hi, {
       fam_switch: 'परिवार प्रोफ़ाइल बदलें', fam_add: 'परिवार का सदस्य जोड़ें', fam_edit: 'बदलें', fam_remove: 'सदस्य हटाएँ',
@@ -332,7 +338,7 @@ const SehatFamily = (function () {
     const p = byId(id);
     if (!p) return;
     if (needsPin(p)) return openPin(id);
-    switchTo(id);
+    return switchTo(id);
   }
 
   /* --- family overview: one card per member --- */
@@ -419,7 +425,7 @@ const SehatFamily = (function () {
     const had = FAM.list.length > 1;
     const self = byId('self');
     if (!self.name) Object.assign(self, { name: 'Jay Tawri', age: 46, sex: 'M' });
-    if (!had && cryptoOK()) { self.pin = await makePin('1234'); self.hidden = true; FAM.unlocked.self = true; saveUnlocked(); }  // the demo opens Jay on purpose, once  // parental-control demo: Aarav cannot see Jay
+    if (!had && cryptoOK()) { self.pin = await makePin('1000'); self.hidden = true; FAM.unlocked.self = true; saveUnlocked(); }  // the demo opens Jay on purpose, once  // parental-control demo: Aarav cannot see Jay
     if (!byId('p_ramesh')) FAM.list.push({ id: 'p_ramesh', name: 'Ramesh Tawri', relation: 'father', age: 72, sex: 'M', pin: null, hidden: false });
     if (!byId('p_aarav')) FAM.list.push({ id: 'p_aarav', name: 'Aarav Tawri', relation: 'child', age: 12, sex: 'M', pin: null, hidden: false });
     FAM.list = norm(FAM.list);
@@ -428,6 +434,55 @@ const SehatFamily = (function () {
     await dbPut('meta', { name: 'Aarav Tawri', age: '12', sex: 'M', abha: null }, profKeyFor('patient', 'p_aarav'));
     for (const r of rameshRecords()) await saveRecordLocal(r);   // famStamp keeps them out of Jay's list
     await loadProfileMeta();
+  }
+
+  /* --- parental control PIN (Settings card): one PIN shared by the protected profiles --- */
+  const protectedList = () => (FAM.list || []).filter(p => p.pin);
+  async function changePin(cur, a, b) {
+    if (!/^\d{4}$/.test(a)) return { err: t('fam_err_pin') };
+    if (a !== b) return { err: t('pin_err_match') };
+    if (!cryptoOK()) return { err: t('fam_err_crypto') };
+    const prot = protectedList();
+    if (!prot.length) return { err: t('pin_none') };
+    const res = await checkPin(cur, prot);  // same wrong-try limit as opening a profile
+    if (res.err) return { err: res.err };
+    let n = 0;
+    for (const p of prot) if (await hashPin(p.pin.salt, cur) === p.pin.hash) { p.pin = await makePin(a); n++; }
+    await save();
+    return { n };
+  }
+  async function resetPin(a, b, sure) {
+    if (FAM.active !== 'self') return { err: t('pin_err_owner') };
+    if (!/^\d{4}$/.test(a)) return { err: t('fam_err_pin') };
+    if (a !== b) return { err: t('pin_err_match') };
+    if (!sure) return { err: t('pin_err_sure') };
+    if (!cryptoOK()) return { err: t('fam_err_crypto') };
+    const prot = protectedList();
+    if (!prot.length) return { err: t('pin_none') };
+    for (const p of prot) p.pin = await makePin(a);
+    waitSet({ n: 0, until: 0 });
+    await save();
+    return { n: prot.length };
+  }
+  function pinCard(demo) {
+    if (!FAM.list) return '';
+    const prot = protectedList(), ui = FAM.pinUi || {}, msg = ui.msg, self = byId('self');
+    const inp = (n, l) => '<label class="fld"><span>' + esc(t(l)) + '</span><input name="' + n + '" type="password" inputmode="numeric" maxlength="4" autocomplete="off" class="d-in" style="max-width:160px"></label>';
+    const list = prot.length ? '<ul class="list" id="pinProt">' + prot.map(p => '<li><span class="l"><strong>' + esc(nameOf(p)) + '</strong><br><span class="muted small">' + esc(t('rel_' + p.relation)) + (p.hidden ? ' · ' + esc(t('fam_hidden_tag')) : '') + '</span></span></li>').join('') + '</ul>' : '<p class="muted">' + esc(t('pin_none')) + '</p>';
+    const change = prot.length ? '<form id="famPinChange" novalidate style="margin-top:12px"><h3 style="margin:0 0 6px">' + esc(t('pin_change')) + '</h3><div class="row">' + inp('cur', 'pin_cur') + inp('n1', 'pin_new1') + inp('n2', 'pin_new2') + '</div><button type="submit" class="btn">' + esc(t('pin_change')) + '</button></form>' : '';
+    const reset = !prot.length ? '' : FAM.active !== 'self' ? '<p class="muted small" style="margin-top:12px">' + esc(t('pin_reset_owner', { name: nameOf(self) })) + '</p>' :
+      (ui.reset ? '<form id="famPinReset" novalidate style="margin-top:12px"><h3 style="margin:0 0 6px">' + esc(t('pin_reset')) + '</h3><p class="muted small">' + esc(t('pin_reset_note')) + '</p><div class="row">' + inp('n1', 'pin_new1') + inp('n2', 'pin_new2') + '</div>' +
+        '<label class="fam-check"><input type="checkbox" name="sure"> ' + esc(t('pin_reset_sure')) + '</label><div class="row"><button type="submit" class="btn danger">' + esc(t('pin_reset_go')) + '</button><button type="button" class="btn secondary" data-fam="pinresetx">' + esc(t('fam_cancel')) + '</button></div></form>'
+        : '<p style="margin-top:12px"><button type="button" class="btn secondary" data-fam="pinreset">' + esc(t('pin_reset')) + '</button></p>');
+    return '<div class="card" id="pinCard"><h2 style="margin-bottom:6px">' + esc(t('pin_card')) + '</h2><p class="muted small">' + esc(t('pin_note')) + '</p><h3 style="margin:10px 0 4px">' + esc(t('pin_prot')) + '</h3>' + list + change + reset +
+      (msg ? '<p class="small" role="status" id="pinMsg" style="margin:10px 0 0;color:var(' + (msg.ok ? '--ok' : '--crit') + ')">' + esc(msg.text) + '</p>' : '') +
+      (demo ? '<p class="muted small" style="margin:10px 0 0">' + esc(t('pin_demo')) + '</p>' : '') + '</div>';
+  }
+  async function submitPinForm(form, kind) {
+    const f = form.elements, v = n => (f[n] ? f[n].value.trim() : '');
+    const res = kind === 'change' ? await changePin(v('cur'), v('n1'), v('n2')) : await resetPin(v('n1'), v('n2'), !!(f.sure && f.sure.checked));
+    FAM.pinUi = res.err ? { reset: kind === 'reset', msg: { ok: false, text: res.err } } : { reset: false, msg: { ok: true, text: t(kind === 'change' ? 'pin_changed' : 'pin_was_reset', { n: res.n }) } };
+    render();
   }
 
   /* --- events --- */
@@ -448,11 +503,14 @@ const SehatFamily = (function () {
     else if (a === 'pinany') openPin('*');
     else if (a === 'close') closeModal();
     else if (a === 'remove') removeMember(id);
+    else if (a === 'pinreset' || a === 'pinresetx') { FAM.pinUi = { reset: a === 'pinreset' }; render(); }
   });
   document.addEventListener('submit', e => {
     if (!e.target) return;
     if (e.target.id === 'famForm') { e.preventDefault(); submitForm(e.target); }
     else if (e.target.id === 'famPin') { e.preventDefault(); submitPin(e.target); }
+    else if (e.target.id === 'famPinChange') { e.preventDefault(); submitPinForm(e.target, 'change'); }
+    else if (e.target.id === 'famPinReset') { e.preventDefault(); submitPinForm(e.target, 'reset'); }
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
@@ -471,7 +529,8 @@ const SehatFamily = (function () {
   return {
     _norm: norm, _split: split, _loadProfileMeta: loadProfileMeta, _demo: demo, _bootPin: bootPin,
     active: () => FAM.active, list: () => (FAM.list || []).map(p => ({ id: p.id, name: nameOf(p), relation: p.relation, age: p.age, sex: p.sex, locked: !!p.pin, hidden: p.hidden })),
-    switchTo: id => pick(id), view, profKey, profKeyFor, addMember, canAdd, targets
+    switchTo: id => pick(id), view, profKey, profKeyFor, addMember, canAdd, targets,
+    pinCard, changePin, resetPin, protectedIds: () => protectedList().map(p => p.id)
   };
 })();
 window.SehatFamily = SehatFamily;

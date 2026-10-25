@@ -3109,6 +3109,7 @@ function viewSettings() {
       '<a class="btn secondary" href="/login">' + esc(u ? t('st_signout') : t('st_signin')) + '</a>') +
     card(t('st_family'), '<p class="muted">' + esc(t('st_family_note')) + '</p><button type="button" class="btn secondary" data-act="nav" data-view="family">' + esc(t('st_go_family')) + '</button>') +
     card(t('st_export'), '<p class="muted">' + esc(t('st_export_note')) + '</p><button type="button" class="btn secondary" data-act="nav" data-view="abha">' + esc(t('st_go_export')) + '</button>') +
+    (window.SehatFamily && SehatFamily.pinCard ? SehatFamily.pinCard(!!(u && u.demo)) : '') /* family.js: parental control PIN */ +
     backupCard() +
     '<div class="card"><h2 style="margin-bottom:6px">' + esc(t('data_title')) + '</h2><p class="muted">' + esc(t('consent')) + '</p><p class="muted small">' + esc(t('privacy')) + '</p><p class="muted">' + esc(t('wipe_hint')) + '</p><button type="button" class="btn danger" data-act="wipe">' + esc(t('wipe_btn')) + '</button></div>' +
     card(t('st_about'), '<p class="muted">' + esc(t('st_about_note')) + '</p>');
