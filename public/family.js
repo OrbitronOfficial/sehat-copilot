@@ -81,7 +81,7 @@ const SehatFamily = (function () {
       fam_confirm_remove: 'Remove {name} and all their records from this device? This cannot be undone.',
       fam_busy: 'Please finish or discard the record you are reviewing, or wait for the answer, before switching profiles.',
       fam_viewing: 'Viewing {name}',
-      fam_view: 'Family overview', fam_active: 'Open now', fam_open_m: 'Open', fam_meds_n: 'Medicines today: {x} of {y} taken', fam_meds_none: 'No medicines being tracked',
+      fam_care_for: 'Caretaker for the family', fam_cared_by: 'Cared for by {name}', fam_view: 'Family overview', fam_active: 'Open now', fam_open_m: 'Open', fam_meds_n: 'Medicines today: {x} of {y} taken', fam_meds_none: 'No medicines being tracked',
       fam_alerts: '{n} doses not marked yet (2+ hours late or skipped)', fam_alert_one: '1 dose not marked yet (2+ hours late or skipped)', fam_add_card: 'Add a family member', fam_add_hint: 'Keep a parent, partner or child\'s records here too.',
       fam_age_n: '{n} years', fam_locked_note: 'Locked. Enter the PIN to open.', fam_hidden_tag: 'Hidden from child profiles', fam_go_health: 'My health',
       pin_card: 'Parental control PIN', pin_note: 'Profiles with this PIN are hidden from child profiles. It keeps them private in the app on this device; it does not encrypt the records.',
@@ -107,7 +107,7 @@ const SehatFamily = (function () {
       fam_confirm_remove: '{name} और उनके सभी रिकॉर्ड इस डिवाइस से हटाएँ? यह वापस नहीं होगा।',
       fam_busy: 'प्रोफ़ाइल बदलने से पहले जिस रिकॉर्ड की जाँच कर रहे हैं उसे पूरा करें या हटाएँ, या जवाब आने तक रुकें।',
       fam_viewing: '{name} की प्रोफ़ाइल',
-      fam_view: 'परिवार की झलक', fam_active: 'अभी खुला है', fam_open_m: 'खोलें', fam_meds_n: 'आज की दवाइयाँ: {y} में से {x} ली गईं', fam_meds_none: 'कोई दवा ट्रैक नहीं हो रही',
+      fam_care_for: 'परिवार की देखभाल करती/करते हैं', fam_cared_by: '{name} देखभाल करती/करते हैं', fam_view: 'परिवार की झलक', fam_active: 'अभी खुला है', fam_open_m: 'खोलें', fam_meds_n: 'आज की दवाइयाँ: {y} में से {x} ली गईं', fam_meds_none: 'कोई दवा ट्रैक नहीं हो रही',
       fam_alerts: '{n} खुराकें अभी दर्ज नहीं (2+ घंटे देर या छोड़ी गई)', fam_alert_one: '1 खुराक अभी दर्ज नहीं (2+ घंटे देर या छोड़ी गई)', fam_add_card: 'परिवार का सदस्य जोड़ें', fam_add_hint: 'माता-पिता, जीवनसाथी या बच्चे के रिकॉर्ड भी यहीं रखें।',
       fam_age_n: '{n} वर्ष', fam_locked_note: 'लॉक है। खोलने के लिए पिन डालें।', fam_hidden_tag: 'बच्चों की प्रोफ़ाइल से छिपा', fam_go_health: 'मेरी सेहत'
     });
@@ -121,7 +121,8 @@ const SehatFamily = (function () {
         id: p.id, name: String(p.name || ''), relation: p.id === 'self' ? 'self' : (RELS.indexOf(p.relation) > 0 ? p.relation : 'other'),
         age: p.age == null || p.age === '' ? null : Number(p.age), sex: ['M', 'F', 'O'].indexOf(p.sex) >= 0 ? p.sex : null,
         pin: p.pin && p.pin.salt && p.pin.hash ? { salt: String(p.pin.salt), hash: String(p.pin.hash) } : null,
-        hidden: !!(p.hidden && p.pin)
+        hidden: !!(p.hidden && p.pin),
+        caretaker: !!p.caretaker, caredBy: typeof p.caredBy === 'string' ? p.caredBy : null
       });
     });
     if (!out.some(p => p.id === 'self')) out.unshift({ id: 'self', name: '', relation: 'self', age: null, sex: null, pin: null, hidden: false });
@@ -131,7 +132,7 @@ const SehatFamily = (function () {
   const byId = id => FAM.list.find(p => p.id === id) || null;
   const isChild = id => { const p = byId(id); return !!(p && p.relation === 'child'); };
   /* The account owner ('self') manages the family and opens any profile; everyone else needs the PIN. */
-  const needsPin = p => !!(p.pin && p.id !== FAM.active && FAM.active !== 'self' && !FAM.unlocked[p.id]);
+  const needsPin = p => !!(p.pin && p.id !== FAM.active && isChild(FAM.active) && !FAM.unlocked[p.id]);
   const visible = p => !(p.hidden && isChild(FAM.active) && p.id !== FAM.active && !FAM.unlocked[p.id]);
   const canEdit = p => FAM.active === 'self' || p.id === FAM.active;
   function nameOf(p) {
@@ -375,7 +376,8 @@ const SehatFamily = (function () {
       const locked = needsPin(p), on = p.id === FAM.active, mp = locked ? null : medProgress(p), al = locked ? 0 : alerts(p.id);
       return '<div class="card fam-card' + (on ? ' on' : '') + '" data-pid="' + esc(p.id) + '"><div class="fam-card-top">' + avatar(p).replace('fam-av ', 'fam-av fam-av-lg ') +
         '<div class="fam-card-who"><h3>' + esc(nameOf(p)) + (p.pin ? ' <span class="fam-lk" title="' + esc(t('fam_locked')) + '">' + LOCK_SVG + '<span class="sr-only">' + esc(t('fam_locked')) + '</span></span>' : '') + '</h3>' +
-        '<span class="muted small">' + esc(t('rel_' + p.relation)) + (p.age != null ? ' · ' + esc(t('fam_age_n', { n: p.age })) : '') + '</span></div>' +
+        '<span class="muted small">' + esc(t('rel_' + p.relation)) + (p.age != null ? ' · ' + esc(t('fam_age_n', { n: p.age })) : '') + '</span>' +
+        (p.caretaker ? '<span class="tag green" style="margin-top:4px">' + esc(t('fam_care_for')) + '</span>' : p.caredBy && byId(p.caredBy) ? '<span class="muted small">' + esc(t('fam_cared_by', { name: nameOf(byId(p.caredBy)) })) + '</span>' : '') + '</div>' +
         (on ? '<span class="tag green">' + esc(t('fam_active')) + '</span>' : '') + '</div>' +
         '<ul class="fam-stats"><li>' + esc(t('fam_records', { n })) + '</li>' +
         (locked ? '<li class="muted small">' + esc(t('fam_locked_note')) + '</li>' :
@@ -420,6 +422,18 @@ const SehatFamily = (function () {
         diagnoses: [{ name: 'Type 2 Diabetes Mellitus', confidence: 1 }], advice: ['Walk 30 minutes daily', 'Repeat HbA1c in 3 months'], follow_up: null, warnings: [], unread: [], explanation: {}
       })
     ];
+  }
+  /* demo helpers used by seed-year.js */
+  async function lockForChild(ids, pin) {
+    if (!cryptoOK()) return;
+    for (const id of ids || []) { const p = byId(id); if (p && p.relation !== 'child' && !p.pin) { p.pin = await makePin(String(pin)); p.hidden = true; } }
+    FAM.list = norm(FAM.list); await save();
+  }
+  async function setCare(caretakerId, ids) {
+    const c = byId(caretakerId); if (!c) return;
+    c.caretaker = true;
+    (ids || []).forEach(id => { const p = byId(id); if (p && p.id !== caretakerId) p.caredBy = caretakerId; });
+    FAM.list = norm(FAM.list); await save();
   }
   async function demo() {
     const had = FAM.list.length > 1;
@@ -528,9 +542,9 @@ const SehatFamily = (function () {
 
   return {
     _norm: norm, _split: split, _loadProfileMeta: loadProfileMeta, _demo: demo, _bootPin: bootPin,
-    active: () => FAM.active, list: () => (FAM.list || []).map(p => ({ id: p.id, name: nameOf(p), relation: p.relation, age: p.age, sex: p.sex, locked: !!p.pin, hidden: p.hidden })),
+    active: () => FAM.active, list: () => (FAM.list || []).map(p => ({ id: p.id, name: nameOf(p), relation: p.relation, age: p.age, sex: p.sex, locked: !!p.pin, hidden: p.hidden, caretaker: !!p.caretaker, caredBy: p.caredBy || null })),
     switchTo: id => pick(id), view, profKey, profKeyFor, addMember, canAdd, targets,
-    pinCard, changePin, resetPin, protectedIds: () => protectedList().map(p => p.id)
+    pinCard, changePin, resetPin, protectedIds: () => protectedList().map(p => p.id), lockForChild, setCare
   };
 })();
 window.SehatFamily = SehatFamily;
