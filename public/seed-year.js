@@ -7,6 +7,7 @@
 (function () {
   'use strict';
   const FLAG = 'sehat_seed_year', MAN = 'sehat_seed_manifest', DAYS = 365;
+  const SEED_VERSION = 2;  // bump when the demo data changes: browsers on an older version re-seed (records are keyed by id, days are de-duplicated)
   const wantReset = /[?&]seed=reset\b/.test(location.search);
   const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* blocked */ } };
@@ -204,7 +205,7 @@
   }
 
   async function runSeed() {
-    if (lsGet(FLAG, null)) { toast('Year data was already seeded. Add ?seed=reset to remove it, then ?seed=1 again.'); return; }
+    if (lsGet(FLAG, null) >= SEED_VERSION) { toast('Year data was already seeded. Add ?seed=reset to remove it, then ?seed=1 again.'); return; }
     const man = { at: new Date().toISOString(), profilesAdded: [], selfNamed: false, byProfile: {}, counts: { vitals: 0, journal: 0, steps: 0, records: 0 } };
     const pk = SehatFamily.profKeyFor;
     for (const p of PEOPLE) {
@@ -227,7 +228,7 @@
       man.byProfile[pid] = { name: p.name, vitals: g.vitals.length, journal: jNew.length, steps: sNew.length, records: g.records.length, keys: [vk, jk, sk] };
       man.counts.vitals += g.vitals.length; man.counts.journal += jNew.length; man.counts.steps += sNew.length; man.counts.records += g.records.length;
     }
-    lsSet(MAN, man); lsSet(FLAG, 1);
+    lsSet(MAN, man); lsSet(FLAG, SEED_VERSION);
     await SehatFamily._loadProfileMeta();
     const first = Object.keys(man.byProfile)[0];
     if (SehatFamily.active() !== first) { try { await SehatFamily.switchTo(first); } catch (e) { /* stay on current profile */ } }

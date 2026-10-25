@@ -70,6 +70,6 @@
 <script src="/bulk.js"></script>
 <script src="inbox.js" defer></script>
 <script src="fx.js" defer></script>
-<script>var sdDemo=false;try{sdDemo=/[?&]demo=1/.test(location.search)&&!localStorage.getItem("sehat_seed_year")}catch(e){}if((/[?&]seed=/.test(location.search)&&/^(localhost|127\.0\.0\.1)$/.test(location.hostname))||sdDemo){window.addEventListener("load",function(){var s=document.createElement("script");s.src="/seed-year.js";document.body.appendChild(s)})}</script>
+<script>var sdDemo=false;try{sdDemo=/[?&]demo=1/.test(location.search)&&Number(localStorage.getItem("sehat_seed_year")||0)<2}catch(e){}if((/[?&]seed=/.test(location.search)&&/^(localhost|127\.0\.0\.1)$/.test(location.hostname))||sdDemo){window.addEventListener("load",function(){var s=document.createElement("script");s.src="/seed-year.js";document.body.appendChild(s)})}</script>
 </body>
 </html>
