@@ -141,6 +141,7 @@ ASK_PROMPT = """You answer a patient's question about their own health records i
 First decide which kind of answer this is:
 - "records": the answer is in the records below. Quote the value, its unit, the reference range and the report date. If part of what they ask is missing from the records, say exactly what is missing.
 - "general": the question is about what a test, term or medicine generally is, and the records are not needed. Give a short general explanation and say it is general information, not about them.
+- "offtopic": the question has nothing to do with health, the body, illness, medicines, tests, the patient's records, wellness (sleep, food, exercise, stress) or using this app. Examples: geography ("where is Chandigarh"), sports, films, maths homework, coding, news, politics, jokes. Do not answer it; the app replies for you.
 - "doctor": the question asks what treatment to take, whether to start, stop or change anything, for a diagnosis, or for a prognosis. Do not answer it. Say this needs their doctor and, if useful, which values from the records to show the doctor.
 
 Context rules:
@@ -153,7 +154,7 @@ Context rules:
 
 Rules: compare two results of the same test only when their units match; if the units differ, say they cannot be compared directly. Never diagnose. Never advise starting, stopping or changing a medicine or dose. Never write a number that is not in the records. Format: plain text, no markdown (no asterisks, no headings). Write the answer as 2 to 5 short bullet points, one per line, each starting with "• " (a bullet and a space); one short sentence per bullet. A one-line safety reply may skip the bullets.
 
-Return ONE JSON object: {{"kind": "records" | "general" | "doctor", "answer": str, "sources": [ids of the records you used, empty unless kind is "records"]}}
+Return ONE JSON object: {{"kind": "records" | "general" | "doctor" | "offtopic", "answer": str, "sources": [ids of the records you used, empty unless kind is "records"]}}
 
 RECORDS:
 {records}
@@ -789,6 +790,15 @@ def _mostly_devanagari(text):
     return not letters or sum("ऀ" <= c <= "ॿ" for c in letters) / len(letters) > 0.5
 
 
+OFFTOPIC = {
+    "en": ("I am Sehat Copilot, your health assistant, so I only help with health.\n"
+           "• Your reports, test values and medicines\n• Symptoms, sleep, food and exercise\n"
+           "• What to ask your doctor\nTry: What does my latest HbA1c mean?"),
+    "hi": ("मैं सेहत कोपायलट हूँ, सिर्फ़ सेहत से जुड़े सवालों में मदद करता हूँ।\n"
+           "• रिपोर्ट, जाँच और दवाइयाँ\n• लक्षण, नींद, खाना, व्यायाम\n• डॉक्टर से क्या पूछें"),
+}
+
+
 def _bullets(text):
     """Chat answers read as short bullet points: one point per line or sentence, each starting "• "."""
     text = (text or "").strip()
@@ -828,6 +838,8 @@ def ask(question, records, lang="en"):
             out, _ = llm.write_json(prompt + " Your last answer used Latin letters. Write it again in Devanagari (हिंदी).")
         except llm.LLMError:
             pass
+    if out.get("kind") == "offtopic":  # a health assistant stays a health assistant
+        return {"answer": OFFTOPIC.get(lang) or OFFTOPIC["en"], "sources": [], "label": "general", "disclaimer": _disclaimer(lang)}
     ids = {r.get("id") for r in records if isinstance(r, dict)}
     sources = [x for x in (out.get("sources") or []) if x in ids]
     # "From your records" is only shown when the answer really cites a saved record

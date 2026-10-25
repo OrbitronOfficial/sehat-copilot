@@ -1633,7 +1633,9 @@ function greetingLine() {
   const u = currentUser(), p = S.patient || {};
   const other = window.SehatFamily && SehatFamily.active() !== 'self';  // another profile is open: greet that person
   // greet the person whose health profile is open; the login name is only a fallback
-  const nm = String((other ? p.name : (p.name || (u && u.name))) || '').trim().replace(/^((mr|mrs|ms|miss|dr|shri|smt|kumari|master)\.?\s+)+/i, '').split(/\s+/)[0];
+  // the open family profile's own name wins: S.patient can still hold the previous profile for a moment
+  const act = window.SehatFamily ? SehatFamily.list().find(x => x.id === SehatFamily.active()) : null;
+  const nm = String((act && act.name) || (other ? p.name : (p.name || (u && u.name))) || '').trim().replace(/^((mr|mrs|ms|miss|dr|shri|smt|kumari|master)\.?\s+)+/i, '').split(/\s+/)[0];
   if (!nm) return t('greet_guest');
   const h = new Date().getHours();
   return t(h < 12 ? 'greet_morning' : (h < 18 ? 'greet_afternoon' : 'greet_evening'), { name: nm });
